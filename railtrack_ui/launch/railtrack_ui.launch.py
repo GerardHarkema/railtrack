@@ -13,9 +13,9 @@ def generate_launch_description():
     # wijzig niet de python file, maar de template
 
 
-    config_file = "/home/gerard/modelspoor_ws/src/railtrack_ui/../config/track_config.json"
-    locomotive_images_path = "/home/gerard/modelspoor_ws/src/railtrack_ui/../config/locomotive_images"
-    railtracklayout_images_path = "/home/gerard/modelspoor_ws/src/railtrack_ui/../config/railtracklayout_images"
+    config_file = "/home/gerard/railtrack_ws/src/railtrack/railtrack_ui/../config/track_config.json"
+    locomotive_images_path = "/home/gerard/railtrack_ws/src/railtrack/railtrack_ui/../config/locomotive_images"
+    railtracklayout_images_path = "/home/gerard/railtrack_ws/src/railtrack/railtrack_ui/../config/railtracklayout_images"
 
     return LaunchDescription([
         Node(

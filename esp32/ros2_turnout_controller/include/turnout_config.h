@@ -1,5 +1,5 @@
 // !!! This is an automated generated header file, do not modify by your self !!!
-// Timestamp: 15/02/2024 14:41:28
+// Timestamp: 22/02/2024 20:40:19
 #ifndef _TURNOUT_CONFIG_
 #define _TURNOUT_CONFIG_
 
@@ -9,7 +9,7 @@
 uint8_t ip_address[4] = {192, 168, 2, 150};
 #define PORT   8888
 
-// Turnout config generated from: /home/gerard/modelspoor_ws/src/config/turnout_config_a.json
+// Turnout config generated from: /home/gerard/railtrack_ws/src/railtrack/config/turnout_config_a.json
 #define  NODE_NAME  "turnout_group_a"
 
 #define  STATUS_LED  23
