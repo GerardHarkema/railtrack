@@ -1,0 +1,251 @@
+{
+  "railtrack_layout_imagex" : "railtrack_layoutc.jpg",
+  "Locomotives": [
+    {
+      "name": "DB 74 854",
+      "type": "Stoom Locomotief",
+      "image": "stoom_loc.jpg",
+      "protocol": "MFX",
+      "address": 5,
+      "max_speed" : 1000,
+      "decrement_speed_step" : 50,
+      "increment_speed_step" : 50,
+      "functions":[
+        {
+          "number": 0,
+          "title" : "shunting light",
+          "icon" : "lightbulb"
+        },
+        {
+          "number": 4,
+          "title" : "Acceleration",
+          "icon" : "double_arrow"
+        }
+      ] 
+    },
+    {
+      "name": "NS1212",
+      "type": "Elektrische Locomotief",
+      "image": "NS1212.jpg",
+      "protocol": "DCC",
+      "address": 60,
+      "max_speed" : 900,
+      "decrement_speed_step" : 50,
+      "increment_speed_step" : 50,
+      "functions":[
+        {
+          "number": 0,
+          "title" : "shunting light",
+          "icon" : "lightbulb"
+        }
+      ] 
+    },
+    {
+      "name": "Hondekop, mat 65, BeNeLux",
+      "type": "Treinstel",
+      "image": "hondekop.jpg",
+      "protocol": "MFX",
+      "address": 6,
+      "max_speed" : 1000,
+      "decrement_speed_step" : 50,
+      "increment_speed_step" : 50,
+      "functions":[
+        {
+          "number": 0,
+          "title" : "shunting light",
+          "icon" : "lightbulb"
+        },
+        {
+          "number": 4,
+          "title" : "Acceleration",
+          "icon" : "double_arrow"
+        }
+      ] 
+    },
+    {
+      "name": "NS 6505 Henschel HDG",
+      "type": "Diesel Locomotief",
+      "image": "NS_6505_DHG.jpg",
+      "protocol": "MM1",
+      "address": 78,
+      "max_speed" : 1000,
+      "decrement_speed_step" : 100,
+      "increment_speed_step" : 100
+
+    }
+  ],
+  "Turnouts": {
+    "c-type": [
+      {
+        "number" : 1,
+        "layout_positions" : [
+            {
+              "position" :{
+                "x" :473,
+                "y" :96
+              },
+              "size" :{
+                "radius" :20
+              }
+            },
+            {
+              "position" :{
+                "x" :946,
+                "y" :96
+              },
+              "size" :{
+                "radius" :20
+              }
+            }          
+          ]
+      },
+      {
+        "number" : 2,
+        "layout_positions" : [
+          {
+            "position" :{
+              "x" :259,
+              "y" :316
+            },
+            "size" :{
+              "radius" :20
+            }
+          },
+          {
+            "position" :{
+              "x" :1166,
+              "y" :316
+            },
+            "size" :{
+              "radius" :20
+            }
+          }          
+        ]
+    },
+      {
+        "number" : 3,
+        "layout_positions" : [
+          {
+            "position" :{
+              "x" :554,
+              "y" :497
+            },
+            "size" :{
+              "radius" :20
+            }
+          }         
+        ]
+    },
+      {
+        "number" : 4,
+        "layout_positions" : [
+          {
+            "position" :{
+              "x" :673,
+              "y" :534
+            },
+            "size" :{
+              "radius" :20
+            }
+          }
+        ]
+    }
+    ],
+    "m-type": [
+        {
+          "number" : 11,
+          "layout_positions" : [
+            {
+              "position" :{
+                "x" :644,
+                "y" :17
+              },
+              "size" :{
+                "radius" :20
+              }
+            },          
+            {
+              "position" :{
+                "x" :767,
+                "y" :55
+              },
+              "size" :{
+                "radius" :20
+              }
+            }
+          ]
+        },
+        {
+          "number" : 12,
+          "layout_positions" : [
+            {
+              "position" :{
+                "x" :941,
+                "y" :573
+              },
+              "size" :{
+                "radius" :20
+              }
+            }         
+          ]
+        },
+        {
+          "number" : 21,
+          "layout_positions" : [
+            {
+              "position" :{
+                "x" :117,
+                "y" :63
+              },
+              "size" :{
+                "radius" :20
+              }
+            }          
+          ]
+        },
+        {
+          "number" : 22,
+          "layout_positions" : [
+            {
+              "position" :{
+                "x" :62,
+                "y" :141
+              },
+              "size" :{
+                "radius" :20
+              }
+            }          
+          ]
+        },
+        {
+          "number" : 23,
+          "layout_positions" : [
+            {
+              "position" :{
+                "x" :56,
+                "y" :232
+              },
+              "size" :{
+                "radius" :20
+              }
+            }          
+          ]
+        },
+        {
+          "number" : 24,
+          "layout_positions" : [
+            {
+              "position" :{
+                "x" :55,
+                "y" :333
+              },
+              "size" :{
+                "radius" :20
+              }
+
+            }          
+          ]
+        }
+    ]
+  }
+}

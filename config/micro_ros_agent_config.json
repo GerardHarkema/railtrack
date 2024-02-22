@@ -1,0 +1,12 @@
+{
+  "wifi": 
+  {
+    "ssid": "BirdsBoven",
+    "password": "Highway12!"
+  },
+  "agent": 
+    {
+      "ip": "192:168:2:150",
+      "port": 8888
+    }
+}

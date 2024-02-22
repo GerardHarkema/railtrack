@@ -1,0 +1,10 @@
+[Unit]
+After=NetworkManager.service time-sync.target
+
+[Service]
+Type=simple
+User=gerard
+ExecStart=/bin/sh -c ". /opt/ros/humble/setup.sh;. /home/gerard/modelspoor_ws/install/setup.sh; ros2 run micro_ros_agent micro_ros_agent udp4 --port 8888"
+
+[Install]
+WantedBy=multi-user.target

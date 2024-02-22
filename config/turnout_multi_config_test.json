@@ -1,0 +1,32 @@
+{
+    "Node_name" : "turnout_multi_config_test",
+    "Status_led_pin" : 23,
+    "Turnouts":[
+        {
+            "type" : "magnet",
+            "number" : 21,
+            "red_pin": 33,
+            "green_pin" : 32
+        },
+        {
+            "type" : "servo",
+            "number" : 22,
+            "pin"	: 26,
+            "green_value" : 0,
+            "red_value" : 255
+        },
+        {
+            "type" : "analog_out",
+            "number" : 22,
+            "pin"	: 26,
+            "green_value" : 0,
+            "red_value" : 255
+        },
+        {
+            "type" : "digital_out",
+            "number" : 24,
+            "pin": 13,
+            "negative_logic": true
+        }
+    ]
+}

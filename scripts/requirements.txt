@@ -1,0 +1,3 @@
+nicegui
+easygui
+setuptools==58.2.0
