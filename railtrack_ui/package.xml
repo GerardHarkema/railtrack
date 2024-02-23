@@ -5,7 +5,7 @@
   <version>0.0.0</version>
   <description>Userinterface of thet railtrack</description>
   <maintainer email="gerardanneharkema@gmail.com">gerard</maintainer>
-  <license>Apache-2.0</license>
+  <license>CC BY-NC-SA 4.0</license>
 
   <test_depend>ament_copyright</test_depend>
   <test_depend>ament_flake8</test_depend>
