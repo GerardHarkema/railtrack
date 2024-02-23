@@ -1,2 +1,7 @@
-License CC BY-NC-SA 4.0
-https://creativecommons.org/licenses/by-nc-sa/4.0/
+# Simple RailTrack Control System 
+Note: This repository is currently under construcion. Alle the code works, expept documentation is not completed. It wil follow soon.
+
+
+![Image](documentation/images/SystemArchitecture.jpg)
+
+See demonstration videos [here](documentation/demos.md)
