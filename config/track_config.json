@@ -24,23 +24,6 @@
       ] 
     },
     {
-      "name": "NS1212",
-      "type": "Elektrische Locomotief",
-      "image": "NS1212.jpg",
-      "protocol": "DCC",
-      "address": 60,
-      "max_speed" : 900,
-      "decrement_speed_step" : 50,
-      "increment_speed_step" : 50,
-      "functions":[
-        {
-          "number": 0,
-          "title" : "shunting light",
-          "icon" : "lightbulb"
-        }
-      ] 
-    },
-    {
       "name": "Hondekop, mat 65, BeNeLux",
       "type": "Treinstel",
       "image": "hondekop.jpg",
@@ -59,6 +42,40 @@
           "number": 4,
           "title" : "Acceleration",
           "icon" : "double_arrow"
+        }
+      ] 
+    },
+    {
+      "name": "NS1212",
+      "type": "Elektrische Locomotief",
+      "image": "NS1212.jpg",
+      "protocol": "DCC",
+      "address": 60,
+      "max_speed" : 900,
+      "decrement_speed_step" : 50,
+      "increment_speed_step" : 50,
+      "functions":[
+        {
+          "number": 0,
+          "title" : "shunting light",
+          "icon" : "lightbulb"
+        }
+      ] 
+    },
+    {
+      "name": "mp3000 NS",
+      "type": "Treinstel",
+      "image": "mp3000-ns.jpg",
+      "protocol": "MM1",
+      "address": 30,
+      "max_speed" : 1000,
+      "decrement_speed_step" : 50,
+      "increment_speed_step" : 50,
+      "functions":[
+        {
+          "number": 0,
+          "title" : "shunting light",
+          "icon" : "lightbulb"
         }
       ] 
     },
