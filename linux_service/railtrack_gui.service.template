@@ -1,0 +1,10 @@
+[Unit]
+After=NetworkManager.service time-sync.target
+
+[Service]
+Type=simple
+User=<user>
+ExecStart=/bin/sh -c ". /opt/ros/humble/setup.sh;. <workspace_path>/install/setup.sh; ros2 launch railtrack_ui railtrack_ui.launch.py"
+
+[Install]
+WantedBy=multi-user.target
