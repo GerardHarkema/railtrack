@@ -1,11 +1,12 @@
 {
   "wifi": 
   {
-    "ssid": "BirdsBoven",
-    "password": "Highway12!"
+    "ssid": "SSID",
+    "password": "PASSWORD"
   },
   "agent": 
     {
+      "Comment" : "Set here the ip-address of the agent, use default portnumber",
       "ip": "192:168:2:150",
       "port": 8888
     }

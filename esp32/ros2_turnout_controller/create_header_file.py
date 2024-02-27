@@ -44,8 +44,14 @@ def create_turnout_config_struct_line(turnout):
 
 def main():
     agent_config_file = '../../config/micro_ros_agent_config.json'
-    with open(agent_config_file, 'r', encoding='utf-8') as f:
-        agent_config = json.load(f)
+    my_agent_config_file = '../../../micro_ros_agent_config.json'
+
+    try:
+        with open(my_agent_config_file, 'r', encoding='utf-8') as f:
+            agent_config = json.load(f)
+    except OSError:
+        with open(agent_config_file, 'r', encoding='utf-8') as f:
+            agent_config = json.load(f)
 
     header = "// !!! This is an automated generated header file, do not modify by your self !!!\n"
 
