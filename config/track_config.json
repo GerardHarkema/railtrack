@@ -1,5 +1,5 @@
 {
-  "railtrack_layout_imagex" : "railtrack_layoutc.jpg",
+  "railtrack_layout_image" : "railtrack_layout.jpg",
   "Locomotives": [
     {
       "name": "DB 74 854",
@@ -98,20 +98,20 @@
         "layout_positions" : [
             {
               "position" :{
-                "x" :473,
-                "y" :96
+                "x" :513,
+                "y" :105
               },
               "size" :{
-                "radius" :20
+                "radius" :18
               }
             },
             {
               "position" :{
-                "x" :946,
-                "y" :96
+                "x" :989,
+                "y" :105
               },
               "size" :{
-                "radius" :20
+                "radius" :18
               }
             }          
           ]
@@ -121,20 +121,20 @@
         "layout_positions" : [
           {
             "position" :{
-              "x" :259,
+              "x" :274,
               "y" :316
             },
             "size" :{
-              "radius" :20
+              "radius" :18
             }
           },
           {
             "position" :{
-              "x" :1166,
+              "x" :1230,
               "y" :316
             },
             "size" :{
-              "radius" :20
+              "radius" :18
             }
           }          
         ]
@@ -144,11 +144,11 @@
         "layout_positions" : [
           {
             "position" :{
-              "x" :554,
-              "y" :497
+              "x" :605,
+              "y" :523
             },
             "size" :{
-              "radius" :20
+              "radius" :18
             }
           }         
         ]
@@ -158,11 +158,11 @@
         "layout_positions" : [
           {
             "position" :{
-              "x" :673,
-              "y" :534
+              "x" :690,
+              "y" :563
             },
             "size" :{
-              "radius" :20
+              "radius" :18
             }
           }
         ]
@@ -174,20 +174,20 @@
           "layout_positions" : [
             {
               "position" :{
-                "x" :644,
-                "y" :17
+                "x" :692,
+                "y" :20
               },
               "size" :{
-                "radius" :20
+                "radius" :18
               }
             },          
             {
               "position" :{
-                "x" :767,
-                "y" :55
+                "x" :791,
+                "y" :60
               },
               "size" :{
-                "radius" :20
+                "radius" :18
               }
             }
           ]
@@ -197,11 +197,11 @@
           "layout_positions" : [
             {
               "position" :{
-                "x" :941,
-                "y" :573
+                "x" :980,
+                "y" :604
               },
               "size" :{
-                "radius" :20
+                "radius" :18
               }
             }         
           ]
@@ -211,11 +211,11 @@
           "layout_positions" : [
             {
               "position" :{
-                "x" :117,
-                "y" :63
+                "x" :125,
+                "y" :67
               },
               "size" :{
-                "radius" :20
+                "radius" :18
               }
             }          
           ]
@@ -225,11 +225,11 @@
           "layout_positions" : [
             {
               "position" :{
-                "x" :62,
-                "y" :141
+                "x" :70,
+                "y" :151
               },
               "size" :{
-                "radius" :20
+                "radius" :18
               }
             }          
           ]
@@ -239,11 +239,11 @@
           "layout_positions" : [
             {
               "position" :{
-                "x" :56,
-                "y" :232
+                "x" :61,
+                "y" :257
               },
               "size" :{
-                "radius" :20
+                "radius" :18
               }
             }          
           ]
@@ -253,11 +253,11 @@
           "layout_positions" : [
             {
               "position" :{
-                "x" :55,
-                "y" :333
+                "x" :61,
+                "y" :355
               },
               "size" :{
-                "radius" :20
+                "radius" :18
               }
 
             }          

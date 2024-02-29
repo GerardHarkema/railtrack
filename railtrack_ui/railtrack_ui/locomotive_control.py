@@ -110,6 +110,7 @@ class locomotive_control(Node):
         if new_speed > self.max_speed:
             new_speed = self.max_speed
         self.speed = new_speed
+        # generates callback
         self.speed_slider.value = self.speed  
         pass
 
@@ -118,6 +119,7 @@ class locomotive_control(Node):
         if new_speed < 0:
             new_speed = 0
         self.speed = new_speed
+        # generates callback
         self.speed_slider.value = self.speed          
         pass
 
@@ -140,6 +142,7 @@ class locomotive_control(Node):
         self.speed_slider.disable()
         self.speed_slider.value = 0
         self.speed_slider.enable()
+        self.speed = 0
         pass
 
     def stop(self):

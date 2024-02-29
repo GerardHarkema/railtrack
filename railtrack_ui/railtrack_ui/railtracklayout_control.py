@@ -105,8 +105,6 @@ class turnout_control_on_layout(Node):
         ui.notify(notify_text)
 
     def set_status_indicator(self, status):
-        self.old_status = False
-        self.first_ui_update = True
 
         if self.first_ui_update or self.old_status != status.state:
             if(self.turnout_msg.number == status.number):

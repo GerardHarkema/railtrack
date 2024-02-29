@@ -1,1 +1,1 @@
-sudo systemctl status railtrack_control.service
+sudo systemctl status railtrack_gui.service
