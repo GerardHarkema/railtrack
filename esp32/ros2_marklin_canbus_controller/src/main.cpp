@@ -190,7 +190,6 @@ void turnout_control_callback(const void * msgin)
   const railway_interfaces__msg__TurnoutControl * control = (const railway_interfaces__msg__TurnoutControl *)msgin;
   int index;
   boolean straight = control->state ? true : false;
-  //Serial.println("turnout_control_callback");
   // update controller always !!!
   if(power_status.data){
     ctrl->setTurnout(TURNOUT_BASE_ADDRESS + control->number - 1, straight);
@@ -202,7 +201,7 @@ void turnout_control_callback(const void * msgin)
     tft_printf(ST77XX_GREEN, "ROS msg\nTurnout\nNumber: %i\nSet: %s\n",
             control->number, straight ? "Green" : "Red");
   }
-//  else Serial.println("Invalid Turnout");
+
 }
 
 void locomotive_control_callback(const void * msgin)
@@ -216,11 +215,8 @@ void locomotive_control_callback(const void * msgin)
 
   switch(control->command){
     case railway_interfaces__msg__LocomotiveControl__SET_SPEED:
-      //Serial.print("Address: "); Serial.println(control->address, HEX);
-      //Serial.print("Speed: "); Serial.println(control->speed);
       ctrl->setLocoSpeed(control->address, control->speed);
       if(lookupLocomotiveIndex(control->address, &locomotive_index)){
-        //Serial.print("Index: "); Serial.println(locomotive_index);
         locomotive_status[locomotive_index].speed = control->speed;
       }
       lookupLocomotiveProtocolAddress(control->address, protocol_txt, &sub_address);
@@ -228,8 +224,6 @@ void locomotive_control_callback(const void * msgin)
             protocol_txt, sub_address, control->speed);
       break;
     case railway_interfaces__msg__LocomotiveControl__SET_DIRECTION:
-      //Serial.print("Address: "); Serial.println(control->address, HEX);
-      //Serial.print("Direction: "); Serial.println(control->direction);
       ctrl->setLocoDirection(control->address, control->direction);
       if(lookupLocomotiveIndex(control->address, &locomotive_index)){
         locomotive_status[locomotive_index].direction = control->direction;
@@ -256,12 +250,10 @@ void locomotive_control_callback(const void * msgin)
 void power_control_callback(const void * msgin)
 {  
   const std_msgs__msg__Bool * control = (const std_msgs__msg__Bool *)msgin;
-  //Serial.println("power_control_callback");
   ctrl->setPower(control->data);
   power_status.data = control->data;
-  tft_printf(ST77XX_GREEN, "CANBUS msg\nSystem: %s", power_status.data ? "Go" : "Halt");
+  tft_printf(ST77XX_GREEN, "ROS msg\nSystem: %s", power_status.data ? "Go" : "Halt");
 
-//  else Serial.println("Invalid Turnout");
 }
 
 
@@ -270,6 +262,12 @@ void setup() {
   while (!Serial);
   delay(2000);
   Serial.println("Marklin canbus controller started");
+#if 1
+  Serial.print("MOSI: ");Serial.println(MOSI);
+  Serial.print("MISO: ");Serial.println(MISO);
+  Serial.print("SCK: ");Serial.println(SCK);
+  Serial.print("SS: ");Serial.println(SS);  
+#endif
 
   tft = new Adafruit_ST7735(CS_PIN, DC_PIN, RST_PIN);
   tft_prinft_begin(tft);
@@ -483,15 +481,12 @@ void loop() {
         break;
       case ZUBEHOR_SCHALTEN:
           word position;
-          //Serial.print("address: 0x");Serial.println(address, HEX);
+
           position = message.data[4];
           int turnout_number;
           turnout_number = address - TURNOUT_BASE_ADDRESS + 1;
-          //Serial.println(turnout_number);
 
           straight = position ? true : false;
-
-          //Serial.println(turnout_number);
 
           if(lookupTurnoutIndex(turnout_number, &index)){
             turnout_status[index].state = straight;

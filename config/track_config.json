@@ -4,7 +4,7 @@
     {
       "name": "DB 74 854",
       "type": "Stoom Locomotief",
-      "image": "stoom_loc.jpg",
+      "image": "BR74.jpg",
       "protocol": "MFX",
       "address": 5,
       "max_speed" : 1000,
@@ -13,7 +13,7 @@
       "functions":[
         {
           "number": 0,
-          "title" : "shunting light",
+          "title" : "Shunting light",
           "icon" : "lightbulb"
         },
         {
@@ -21,6 +21,89 @@
           "title" : "Acceleration",
           "icon" : "double_arrow"
         }
+      ] 
+    },
+    {
+      "name": "DB 24 044",
+      "type": "Stoom Locomotief",
+      "image": "BR24.jpg",
+      "protocol": "MFX",
+      "address": 6,
+      "max_speed" : 1000,
+      "decrement_speed_step" : 50,
+      "increment_speed_step" : 50,
+      "functions":[
+        {
+          "number": 0,
+          "title" : "Shunting light",
+          "icon" : "lightbulb"
+        },
+        {
+          "number": 1,
+          "title" : "Smoke generator",
+          "icon" : "heat"
+        },
+        {
+          "number": 2,
+          "title" : "Sound: Operating",
+          "icon" : "volume_up"
+        },
+        {
+          "number": 3,
+          "title" : "Sound Whistle Blast",
+          "icon" : "volume_up"
+        },
+        {
+          "number": 4,
+          "title" : "Acceleration",
+          "icon" : "double_arrow"
+        },
+        {
+          "number": 5,
+          "title" : "Sound: Squealing brakes off",
+          "icon" : "volume_up"
+        },
+        {
+          "number": 6,
+          "title" : "Sound: Bell",
+          "icon" : "volume_up"
+        },
+        {
+          "number": 7,
+          "title" : "Sound: Switching whistle",
+          "icon" : "volume_up"
+        },
+        {
+          "number": 8,
+          "title" : "Sound: Blowing off steam",
+          "icon" : "volume_up"
+        },
+        {
+          "number": 9,
+          "title" : "Sound: Air pump",
+          "icon" : "volume_up"
+        },
+        {
+          "number": 10,
+          "title" : "Sound: Cool being shoveled",
+          "icon" : "volume_up"
+        },
+        {
+          "number": 11,
+          "title" : "Sound: Rocker grate",
+          "icon" : "volume_up"
+        },
+        {
+          "number": 12,
+          "title" : "Sound: Injector",
+          "icon" : "volume_up"
+        },
+        {
+          "number": 13,
+          "title" : "Sound Generator",
+          "icon" : "volume_up"
+        }
+
       ] 
     },
     {
@@ -35,7 +118,7 @@
       "functions":[
         {
           "number": 0,
-          "title" : "shunting light",
+          "title" : "Shunting light",
           "icon" : "lightbulb"
         },
         {
@@ -57,7 +140,7 @@
       "functions":[
         {
           "number": 0,
-          "title" : "shunting light",
+          "title" : "Shunting light",
           "icon" : "lightbulb"
         }
       ] 
@@ -74,7 +157,7 @@
       "functions":[
         {
           "number": 0,
-          "title" : "shunting light",
+          "title" : "Shunting light",
           "icon" : "lightbulb"
         }
       ] 
