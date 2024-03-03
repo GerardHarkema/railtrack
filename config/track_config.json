@@ -28,7 +28,7 @@
       "type": "Stoom Locomotief",
       "image": "BR24.jpg",
       "protocol": "MFX",
-      "address": 6,
+      "address": 7,
       "max_speed" : 1000,
       "decrement_speed_step" : 50,
       "increment_speed_step" : 50,
@@ -41,11 +41,11 @@
         {
           "number": 1,
           "title" : "Smoke generator",
-          "icon" : "heat"
+          "icon" : "lightbulb"
         },
         {
           "number": 2,
-          "title" : "Sound: Operating",
+          "title" : "Operating",
           "icon" : "volume_up"
         },
         {
@@ -60,42 +60,44 @@
         },
         {
           "number": 5,
-          "title" : "Sound: Squealing brakes off",
+          "title" : "Squealing brakes off",
           "icon" : "volume_up"
         },
         {
           "number": 6,
-          "title" : "Sound: Bell",
+          "title" : "Bell",
           "icon" : "volume_up"
         },
         {
           "number": 7,
-          "title" : "Sound: Switching whistle",
-          "icon" : "volume_up"
+          "title" : "Switching whistle",
+          "icon" : "volume_up",
+          "once": true
         },
         {
           "number": 8,
-          "title" : "Sound: Blowing off steam",
-          "icon" : "volume_up"
+          "title" : "Blowing off steam",
+          "icon" : "volume_up",
+          "once": true
         },
         {
           "number": 9,
-          "title" : "Sound: Air pump",
+          "title" : "Air pump",
           "icon" : "volume_up"
         },
         {
           "number": 10,
-          "title" : "Sound: Cool being shoveled",
+          "title" : "Cool being shoveled",
           "icon" : "volume_up"
         },
         {
           "number": 11,
-          "title" : "Sound: Rocker grate",
+          "title" : "Rocker grate",
           "icon" : "volume_up"
         },
         {
           "number": 12,
-          "title" : "Sound: Injector",
+          "title" : "Injector",
           "icon" : "volume_up"
         },
         {

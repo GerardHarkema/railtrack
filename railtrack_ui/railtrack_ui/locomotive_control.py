@@ -72,6 +72,7 @@ class locomotive_control(Node):
                     with ui.dialog() as dialog, ui.card():
                         self.set_functions = []
                         self.function_buttons = []
+                        self.once = []
                         ui.label('Functions')
                         
                         with ui.grid(columns=2):
@@ -87,7 +88,12 @@ class locomotive_control(Node):
                                     button = ui.button(text, on_click=set_function).classes('drop-shadow bg-red')
                                 self.function_buttons.append(button)
                                 self.function_status.append(False)
-                                self.function_numbers.append(number)            
+                                self.function_numbers.append(number)
+                                try:
+                                    once = function['once'] 
+                                except KeyError:
+                                    once = False;
+                                self.once.append(once)         
                                 # see icons https://fonts.google.com/icons
                         ui.button('Close', on_click=dialog.close)
                     ui.button('Functions', on_click=dialog.open)
@@ -173,6 +179,12 @@ class locomotive_control(Node):
         self.locomotive_msg.function_index = function_index;
         self.locomotive_msg.function_state = self.function_status[index];
         self.control_publisher.publish(self.locomotive_msg);
+        if(self.once[index]):
+            self.function_status[index] = False
+            self.function_buttons[index].classes('drop-shadow bg-red', remove='bg-green')
+            self.locomotive_msg.function_state = self.function_status[index];
+            self.control_publisher.publish(self.locomotive_msg);
+
         ui.notify(notify_text) 
         
         pass
@@ -183,6 +195,7 @@ class locomotive_control(Node):
             #print(status)
             self.speed_slider.disable()
             self.speed_slider.value = status.speed
+            self.speed = status.speed
             self.speed_slider.enable()
             if status.direction == LocomotiveState().__class__.DIRECTION_FORWARD:
                 self.direction_button.text ='REVERSE'

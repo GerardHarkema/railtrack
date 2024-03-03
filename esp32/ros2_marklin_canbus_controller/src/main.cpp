@@ -216,8 +216,13 @@ void locomotive_control_callback(const void * msgin)
   switch(control->command){
     case railway_interfaces__msg__LocomotiveControl__SET_SPEED:
       ctrl->setLocoSpeed(control->address, control->speed);
+      //Serial.printf("Address: %i\n", control->address);
+      //Serial.printf("Speed: %i\n", control->speed);
+
       if(lookupLocomotiveIndex(control->address, &locomotive_index)){
+        //Serial.printf("Found\n");
         locomotive_status[locomotive_index].speed = control->speed;
+
       }
       lookupLocomotiveProtocolAddress(control->address, protocol_txt, &sub_address);
       tft_printf(ST77XX_GREEN, "ROS msg\nLocomotive\nAddress(%s): %i\nSet speed: %i\n",
@@ -363,13 +368,12 @@ void setup() {
   // create turnout_control_subscriber
   sprintf(topic_name, "railtrack/turnout/control");
   // create turnout_status_publisher
-#if 1
+
   RCCHECK(rclc_publisher_init_default(
     &turnout_control_publisher,
     &node,
     ROSIDL_GET_MSG_TYPE_SUPPORT(railway_interfaces, msg, TurnoutControl),
     topic_name));
-#endif
   RCCHECK(rclc_subscription_init_default(
     &turnout_control_subscriber,
     &node,
