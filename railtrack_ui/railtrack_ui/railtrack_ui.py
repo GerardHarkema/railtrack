@@ -88,9 +88,9 @@ class RailTrackNode(Node):
                 with ui.tab_panel(self.turnouts_tab):
                     with ui.grid(columns=3):
 
-                        for turnout in self.track_config["Turnouts"]["c-type"]:
+                        for turnout in self.track_config["Turnouts"]["railbox_controlled"]:
                             self.turnouts.append(turnout["number"])   
-                        for turnout in self.track_config["Turnouts"]["m-type"]:
+                        for turnout in self.track_config["Turnouts"]["ros_controlled"]:
                             self.turnouts.append(turnout["number"])   
                         self.turnouts.sort()
                         for turnout in self.turnouts:

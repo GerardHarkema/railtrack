@@ -72,7 +72,7 @@ typedef struct{
 
 IPAddress agent_ip(ip_address[0], ip_address[1], ip_address[2], ip_address[3]);
 
-railway_interfaces__msg__TurnoutState turnout_status[NUMBER_OF_ACTIVE_TURNOUTS_C] = {0};
+railway_interfaces__msg__TurnoutState turnout_status[NUMBER_OF_ACTIVE_TURNOUTS_RAILBOX] = {0};
 railway_interfaces__msg__LocomotiveState locomotive_status[NUMBER_OF_ACTIVE_LOCOMOTIVES] = {0};
 std_msgs__msg__Bool power_status = {0};
 
@@ -136,10 +136,10 @@ void getDirectionTxt(int direction, char*direction_txt){
 
 bool lookupTurnoutIndex(int turnout_number, int *turnout_index){
   int i;
-  for(i = 0; i < NUMBER_OF_ACTIVE_TURNOUTS_C; i++){
-    if(active_turnouts_c[i] == turnout_number) break;
+  for(i = 0; i < NUMBER_OF_ACTIVE_TURNOUTS_RAILBOX; i++){
+    if(active_turnouts_railbox[i] == turnout_number) break;
   }
-  if(i == NUMBER_OF_ACTIVE_TURNOUTS_C) return false;
+  if(i == NUMBER_OF_ACTIVE_TURNOUTS_RAILBOX) return false;
   *turnout_index = i;
   return true;
 }
@@ -161,7 +161,7 @@ void turnout_state_publisher_timer_callback(rcl_timer_t * timer, int64_t last_ca
   if (timer != NULL) {
     RCSOFTCHECK(rcl_publish(&turnout_status_publisher, &turnout_status[turnout_state_index], NULL));
     turnout_state_index++;
-    if(turnout_state_index == NUMBER_OF_ACTIVE_TURNOUTS_C) turnout_state_index = 0;
+    if(turnout_state_index == NUMBER_OF_ACTIVE_TURNOUTS_RAILBOX) turnout_state_index = 0;
   }
 }
 
@@ -298,12 +298,12 @@ void setup() {
   }
   ctrl->begin();
 
-  EEPROM.begin(NUMBER_OF_ACTIVE_TURNOUTS_C);
+  EEPROM.begin(NUMBER_OF_ACTIVE_TURNOUTS_RAILBOX);
 
   power_status.data = false;
 
-  for(int i = 0; i < NUMBER_OF_ACTIVE_TURNOUTS_C; i++){
-    turnout_status[i].number = active_turnouts_c[i];
+  for(int i = 0; i < NUMBER_OF_ACTIVE_TURNOUTS_RAILBOX; i++){
+    turnout_status[i].number = active_turnouts_railbox[i];
     turnout_status[i].state = EEPROM.readBool(i);
     //ctrl->getTurnout(turnout_status[i].number, &turnout_status[i].state);
   }
@@ -414,7 +414,7 @@ void setup() {
 
   // create timer,
 #define CYCLE_TIME    500
-  unsigned int timer_timeout = CYCLE_TIME / NUMBER_OF_ACTIVE_TURNOUTS_C;
+  unsigned int timer_timeout = CYCLE_TIME / NUMBER_OF_ACTIVE_TURNOUTS_RAILBOX;
   RCCHECK(rclc_timer_init_default(
     &turnout_state_publisher_timer,
     &support,
@@ -499,8 +499,8 @@ void loop() {
           } 
           if(message.data[5] && message.response){
           // Testen op M-Track turnout!!!!
-            for(int i = 0; i < NUMBER_OF_ACTIVE_TURNOUTS_M; i++){
-              if(active_turnouts_m[i] == turnout_number){
+            for(int i = 0; i < NUMBER_OF_ACTIVE_TURNOUTS_ROS; i++){
+              if(active_turnouts_ros[i] == turnout_number){
                 railway_interfaces__msg__TurnoutControl msg;
                 msg.number = turnout_number;
                 msg.state = straight;

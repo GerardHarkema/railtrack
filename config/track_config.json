@@ -177,7 +177,7 @@
     }
   ],
   "Turnouts": {
-    "c-type": [
+    "railbox_controlled": [
       {
         "number" : 1,
         "layout_positions" : [
@@ -253,7 +253,7 @@
         ]
     }
     ],
-    "m-type": [
+    "ros_controlled": [
         {
           "number" : 11,
           "layout_positions" : [

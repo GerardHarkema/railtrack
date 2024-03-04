@@ -133,9 +133,9 @@ class RailTrackEmulatorNode(Node):
         self.locomotives = []
         self.turnouts_tmp = []
         
-        for turnout in self.track_config["Turnouts"]["c-type"]:
+        for turnout in self.track_config["Turnouts"]["railbox_controlled"]:
             self.turnouts_tmp.append(turnout["number"])   
-        for turnout in self.track_config["Turnouts"]["m-type"]:
+        for turnout in self.track_config["Turnouts"]["ros_controlled"]:
             self.turnouts_tmp.append(turnout["number"])   
         self.turnouts_tmp.sort()
         for turnout in self.turnouts_tmp:
