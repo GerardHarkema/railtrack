@@ -77,6 +77,14 @@ Following instructions for [Installing Visual Studio Code on Linux](https://code
 
 Following instruction for [Add platfomIO plugin to VisualCode](https://platformio.org/install/ide?install=vscode)
 
+### Python Libraries
+Use follwing script to install missing Python libraries
+```bash
+cd ~/railtrack_ws/src/railtrack/scripts
+./install_required_packages.sh
+```
+
+
 Next thing to do is creating the microROS-agent. See: [Install microROS agent](setup_microROS_agent.md)
 
 [Back](../README.md)
