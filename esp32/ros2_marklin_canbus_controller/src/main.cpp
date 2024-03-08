@@ -72,8 +72,19 @@ typedef struct{
 
 IPAddress agent_ip(ip_address[0], ip_address[1], ip_address[2], ip_address[3]);
 
+#if NUMBER_OF_ACTIVE_TURNOUTS_RAILBOX
 railway_interfaces__msg__TurnoutState turnout_status[NUMBER_OF_ACTIVE_TURNOUTS_RAILBOX] = {0};
+#else
+// Dummy pointer to turnout_status if no turnouts are defined
+railway_interfaces__msg__TurnoutState *turnout_status;
+#endif
+
+#if NUMBER_OF_ACTIVE_LOCOMOTIVES
 railway_interfaces__msg__LocomotiveState locomotive_status[NUMBER_OF_ACTIVE_LOCOMOTIVES] = {0};
+#else
+// Dummy pointer to locomotive_status if no locomotives are defined
+railway_interfaces__msg__LocomotiveState *locomotive_status;
+#endif
 std_msgs__msg__Bool power_status = {0};
 
 
@@ -139,7 +150,7 @@ bool lookupTurnoutIndex(int turnout_number, int *turnout_index){
   for(i = 0; i < NUMBER_OF_ACTIVE_TURNOUTS_RAILBOX; i++){
     if(active_turnouts_railbox[i] == turnout_number) break;
   }
-  if(i == NUMBER_OF_ACTIVE_TURNOUTS_RAILBOX) return false;
+  if(i >= NUMBER_OF_ACTIVE_TURNOUTS_RAILBOX) return false;
   *turnout_index = i;
   return true;
 }
@@ -149,7 +160,7 @@ bool lookupLocomotiveIndex(int locomotive_address, int *locomotive_index){
   for(i = 0; i < NUMBER_OF_ACTIVE_LOCOMOTIVES; i++){
     if(locomotive_status[i].address == locomotive_address) break;
   }
-  if(i == NUMBER_OF_ACTIVE_LOCOMOTIVES) return false;
+  if(i >= NUMBER_OF_ACTIVE_LOCOMOTIVES) return false;
   *locomotive_index = i;
   return true;
 }
@@ -158,7 +169,7 @@ int turnout_state_index = 0;
 
 void turnout_state_publisher_timer_callback(rcl_timer_t * timer, int64_t last_call_time) {
   RCLC_UNUSED(last_call_time);
-  if (timer != NULL) {
+  if (timer != NULL & NUMBER_OF_ACTIVE_TURNOUTS_RAILBOX) {
     RCSOFTCHECK(rcl_publish(&turnout_status_publisher, &turnout_status[turnout_state_index], NULL));
     turnout_state_index++;
     if(turnout_state_index == NUMBER_OF_ACTIVE_TURNOUTS_RAILBOX) turnout_state_index = 0;
@@ -170,7 +181,7 @@ int locomotive_state_index = 0;
 
 void locomotive_state_publisher_timer_callback(rcl_timer_t * timer, int64_t last_call_time) {
   RCLC_UNUSED(last_call_time);
-  if (timer != NULL) {
+  if (timer != NULL & NUMBER_OF_ACTIVE_LOCOMOTIVES) {
     RCSOFTCHECK(rcl_publish(&locomoitive_status_publisher, &locomotive_status[locomotive_state_index], NULL));
     locomotive_state_index++;
     if(locomotive_state_index == NUMBER_OF_ACTIVE_LOCOMOTIVES) locomotive_state_index = 0;
@@ -414,14 +425,16 @@ void setup() {
 
   // create timer,
 #define CYCLE_TIME    500
-  unsigned int timer_timeout = CYCLE_TIME / NUMBER_OF_ACTIVE_TURNOUTS_RAILBOX;
+  // prevent division by zero
+  unsigned int timer_timeout = CYCLE_TIME / (NUMBER_OF_ACTIVE_TURNOUTS_RAILBOX + 1);
   RCCHECK(rclc_timer_init_default(
     &turnout_state_publisher_timer,
     &support,
     RCL_MS_TO_NS((int)timer_timeout),
     turnout_state_publisher_timer_callback));
 
-  timer_timeout = CYCLE_TIME / NUMBER_OF_ACTIVE_LOCOMOTIVES;
+  // prevent division by zero
+  timer_timeout = CYCLE_TIME / (NUMBER_OF_ACTIVE_LOCOMOTIVES + 1);
   RCCHECK(rclc_timer_init_default(
     &locomotive_state_publisher_timer,
     &support,

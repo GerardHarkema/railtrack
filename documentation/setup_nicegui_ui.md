@@ -16,22 +16,28 @@ cd ~/railtrack_ws/src/railtrack/scripts
 You can "tweak" the user interface according you wishes. Th only thing you have to do is editing the track_config.json file in the config directory of this repository.
 The most relevant json-objects are described below.
 
+The user interface exists 3 tab's. These tabs representate the main json-object. If the json-object not excists the tab is not displayed. 
+
+
 ### Common Controls & Indicators
 At the bottom of the user interface there ar two items:
 * Stop/Enable knob: Controls the main power of the railtrack
-* Active LED: Indicates the connection activity between the user interface and the Marklin Railbox Bridge. In actif state it flashes.(if no Marklin Ralibox Bridge is used, this indicator has no function)
+* Active LED: Indicates the connection activity between the user interface and the Marklin Railbox Bridge. In active state it flashes(if no Marklin Ralibox Bridge is used, this indicator has no function).
 
 ![Image](images/Screenshot%20Common%20Controls%20and%20Indicators.png)
 
 ### Locomotives tab
 ![Image](images/Screenshot%20Locomotives.png)
 
+The locomotives are defined in de locomotives json-object. See track_config.json for the corresponding parameters.
+
 ### Turnouts tab
 ![Image](images/Screenshot%20Turnouts.png)
+The turnouts are defined in de turnouts json-object. See track_config.json for the corresponding parameters.
 
 ### Track Layout tab
 ![Image](images/Screenshot%20Track%20Layout.png)
-
+This tab is experimental. You can define the position of the turnouts in the layout_positions sub-json-object. To aquaiure the position by enabling the "Show mouse click location" See track_config.json for the corresponding parameters.
 
 Alternative you can start the user interface by installing a Linux-service using the __install_railtrack_gui_service.sh__ script in the linux_service directory of this repository (note: the user interface might not be running, abort with ctrl-C).
 ```bash

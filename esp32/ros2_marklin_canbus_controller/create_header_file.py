@@ -48,39 +48,64 @@ header = header + line
 
 line = "// Track config generated from: " + track_config_file + "\n"
 header = header + line
-locomotives = track_config["Locomotives"]
-#print(locomotives)
+try:
+    locomotives = track_config["Locomotives"]
+    #print(locomotives)
 
-line = "LOCOMOTIVE active_locomotives[] = {"
-for i in range(len(locomotives) - 1):
-    line = line + "{" + str(locomotives[i]["address"]) + ', '
-    line = line + str(locomotives[i]["protocol"]) + ', '
-    line = line + "0},"
+    line = "LOCOMOTIVE active_locomotives[] = {"
+    for i in range(len(locomotives) - 1):
+        line = line + "{" + str(locomotives[i]["address"]) + ', '
+        line = line + str(locomotives[i]["protocol"]) + ', '
+        line = line + "0},"
 
-line = line + "{" + str(locomotives[len(locomotives) - 1]["address"]) + ', '
-line = line + str(locomotives[len(locomotives) - 1]["protocol"]) + ', '
-line = line + " 0}};\n"
-header = header + line
-line = "#define  NUMBER_OF_ACTIVE_LOCOMOTIVES   " + str(len(locomotives)) + "\n"
-header = header + line + "\n"
+    line = line + "{" + str(locomotives[len(locomotives) - 1]["address"]) + ', '
+    line = line + str(locomotives[len(locomotives) - 1]["protocol"]) + ', '
+    line = line + " 0}};\n"
+    header = header + line
+    line = "#define  NUMBER_OF_ACTIVE_LOCOMOTIVES   " + str(len(locomotives)) + "\n"
+    header = header + line + "\n"
+except KeyError:
+    line = "//!!! Dummy pointer to active_locomotives !!!\n"
+    header = header + line
+    line = "LOCOMOTIVE *active_locomotives;\n"
+    header = header + line
+    line = "#define  NUMBER_OF_ACTIVE_LOCOMOTIVES   0\n"
+    header = header + line + "\n"
 
-turnouts = track_config["Turnouts"]["railbox_controlled"]
-line = "unsigned short int active_turnouts_railbox[] = {"
-for i in range(len(turnouts)-1):
-    line = line + str(turnouts[i]["number"]) + ", "
-line  = line + str(turnouts[len(turnouts)-1]["number"]) + "};\n"
-header = header + line
-line = "#define  NUMBER_OF_ACTIVE_TURNOUTS_RAILBOX   " + str(len(turnouts)) + "\n"
-header = header + line  + "\n"
+try:
+    turnouts = track_config["Turnouts"]["railbox_controlled"]
+    line = "unsigned short int active_turnouts_railbox[] = {"
+    for i in range(len(turnouts)-1):
+        line = line + str(turnouts[i]["number"]) + ", "
+    line  = line + str(turnouts[len(turnouts)-1]["number"]) + "};\n"
+    header = header + line
+    line = "#define  NUMBER_OF_ACTIVE_TURNOUTS_RAILBOX   " + str(len(turnouts)) + "\n"
+    header = header + line  + "\n"
+except KeyError:
+    line = "//!!! Dummy pointer to active_turnouts_railbox !!!\n"
+    header = header + line
+    line = "unsigned short int *active_turnouts_railbox;\n"
+    header = header + line
+    line = "#define  NUMBER_OF_ACTIVE_TURNOUTS_RAILBOX  0\n"
+    header = header + line  + "\n"
 
-turnouts = track_config["Turnouts"]["ros_controlled"]
-line = "unsigned short int active_turnouts_ros[] = {"
-for i in range(len(turnouts)-1):
-    line = line + str(turnouts[i]["number"]) + ", "
-line  = line + str(turnouts[len(turnouts)-1]["number"]) + "};\n"
-header = header + line
-line = "#define  NUMBER_OF_ACTIVE_TURNOUTS_ROS   " + str(len(turnouts)) + "\n"
-header = header + line + "\n"
+try:
+    turnouts = track_config["Turnouts"]["ros_controlled"]
+    line = "unsigned short int active_turnouts_ros[] = {"
+    for i in range(len(turnouts)-1):
+        line = line + str(turnouts[i]["number"]) + ", "
+    line  = line + str(turnouts[len(turnouts)-1]["number"]) + "};\n"
+    header = header + line
+    line = "#define  NUMBER_OF_ACTIVE_TURNOUTS_ROS   " + str(len(turnouts)) + "\n"
+    header = header + line + "\n"
+except KeyError:
+    line = "//!!! Dummy pointer to active_turnouts_ros !!!\n"
+    header = header + line
+    line = "unsigned short int *active_turnouts_ros;\n"
+    header = header + line
+    line = "#define  NUMBER_OF_ACTIVE_TURNOUTS_ROS   0\n"
+    header = header + line + "\n"
+
 
 line = "#endif //_TRACK_CONFIG_\n"
 header = header + line

@@ -25,9 +25,6 @@ from turnout_control import turnout_control
 from locomotive_control import locomotive_control
 from railtracklayout_control import railtracklayout_control
 
-
-
-
 class RailTrackNode(Node):
 
     def __init__(self) -> None:
@@ -71,31 +68,53 @@ class RailTrackNode(Node):
         self.turnouts = []
         with Client.auto_index_client:
             with ui.tabs().classes('w-full') as tabs:
+
                 try:
                     tmp = self.track_config["Locomotives"]
                     self.locomotives_tab = ui.tab('Locomotives')
+                    first_tab = self.locomotives_tab
                 except KeyError:
                     pass
 
-                self.turnouts_tab = ui.tab('Turnouts')
+                try:
+                    tmp = self.track_config["Turnouts"]
+                    self.turnouts_tab = ui.tab('Turnouts')
+                    if not 'first_tab' in locals():
+                        first_tab = self.turnouts_tab
+                except KeyError:
+                    pass
+
 
                 try:
                     tmp = self.track_config["railtrack_layout_image"]
                     self.tracklayouts_tab = ui.tab('Track Layout')
                 except KeyError:
                     pass
-            with ui.tab_panels(tabs, value=self.turnouts_tab).classes('w-full'):
-                with ui.tab_panel(self.turnouts_tab):
-                    with ui.grid(columns=3):
+            with ui.tab_panels(tabs, value=first_tab).classes('w-full'):
+                try:
+                    tmp = self.track_config["Turnouts"]
+                    with ui.tab_panel(self.turnouts_tab):
+                        with ui.grid(columns=3):
 
-                        for turnout in self.track_config["Turnouts"]["railbox_controlled"]:
-                            self.turnouts.append(turnout["number"])   
-                        for turnout in self.track_config["Turnouts"]["ros_controlled"]:
-                            self.turnouts.append(turnout["number"])   
-                        self.turnouts.sort()
-                        for turnout in self.turnouts:
-                            tc = turnout_control(turnout, self.turnout_control_publisher)
+                            try:
+                                for turnout in self.track_config["Turnouts"]["railbox_controlled"]:
+                                    self.turnouts.append(turnout["number"]) 
+                            except KeyError:
+                                pass
+
+                            try:
+                                for turnout in self.track_config["Turnouts"]["ros_controlled"]:
+                                    self.turnouts.append(turnout["number"]) 
+                            except KeyError:
+                                pass
+
+                            self.turnouts.sort()
+                            for turnout in self.turnouts:
+                                tc = turnout_control(turnout, self.turnout_control_publisher)
                             self.turnoutsui.append(tc)
+                except KeyError:
+                    pass
+
                 try:
                     tmp = self.track_config["Locomotives"]                
                     with ui.tab_panel(self.locomotives_tab):
@@ -105,6 +124,7 @@ class RailTrackNode(Node):
                                 self.locomotivesui.append(locomotive)
                 except KeyError:
                     pass
+                
                 try:
                     tmp = self.track_config["railtrack_layout_image"]
                     with ui.tab_panel(self.tracklayouts_tab):
@@ -113,8 +133,9 @@ class RailTrackNode(Node):
                         pass
                 except KeyError:
                     pass
-            self.power_button = ui.button('STOP', on_click=lambda:self.power()).classes('drop-shadow bg-red')
-            self.active = ui.icon('fiber_manual_record', size='3em').classes('drop-shadow text-green')
+            with ui.grid(columns=3):
+                self.power_button = ui.button('STOP', on_click=lambda:self.power()).classes('drop-shadow bg-red')
+                self.active = ui.icon('fiber_manual_record', size='3em').classes('drop-shadow text-green')
             self.active_status = False;
 
 
