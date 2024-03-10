@@ -13,11 +13,11 @@ This system has the following features:
 * Integratable with Marklin Central/Digital Station throug the Marklin CAN bus
 * Easy to adapt to "Railboxs" from other manufactures as Marklin
 
-My apologies for my English language. This documentation provides a brief description of the system setup. Let the internet help you when a configuration goes wrong. Usually the answer can be found there.
+_My apologies for my English language. This documentation provides a brief description of the system setup. Let the internet help you when a configuration goes wrong. Usually the answer can be found there._
 
 ![Image](documentation/images/SystemArchitecture.jpg)
 
-_Note: The "Digital Connector Box 60116"(or simular) from Marklin is called in this documentation "Railbox"_
+_Note: The "[Digital Connector Box 60116](https://www.maerklin.de/en/products/details/article/60116)"(or simular) from Marklin is called in this documentation "Railbox"_
 
 [See demonstration videos](documentation/demos.md)
 
