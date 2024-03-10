@@ -6,10 +6,10 @@ Digital Connector Box
 
 [List of Components](https://docs.google.com/spreadsheets/d/18TnnurDtuM7WNLGjFARisbmxjI6zFRmcXOZzPikqvao/edit?usp=sharing)
 
-esp32-wroom32 pinouts:
+### esp32-wroom32 pinouts:
 ![Image](images/ESP32-Pinout.jpg)
 
-esp32-wroom32(mini) pinouts:
+### esp32-wroom32(mini) pinouts:
 ![Image](images/ESP32-Pinout-mini.png)
 
 [Connectiontable Railbox Bridge](https://docs.google.com/spreadsheets/d/1lZ0bYcd9MC5ZJBcrFeeLdLd2YKi_yTghrkXhHs3W9o0/edit?usp=sharing)
@@ -23,6 +23,6 @@ Connections to the Marklin Railbox can be made by:
 [Reference](https://www.marklin-users.net/forum/posts/t36089-Computer-interface-for-Marklin-Track-Box-and-mfx-programming)
 
 
-[Programming instructions](instructions_programming_esp32.md)(Note: Select project ros2_marklin_canbus_controller)
+[Programming instructions](instructions_programming_esp32.md)(Note: Select project ___ros2_marklin_canbus_controller___)
 
 [Back](../README.md)
