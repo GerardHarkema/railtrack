@@ -17,6 +17,8 @@ My apologies for my English language. This documentation provides a brief descri
 
 ![Image](documentation/images/SystemArchitecture.jpg)
 
+_Note: The "Digital Connector Box 60116"(or simular) from Marklin is called in this documentation "Railbox"_
+
 [See demonstration videos](documentation/demos.md)
 
 [Setup environment](documentation/setup_environment.md)
