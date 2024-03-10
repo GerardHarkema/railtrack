@@ -16,7 +16,7 @@ Commands can be given over the status bar at the buttom-side of the Visual Code 
 
 ![Image](images/ScreenshotStatusBar.png)
 
-4. Select project to program the ESP32, by hoving over the status bar and click the __Stwitch PlatormIO project Environment__.
+4. Select project to program the ESP32, by hoving over the status bar and click the __Switch PlatormIO project Environment__.
 
 ![Image](images/ScreenshotSelectProjectStatusBar.png)
     Next, select project from Projects list window:

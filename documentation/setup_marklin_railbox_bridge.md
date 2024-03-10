@@ -2,7 +2,13 @@
 
 Under Construction
 
-Digital Connector Box
+With the Marklin Railbox Bridge it is possible to control(by the graphical user interface) turnouts and locomotives over the railtarcks in the following (rail)protocols:
+* Marklin Motorola
+* DCC
+* mfx
+
+![Image](images/MarklinRailboxBridge.jpg)
+(New one wil follow soon)
 
 [List of Components](https://docs.google.com/spreadsheets/d/18TnnurDtuM7WNLGjFARisbmxjI6zFRmcXOZzPikqvao/edit?usp=sharing)
 
