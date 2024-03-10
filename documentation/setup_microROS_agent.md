@@ -2,7 +2,7 @@
 
 Under Construction
 
-The microROS Agent acts as a (WiFi)communication-channel between the ROS-Humble system and the embedded esp32 devices controlling __turnouts__ or the __Marklin RailBox bridge__.
+The microROS Agent acts as a (WiFi)communication-channel between the ROS-Humble system and the embedded ESP32 devices controlling __turnouts__ or the __Marklin RailBox bridge__.
 
 
 You can install using the following options:

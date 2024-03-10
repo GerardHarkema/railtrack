@@ -1,13 +1,13 @@
-# Brief instructions programming esp32 devices with VisualCode/Platform IO
+# Brief instructions programming ESP32 devices with VisualCode/Platform IO
 
-In this chapter the most important functions of programming an esp32 device wit Visual Code and the PlatformIO plugin are described.
+In this chapter the most important functions of programming an ESP32 device wit Visual Code and the PlatformIO plugin are described.
 
 1. Start Visual code
 2. Enable PlatfomIO environment(see: Visual Code/PlatfomIO documentation)
     * [Visual Code docs](https://code.visualstudio.com/docs)
     * [PlatfomIO code](https://docs.platformio.org/en/latest/core/index.html)
-3. Select esp32 workspace:
-    * __File-->Open Workspace from File...-->esp32.code-workspace__ (in the esp32 folder of this repository)
+3. Select ESP32 workspace:
+    * __File-->Open Workspace from File...-->esp32.code-workspace__ (in the ESP32 folder of this repository)
 
 (_Warning: Sometimes Visual Code display's it's dialogs behind the main window, toggle to the dialog window_)
 
@@ -16,7 +16,7 @@ Commands can be given over the status bar at the buttom-side of the Visual Code 
 
 ![Image](images/ScreenshotStatusBar.png)
 
-4. Select project to program the esp32, by hoving over the status bar and click the __Stwitch PlatormIO project Environment__.
+4. Select project to program the ESP32, by hoving over the status bar and click the __Stwitch PlatormIO project Environment__.
 
 ![Image](images/ScreenshotSelectProjectStatusBar.png)
     Next, select project from Projects list window:
@@ -28,9 +28,9 @@ Commands can be given over the status bar at the buttom-side of the Visual Code 
 
 ![Image](images/ScreenshotCompile.png)
 
-6. Connect esp32 device to the computer throug a USB-cable.
+6. Connect ESP32 device to the computer throug a USB-cable.
 
-7. Upload the program to the esp32, by hoving over the status bar and click the __Upload__ button, no erros should appear in the Therminal
+7. Upload the program to the ESP32, by hoving over the status bar and click the __Upload__ button, no erros should appear in the Therminal
 
 ![Image](images/ScreenshotUpload.png)
 

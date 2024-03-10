@@ -7,14 +7,14 @@ Under Construction
 The system is developed under ___Ubuntu 22 linux___. You can chose between two setups:
 * **Desktop/Laptop setup**
     * **Developer**: 
-        * Use this if you want to configure en programm esp32 devices
+        * Use this if you want to configure en programm ESP32 devices
         * Acts also as server for the microROS agent and the grapical use interface
     * [Install Ubuntu Desktop](https://ubuntu.com/download/desktop)
     * You can als use a virtual environment(for example BusyBox or VM-ware)
 * **Raspberry PI setup**
     * **Server**: 
         * Acts as an server for the microROS agant and the graphical user interface
-        * It is __not possible__ to programm esp32 devices
+        * It is __not possible__ to programm ESP32 devices
         * Hybride system with Desktop/Laptop server for programming ESP32 devices
     * [Install Ubuntu server](https://ubuntu.com/download/raspberry-pi)
 
@@ -71,7 +71,7 @@ echo "source ~/railtrack_ws/src/install/setup.bash" >> ~/.bashrc
 Note: Execute this command only once. If multiple lines exists in "~/.bashrc" remove all other lines
 
 ### Visual Code & PlatformIO
-Visual Code acts as an system for modifying,  editing files in the railtrack system. The plugin from PlatformIO makes it possible to program esp32 devices for controlling turnouts and the Marklin railtrack to CAN bridge.
+Visual Code acts as an system for modifying,  editing files in the railtrack system. The plugin from PlatformIO makes it possible to program ESP32 devices for controlling turnouts and the Marklin railtrack to CAN bridge.
 
 Following instructions for [Installing Visual Studio Code on Linux](https://code.visualstudio.com/docs/setup/linux)
 
