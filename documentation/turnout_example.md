@@ -28,7 +28,7 @@ To supply the board and turnouts with a single 12V DC adapter, make the folowing
 [Connectiontable of the turnouts](https://docs.google.com/spreadsheets/d/1gRFCZ1HvVopqZunI1NFgUJWMyBfiNZ6XEHDdcQGjpi4/edit?usp=sharing)
 
 ### Extend the board with a (status)display
-You can optionaly extend the controller with a display.
+Optionaly extend the controller with a display.
 ![Image](images/TurnoutControllerWithDisplay.jpg)
 
 [Connectiontable for display](https://docs.google.com/spreadsheets/d/1QX-6jUv3QRhAGAogjCkY_kp1XdK-jJ_qZqqPhJOJk5Y/edit?usp=sharing)
@@ -40,6 +40,8 @@ Adaptor for the display
 
 ### Example of configuration
 The files turnout_config_a.json and turnout_config_b.json in the config directory of this repository gives a good example of configuring the board.
+
+_Note: Every controller should have an unique node name defined in de configuratuin file)_
 
 [Programming instructions](instructions_programming_esp32.md)(Note: Select project ___ros2_turnout_controller___)
 

@@ -11,7 +11,7 @@ This system has the following features:
 * Scalable to the wishes of the individual user
 * Easy to configure using simple json configuration files
 * Integratable with Marklin Central/Digital Station throug the Marklin CAN bus
-* Easy to adapt to "Railboxs" from other manufactures as Marklin
+* Easy to adapt to "Railboxs"(Boosters) from other manufactures as Marklin
 
 _My apologies for my English language. This documentation provides a brief description of the system setup. Let the internet help you when a configuration goes wrong. Usually the answer can be found there._
 
