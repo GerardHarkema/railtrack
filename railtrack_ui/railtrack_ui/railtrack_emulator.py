@@ -165,13 +165,13 @@ class RailTrackEmulatorNode(Node):
                 time.sleep(self.sleep_time)
 
     def turnout_emulator_callback(self, control):
-        print("tc")
+        #print("tc")
         #self.track_control.handle_control(status)
         for turnout in self.turnouts:
             turnout.handle_control(control)
 
     def locomotive_emulator_callback(self, control):
-        print("lc")
+        #print("lc")
         #print(status)
         for loc in self.locomotives:
             loc.handle_control(control)

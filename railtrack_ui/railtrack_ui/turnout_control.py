@@ -48,14 +48,16 @@ class turnout_control(Node):
         else:
             notify_text = notify_text + ": Red"
         ui.notify(notify_text)
+
     def set_status_indicator(self, status) -> None:
-        #print("set_status_indicator")
+        #print("set_status_indicator " + str(self.turnout_msg.number))
+        #print(status.number)
         if(self.turnout_msg.number == status.number):
             if status.state:
-                #print("set green")
                 self.led.classes('text-green', remove='text-red')
                 text = 'Set turnout ' + str(self.turnout_number)+ ": green" 
+                #print(text)
             else:
-                #print("set red")
                 self.led.classes('text-red', remove='text-green')
                 text = 'Set turnout ' + str(self.turnout_number) + ": red" 
+                #print(text)

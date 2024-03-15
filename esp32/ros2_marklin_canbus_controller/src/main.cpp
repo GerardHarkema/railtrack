@@ -169,7 +169,7 @@ int turnout_state_index = 0;
 
 void turnout_state_publisher_timer_callback(rcl_timer_t * timer, int64_t last_call_time) {
   RCLC_UNUSED(last_call_time);
-  if (timer != NULL & NUMBER_OF_ACTIVE_TURNOUTS_RAILBOX) {
+  if (timer != NULL && NUMBER_OF_ACTIVE_TURNOUTS_RAILBOX) {
     RCSOFTCHECK(rcl_publish(&turnout_status_publisher, &turnout_status[turnout_state_index], NULL));
     turnout_state_index++;
     if(turnout_state_index == NUMBER_OF_ACTIVE_TURNOUTS_RAILBOX) turnout_state_index = 0;
@@ -181,7 +181,7 @@ int locomotive_state_index = 0;
 
 void locomotive_state_publisher_timer_callback(rcl_timer_t * timer, int64_t last_call_time) {
   RCLC_UNUSED(last_call_time);
-  if (timer != NULL & NUMBER_OF_ACTIVE_LOCOMOTIVES) {
+  if (timer != NULL && NUMBER_OF_ACTIVE_LOCOMOTIVES) {
     RCSOFTCHECK(rcl_publish(&locomoitive_status_publisher, &locomotive_status[locomotive_state_index], NULL));
     locomotive_state_index++;
     if(locomotive_state_index == NUMBER_OF_ACTIVE_LOCOMOTIVES) locomotive_state_index = 0;

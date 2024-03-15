@@ -98,20 +98,21 @@ class RailTrackNode(Node):
 
                             try:
                                 for turnout in self.track_config["Turnouts"]["railbox_controlled"]:
-                                    self.turnouts.append(turnout["number"]) 
+                                    self.turnouts.append(turnout["number"])
                             except KeyError:
                                 pass
 
                             try:
                                 for turnout in self.track_config["Turnouts"]["ros_controlled"]:
                                     self.turnouts.append(turnout["number"]) 
+
                             except KeyError:
                                 pass
 
                             self.turnouts.sort()
                             for turnout in self.turnouts:
                                 tc = turnout_control(turnout, self.turnout_control_publisher)
-                            self.turnoutsui.append(tc)
+                                self.turnoutsui.append(tc)
                 except KeyError:
                     pass
 
