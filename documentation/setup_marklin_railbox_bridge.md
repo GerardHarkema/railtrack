@@ -23,6 +23,12 @@ ___Example of prototyping the railbox___
 
 [Connectiontable Railbox Bridge](https://docs.google.com/spreadsheets/d/1lZ0bYcd9MC5ZJBcrFeeLdLd2YKi_yTghrkXhHs3W9o0/edit?usp=sharing)
 
+_Warning for the assambly/wireing_:
+* _Before connecting the output of the step-down converter to the rest of the system, adjust the output voltage to 5 Volts_
+* _Solder only in inner rows headers on the ESP32 device_
+
+
+
 
 Connections to the Marklin Railbox can be made by:
 * Soldering wires to the PCB of the Railbox, see image below
