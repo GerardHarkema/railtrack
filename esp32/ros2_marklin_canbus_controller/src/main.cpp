@@ -131,16 +131,16 @@ void lookupLocomotiveProtocolAddress(int address, char *protocol, int *sub_addre
   }
 }
 
-void getDirectionTxt(int direction, char*direction_txt){
+char* getDirectionTxt(int direction){
   switch(direction){
     case railway_interfaces__msg__LocomotiveState__DIRECTION_FORWARD:
-      strcpy(direction_txt, "Forward");
+      return "Forward";
       break;
     case railway_interfaces__msg__LocomotiveState__DIRECTION_REVERSE:
-      strcpy(direction_txt, "Reverse");
+      return "Reverse";
       break;
     default:
-      strcpy(direction_txt, "Invalid Code");
+      return "Invalid Code";
       break;
   }
 }
@@ -220,7 +220,7 @@ void locomotive_control_callback(const void * msgin)
   const railway_interfaces__msg__LocomotiveControl * control = (const railway_interfaces__msg__LocomotiveControl *)msgin;
 
   int locomotive_index;
-  char direction_txt[10];
+  char* direction_txt;
   char protocol_txt[10];
   int sub_address;
 
@@ -244,7 +244,7 @@ void locomotive_control_callback(const void * msgin)
       if(lookupLocomotiveIndex(control->address, &locomotive_index)){
         locomotive_status[locomotive_index].direction = control->direction;
       }
-      getDirectionTxt(control->direction, direction_txt);
+      direction_txt = getDirectionTxt(control->direction);
       lookupLocomotiveProtocolAddress(control->address, protocol_txt, &sub_address);      
       tft_printf(ST77XX_GREEN, "ROS msg\nLocomotive\nAddress(%s): %i\nSet dir: %s\n",
             protocol_txt, sub_address, direction_txt);      
@@ -278,7 +278,7 @@ void setup() {
   while (!Serial);
   delay(2000);
   Serial.println("Marklin canbus controller started");
-#if 1
+#if 0
   Serial.print("MOSI: ");Serial.println(MOSI);
   Serial.print("MISO: ");Serial.println(MISO);
   Serial.print("SCK: ");Serial.println(SCK);
@@ -475,11 +475,16 @@ void loop() {
 
     int address = (message.data[2] << 8) 
                  + message.data[3];
-    int index;
-    bool straight;
+    int index = 0;
+    bool straight = 0;
     char protocol_txt[10];
-    int sub_address;
-    char direction_txt[10];
+    int sub_address = 0;
+    int function_index = 0;
+    int function_enable = 0;
+    word speed;
+    int turnout_number;
+    word position;
+    char* direction_txt;
 
     switch(message.command){
       case SYSTEM_BEFEHL:
@@ -497,10 +502,8 @@ void loop() {
         }
         break;
       case ZUBEHOR_SCHALTEN:
-          word position;
-
           position = message.data[4];
-          int turnout_number;
+
           turnout_number = address - TURNOUT_BASE_ADDRESS + 1;
 
           straight = position ? true : false;
@@ -526,7 +529,6 @@ void loop() {
 
         break;
       case LOC_GESCHWINDIGHEID:
-          word speed;
           speed = (message.data[4] << 8) 
                  + message.data[5];
           if(lookupLocomotiveIndex(address, &index)){
@@ -541,23 +543,28 @@ void loop() {
             locomotive_status[index].direction = message.data[4];
             locomotive_status[index].speed = 0;
           }
-          getDirectionTxt(message.data[4], direction_txt);
+          direction_txt = getDirectionTxt(message.data[4]);
           lookupLocomotiveProtocolAddress(address, protocol_txt, &sub_address);
-          tft_printf(ST77XX_GREEN, "CANBUS msg\nLocomotive\nAddress(%s): %i\nSet dir: %s\n",
-            protocol_txt, sub_address, direction_txt);          
+#if 0
+            Serial.printf("Length %i\n", message.length);
+            Serial.printf("CANBUS msg\nLocomotive\nAddress(%s): %i\nSet dir: %s\n",
+              protocol_txt, sub_address, direction_txt); 
+#endif
+            tft_printf(ST77XX_GREEN, "CANBUS msg\nLocomotive\nAddress(%s): %i\nSet dir: %s\n",
+              protocol_txt, sub_address, direction_txt);      
           break;
       case LOC_FUNCTION:
           lookupLocomotiveProtocolAddress(address, protocol_txt, &sub_address);
-          int function_index = message.data[4];
-          int function_enable = message.data[5];
+          function_index = message.data[4];
+          function_enable = message.data[5];
           tft_printf(ST77XX_GREEN, "CANBUS msg\nLocomotive\nAddress(%s): %i\nSet Func. %i: %s\n",
             protocol_txt, sub_address, function_index, function_enable ? "True" : "False");
           if(lookupLocomotiveIndex(address, &index)){
             locomotive_status[index].function_state.data[function_index] = function_enable ? true : false;
           }  
         break;
-///      default:
-//        break;    
+      default:
+        break;    
     }
   }
 

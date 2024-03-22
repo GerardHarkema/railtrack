@@ -28,7 +28,7 @@
       "type": "Stoom Locomotief",
       "image": "BR24.jpg",
       "protocol": "MFX",
-      "address": 7,
+      "address": 6,
       "max_speed" : 1000,
       "decrement_speed_step" : 50,
       "increment_speed_step" : 50,
@@ -50,7 +50,7 @@
         },
         {
           "number": 3,
-          "title" : "Sound Whistle Blast",
+          "title" : "Whistle Blast",
           "icon" : "volume_up"
         },
         {
@@ -102,7 +102,7 @@
         },
         {
           "number": 13,
-          "title" : "Sound Generator",
+          "title" : "Generator",
           "icon" : "volume_up"
         }
 
@@ -113,7 +113,7 @@
       "type": "Treinstel",
       "image": "hondekop.jpg",
       "protocol": "MFX",
-      "address": 6,
+      "address": 7,
       "max_speed" : 1000,
       "decrement_speed_step" : 50,
       "increment_speed_step" : 50,
