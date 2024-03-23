@@ -268,7 +268,7 @@ void power_control_callback(const void * msgin)
   const std_msgs__msg__Bool * control = (const std_msgs__msg__Bool *)msgin;
   ctrl->setPower(control->data);
   power_status.data = control->data;
-  tft_printf(ST77XX_GREEN, "ROS msg\nSystem: %s", power_status.data ? "Go" : "Halt");
+  tft_printf(ST77XX_GREEN, "ROS msg\nSystem: %s", power_status.data ? "Go" : "Stop");
 
 }
 
@@ -352,6 +352,7 @@ void setup() {
       locomotive_status[i].function_state.data[j] = power ? true : false;
     }
   }
+  WiFi.setHostname("RailTrackController");
   set_microros_wifi_transports(SSID, PASSWORD, agent_ip, (size_t)PORT);
 
   pinMode(LED_BUILTIN, OUTPUT);

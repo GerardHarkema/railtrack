@@ -198,6 +198,36 @@ void timer_callback(rcl_timer_t * timer, int64_t last_call_time) {
 }
 
 
+char* convertToCamelCase(const char *input) {
+    int i, j;
+    int len = strlen(input);
+    char *output = (char *)malloc((len + 1) * sizeof(char));
+    
+    if(output == NULL) {
+        Serial.printf("Error allocating memory\n");
+        error_loop();
+    }
+
+    // Kopieer de originele string naar de uitvoerstring
+    strcpy(output, input);
+
+    // Loop door de uitvoerstring en converteer naar camel case
+    for (i = 0; i < len; i++) {
+        if (output[i] == '_') {
+            // Verwijder de underscore
+            for (j = i; j < len; j++) {
+                output[j] = output[j + 1];
+            }
+            // Converteer het volgende teken naar hoofdletter
+            output[i] = toupper(output[i]);
+            // Verlaag de lengte van de string
+            len--;
+        }
+    }
+    return output;
+}
+
+
 void setup() {
 
   Serial.begin(115200);
@@ -223,11 +253,12 @@ void setup() {
   tft->setCursor(14, 22);
   tft->println("Turnout Control");
   tft->println(NODE_NAME);
-  Serial.print("cursor 1");Serial.println(tft->getCursorY());
   tft->println("Controller Started");
 
   EEPROM.begin(NUMBER_OF_TURNOUTS);
-
+  const char *host_name = convertToCamelCase(NODE_NAME);
+  //Serial.printf("hostname :%s\n", host_name);
+  WiFi.setHostname(NODE_NAME);
   set_microros_wifi_transports(SSID, PASSWORD, agent_ip, (size_t)PORT);
 
   pinMode(STATUS_LED, OUTPUT);
