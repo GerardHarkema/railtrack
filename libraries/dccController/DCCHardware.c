@@ -1,7 +1,14 @@
 #include "Arduino.h"
-//#include <avr/io.h>
-//#include <avr/interrupt.h>
 #include "DCCHardware.h"
+
+//#define DEBUG     
+#if defined DEBUG
+  #define DEBUG_PRINT(x)      Serial.print(x)
+  #define DEBUG_PRINTLN(x)    Serial.println(x)
+#else
+  #define DEBUG_PRINT(x)      
+  #define DEBUG_PRINTLN(x)    
+#endif
 
 /// An enumerated type for keeping track of the state machine used in the timer1 ISR
 /** Given the structure of a DCC packet, the ISR can be in one of 5 states.
@@ -64,68 +71,52 @@ volatile uint8_t current_bit_counter = 14; //init to 14 1's for the preamble
  
 */
 
-uint16_t one_count=115; //58us
-uint16_t zero_high_count=199; //100us
-uint16_t zero_low_count=199; //100us
+uint16_t one_count=58; //58us
+uint16_t zero_high_count=100; //100us
+uint16_t zero_low_count=100; //100us
 
 /// Setup phase: configure and enable timer1 CTC interrupt, set OC1A and OC1B to toggle on CTC
+
+hw_timer_t *waveform_generator_timer = NULL;
+
+void IRAM_ATTR waveform_generator_timer_isr();
+
+#define OUTPUT_PIN 12
+uint8_t output_state = LOW;
+
 void setup_DCC_waveform_generator() {
-#if 0
- //Set the OC1A and OC1B pins (Timer1 output pins A and B) to output mode
- //On Arduino UNO, etc, OC1A is Port B/Pin 1 and OC1B Port B/Pin 2
- //On Arduino MEGA, etc, OC1A is or Port B/Pin 5 and OC1B Port B/Pin 6
-#if defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__) || defined(__AVR_AT90CAN128__) || defined(__AVR_AT90CAN64__) || defined(__AVR_AT90CAN32__)
-  DDRB |= (1<<DDB5) | (1<<DDB6);
-#else
-  DDRB |= (1<<DDB1) | (1<<DDB2);
-#endif
 
-  // Configure timer1 in CTC mode, for waveform generation, set to toggle OC1A, OC1B, at /8 prescalar, interupt at CTC
-  TCCR1A = (0<<COM1A1) | (1<<COM1A0) | (0<<COM1B1) | (1<<COM1B0) | (0<<WGM11) | (0<<WGM10);
-  TCCR1B = (0<<ICNC1)  | (0<<ICES1)  | (0<<WGM13)  | (1<<WGM12)  | (0<<CS12)  | (1<<CS11) | (0<<CS10);
+  // see: https://deepbluembedded.com/esp32-timers-timer-interrupt-tutorial-arduino-ide/
+  waveform_generator_timer = timerBegin(3, 80, true); // Time 3 (is it free?) 80 MHz
+  if(waveform_generator_timer){
+    DEBUG_PRINT("Error creating waveform timer");
+    return 0;
+  }
+  timerAttachInterrupt(waveform_generator_timer, &waveform_generator_timer_isr, true);
+  timerWrite(waveform_generator_timer, zero_high_count);
 
-  // start by outputting a '1'
-  OCR1A = OCR1B = one_count; //Whenever we set OCR1A, we must also set OCR1B, or else pin OC1B will get out of sync with OC1A!
-  TCNT1 = 0; //get the timer rolling (not really necessary? defaults to 0. Just in case.)
-    
-  //finally, force a toggle on OC1B so that pin OC1B will always complement pin OC1A
-  TCCR1C |= (1<<FOC1B);
-#endif
+  output_state = LOW; //Power of the track
+  pinMode(OUTPUT_PIN, OUTPUT);
+  digitalWrite(OUTPUT_PIN, output_state);
+  
+  //timerStart(waveform_generator_timer);
 }
 
 void DCC_waveform_generation_hasshin()
 {
-#if 0
   //enable the compare match interrupt
-  TIMSK1 |= (1<<OCIE1A);
-#endif
+  timerStart(waveform_generator_timer);
 }
 
 /// This is the Interrupt Service Routine (ISR) for Timer1 compare match.
-ISR(TIMER1_COMPA_vect)
+void IRAM_ATTR waveform_generator_timer_isr()
 {
-#if 0
-  //in CTC mode, timer TCINT1 automatically resets to 0 when it matches OCR1A. Depending on the next bit to output,
-  //we may have to alter the value in OCR1A, maybe.
-  //to switch between "one" waveform and "zero" waveform, we assign a value to OCR1A.
-  
-  //remember, anything we set for OCR1A takes effect IMMEDIATELY, so we are working within the cycle we are setting.
-  //first, check to see if we're in the second half of a uint8_t; only act on the first half of a uint8_t
-  //On Arduino UNO, etc, OC1A is digital pin 9, or Port B/Pin 1
-  //On Arduino MEGA, etc, OC1A is digital pin 11, or Port B/Pin 5
-#if defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__) || defined(__AVR_AT90CAN128__) || defined(__AVR_AT90CAN64__) || defined(__AVR_AT90CAN32__)
-  if(PINB & (1<<PINB6)) //if the pin is low, we need to use a different zero counter to enable streched-zero DC operation
-#else
-  if(PINB & (1<<PINB1)) //if the pin is low, we need to use a different zero counter to enable streched-zero DC operation
-#endif
 
-  {
-    if(OCR1A == zero_high_count) //if the pin is low and outputting a zero, we need to be using zero_low_count
-      {
-        OCR1A = OCR1B = zero_low_count;
-      }
-  }
-  else //the pin is high. New cycle is begining. Here's where the real work goes.
+  //Toggle output
+  output_state = output_state ? LOW : HIGH;
+  digitalWrite(OUTPUT_PIN, output_state);
+
+  if(output_state) //the pin is high. New cycle is begining. Here's where the real work goes.
   {
      //time to switch things up, maybe. send the current bit in the current packet.
      //if this is the last bit to send, queue up another packet (might be the idle packet).
@@ -135,48 +126,50 @@ ISR(TIMER1_COMPA_vect)
       case dos_idle:
         if(!current_uint8_t_counter) //if no new packet
         {
-//          Serial.println("X");
-          OCR1A = OCR1B = one_count; //just send ones if we don't know what else to do. safe bet.
+          DEBUG_PRINTLN("X");
+          timerWrite(waveform_generator_timer, one_count); //just send ones if we don't know what else to do. safe bet.
           break;
         }
         //looks like there's a new packet for us to dump on the wire!
         //for debugging purposes, let's print it out
-//        if(current_packet[1] != 0xFF)
-//        {
-//          Serial.print("Packet: ");
-//          for(uint8_t j = 0; j < current_packet_size; ++j)
-//          {
-//            Serial.print(current_packet[j],HEX);
-//            Serial.print(" ");
-//          }
-//          Serial.println("");
-//        }
+#if defined DEBUG
+        if(current_packet[1] != 0xFF)
+        {
+          DEBUG_PRINT("Packet: ");
+          for(uint8_t j = 0; j < current_packet_size; ++j)
+          {
+            DEBUG_PRINT(current_packet[j],HEX);
+            DEBUG_PRINT(" ");
+          }
+          DEBUG_PRINTLN("");
+        }
+#endif
         DCC_state = dos_send_preamble; //and fall through to dos_send_preamble
       /// Preamble: In the process of producing 14 '1's, counter by current_bit_counter; when complete, move to dos_send_bstart
       case dos_send_preamble:
-        OCR1A = OCR1B = one_count;
-//        Serial.print("P");
+        timerWrite(waveform_generator_timer, one_count);
+        DEBUG_PRINT("P");
         if(!--current_bit_counter)
           DCC_state = dos_send_bstart;
         break;
       /// About to send a data uint8_t, but have to peceed the data with a '0'. Send that '0', then move to dos_send_uint8_t
       case dos_send_bstart:
-        OCR1A = OCR1B = zero_high_count;
+        timerWrite(waveform_generator_timer, zero_high_count);
         DCC_state = dos_send_uint8_t;
         current_bit_counter = 8;
-//        Serial.print(" 0 ");
+        DEBUG_PRINT(" 0 ");
         break;
       /// Sending a data uint8_t; current bit is tracked with current_bit_counter, and current uint8_t with current_uint8_t_counter
       case dos_send_uint8_t:
         if(((current_packet[current_packet_size-current_uint8_t_counter])>>(current_bit_counter-1)) & 1) //is current bit a '1'?
         {
-          OCR1A = OCR1B = one_count;
-//          Serial.print("1");
+          timerWrite(waveform_generator_timer, one_count);
+          DEBUG_PRINT("1");
         }
         else //or is it a '0'
         {
-          OCR1A = OCR1B = zero_high_count;
-//          Serial.print("0");
+          timerWrite(waveform_generator_timer, zero_high_count);
+          DEBUG_PRINT("0");
         }
         if(!--current_bit_counter) //out of bits! time to either send a new uint8_t, or end the packet
         {
@@ -192,12 +185,11 @@ ISR(TIMER1_COMPA_vect)
         break;
       /// Done with the packet. Send out a final '1', then head back to dos_idle to check for a new packet.
       case dos_end_bit:
-        OCR1A = OCR1B = one_count;
+        timerWrite(waveform_generator_timer, one_count);
         DCC_state = dos_idle;
         current_bit_counter = 14; //in preparation for a premable...
-//        Serial.println(" 1");
+        DEBUG_PRINTLN(" 1");
         break;
     }
   }
-#endif
 }
