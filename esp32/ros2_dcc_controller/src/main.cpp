@@ -105,7 +105,7 @@ rcl_timer_t power_state_publisher_timer;
 #define RCCHECK(fn) { rcl_ret_t temp_rc = fn; if((temp_rc != RCL_RET_OK)){error_loop();}}
 #define RCSOFTCHECK(fn) { rcl_ret_t temp_rc = fn; if((temp_rc != RCL_RET_OK)){}}
 
-DCCPacketScheduler dps;
+DCCPacketScheduler DccPacketScheduler;
 
 void error_loop(){
   Serial.println("Error: System halted");
@@ -291,7 +291,7 @@ void setup() {
   delay(2000);
   Serial.println("DCC controller started");
 
-  dps.setup();
+  DccPacketScheduler.setup();
 
 #if 0
   Serial.print("MOSI: ");Serial.println(MOSI);
@@ -483,9 +483,9 @@ void loop() {
   vTaskDelay(20);
   //delay(20);
   char speed_byte = 0;
-  dps.setSpeed128(3,DCC_SHORT_ADDRESS,speed_byte);
+  DccPacketScheduler.setSpeed128(3,DCC_SHORT_ADDRESS,speed_byte); //This should be in the call backs of the ROS subscribers
 
-  dps.update();
+  DccPacketScheduler.update(); // This should be a thread started by the DccPacketScheduler.begin()
 
   RCSOFTCHECK(rclc_executor_spin_some(&executor, RCL_MS_TO_NS(100)));
 
