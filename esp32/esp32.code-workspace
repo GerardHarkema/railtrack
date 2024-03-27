@@ -8,6 +8,9 @@
 		},
 		{
 			"path": "ros2_turnout_controller"
+		},
+		{
+			"path": "ros2_dcc_controller"
 		}
 	],
 	"settings": {

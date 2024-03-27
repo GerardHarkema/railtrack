@@ -13,7 +13,7 @@ int8 FUNCTION_STATE_TRUE = 1
 int8 command
 int32 address
 int16 speed
-# direction: false = forward true = referse
+# direction: false = forward true = reverse
 int8 direction
 int8 function_index
 int8 function_state
