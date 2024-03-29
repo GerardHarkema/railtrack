@@ -118,7 +118,8 @@ bool lookupTurnoutIndex(int turnout_number, int *turnout_index){
 }
 
 void error_loop(){
-  tft_printf(ST77XX_BLUE, "Tirnout\ncontroller\nError\nSystem halted");
+  tft_printf(ST77XX_BLUE, "DCC controller\nError\nSystem halted");
+  Serial.printf("DCC controller\nError\nSystem halted");
   while(1){
     digitalWrite(STATUS_LED, !digitalRead(STATUS_LED));
     delay(100);

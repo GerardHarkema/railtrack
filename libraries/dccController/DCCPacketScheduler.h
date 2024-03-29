@@ -28,7 +28,7 @@ class DCCPacketScheduler
     
     //for configuration
     void setDefaultSpeedSteps(uint8_t new_speed_steps);
-    void setup(void); //for any post-constructor initialization
+    int setup(void); //for any post-constructor initialization
     
     //for enqueueing packets
     bool setSpeed(uint16_t address, uint8_t address_kind, int8_t new_speed, uint8_t steps = 0); //new_speed: [-127,127]

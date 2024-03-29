@@ -10,37 +10,38 @@
 #include <Arduino.h>
 #include <EEPROM.h>
 
-#include <micro_ros_platformio.h>
+//#include <micro_ros_platformio.h>
 
 #include <stdio.h>
-#include <rcl/rcl.h>
-#include <rcl/error_handling.h>
-#include <rclc/rclc.h>
-#include <rclc/executor.h>
+//#include <rcl/rcl.h>
+//#include <rcl/error_handling.h>
+//#include <rclc/rclc.h>
+//#include <rclc/executor.h>
 
 #include <std_msgs/msg/bool.h>
 
-#include <railway_interfaces/msg/turnout_control.h>
-#include <railway_interfaces/msg/turnout_state.h>
-#include <railway_interfaces/msg/locomotive_control.h>
-#include <railway_interfaces/msg/locomotive_state.h>
+//#include <railway_interfaces/msg/turnout_control.h>
+//#include <railway_interfaces/msg/turnout_state.h>
+//#include <railway_interfaces/msg/locomotive_control.h>
+//#include <railway_interfaces/msg/locomotive_state.h>
 
-#include <Adafruit_GFX.h> // Core graphics library
-#include <Fonts/FreeSansBold9pt7b.h>
+//#include <Adafruit_GFX.h> // Core graphics library
+//#include <Fonts/FreeSansBold9pt7b.h>
 //#include <Fonts/Tiny3x3a2pt7b.h>
-#include <Adafruit_ST7735.h> // Hardware-specific library
+//#include <Adafruit_ST7735.h> // Hardware-specific library
 #include <SPI.h>
 
 #include <DCCPacket.h>
 #include <DCCPacketQueue.h>
 #include <DCCPacketScheduler.h>
 
-#include "tft_printf.h"
+//#include "tft_printf.h"
 
 #if !defined(ESP32) && !defined(TARGET_PORTENTA_H7_M7) && !defined(ARDUINO_NANO_RP2040_CONNECT) && !defined(ARDUINO_WIO_TERMINAL)
 #error This application is only avaible for Arduino Portenta, Arduino Nano RP2040 Connect, ESP32 Dev module and Wio Terminal
 #endif
 
+#if 0
 
 rcl_publisher_t turnout_status_publisher;
 rcl_publisher_t turnout_control_publisher;
@@ -57,12 +58,12 @@ rclc_executor_t executor;
 railway_interfaces__msg__TurnoutControl turnout_control;
 railway_interfaces__msg__LocomotiveControl locomotive_control;
 std_msgs__msg__Bool power_control;
-
+#endif
 // int8_t cs, int8_t dc, int8_t rst
 #define CS_PIN  16
 #define DC_PIN  17
 #define RST_PIN 21
-Adafruit_ST7735 *tft;
+//Adafruit_ST7735 *tft;
 
 typedef enum{
     MM1, MM2, DCC, MFX
@@ -74,6 +75,7 @@ typedef struct{
     unsigned int address;
 }LOCOMOTIVE;
 
+#if 0
 #include "track_config.h"
 
 IPAddress agent_ip(ip_address[0], ip_address[1], ip_address[2], ip_address[3]);
@@ -104,18 +106,21 @@ rcl_timer_t power_state_publisher_timer;
 
 #define RCCHECK(fn) { rcl_ret_t temp_rc = fn; if((temp_rc != RCL_RET_OK)){error_loop();}}
 #define RCSOFTCHECK(fn) { rcl_ret_t temp_rc = fn; if((temp_rc != RCL_RET_OK)){}}
+#endif
 
 DCCPacketScheduler DccPacketScheduler;
 
 void error_loop(){
   Serial.println("Error: System halted");
-  tft_printf(ST77XX_BLUE, "CANBUS\ncontroller\nError\nSystem halted");
+  //tft_printf(ST77XX_BLUE, "CANBUS\ncontroller\nError\nSystem halted");
 
   while(1){
     digitalWrite(LED_BUILTIN, !digitalRead(LED_BUILTIN));
     delay(100);
   }
 }
+
+#if 0
 void lookupLocomotiveProtocolAddress(int address, char *protocol, int *sub_address){
 #if 0
   if(address >= ADDR_MM2 && address < ADDR_SX1){
@@ -283,15 +288,19 @@ void power_control_callback(const void * msgin)
   tft_printf(ST77XX_GREEN, "ROS msg\nSystem: %s", power_status.data ? "Go" : "Stop");
 
 }
-
+#endif
 
 void setup() {
+
+  pinMode(LED_BUILTIN, OUTPUT);
+  digitalWrite(LED_BUILTIN, HIGH);
+
   Serial.begin(115200);
   while (!Serial);
   delay(2000);
   Serial.println("DCC controller started");
 
-  DccPacketScheduler.setup();
+  if(DccPacketScheduler.setup())error_loop();
 
 #if 0
   Serial.print("MOSI: ");Serial.println(MOSI);
@@ -300,6 +309,7 @@ void setup() {
   Serial.print("SS: ");Serial.println(SS);  
 #endif
 
+#if 0
   tft = new Adafruit_ST7735(CS_PIN, DC_PIN, RST_PIN);
   tft_prinft_begin(tft);
 
@@ -314,7 +324,10 @@ void setup() {
   tft->setCursor(1, 22);
   tft->println("RailTrackControl");
   tft_printf(ST77XX_MAGENTA, "DCC\ncanbus\ncontroller\nstarted\n");
+#endif
+  Serial.println("Controller Started");
 
+#if 0
 
   EEPROM.begin(NUMBER_OF_ACTIVE_TURNOUTS_RAILBOX);
 
@@ -362,8 +375,7 @@ void setup() {
   WiFi.setHostname("RailTrackController");
   set_microros_wifi_transports(SSID, PASSWORD, agent_ip, (size_t)PORT);
 
-  pinMode(LED_BUILTIN, OUTPUT);
-  digitalWrite(LED_BUILTIN, HIGH);
+
 
   delay(2000);
 
@@ -470,23 +482,29 @@ void setup() {
 
   RCCHECK(rclc_executor_add_timer(&executor, &power_state_publisher_timer));
   RCCHECK(rclc_executor_add_subscription(&executor, &power_control_subscriber, &power_control, &power_control_callback, ON_NEW_DATA));
-
+#endif
   Serial.println("!!! Ready for operating !!!");
-  tft_printf(ST77XX_MAGENTA, "DCC\ncanbus\ncontroller\nReady\n");
+  //tft_printf(ST77XX_MAGENTA, "DCC\ncanbus\ncontroller\nReady\n");
 }
 
-
+int once = 0;
 void loop() {
 
-  //Serial.print("*");
+  Serial.print("*");
 
   vTaskDelay(20);
   //delay(20);
   char speed_byte = 0;
-  DccPacketScheduler.setSpeed128(3,DCC_SHORT_ADDRESS,speed_byte); //This should be in the call backs of the ROS subscribers
-
+  if(!once){
+    DccPacketScheduler.setSpeed128(3,DCC_SHORT_ADDRESS,speed_byte); //This should be in the call backs of the ROS subscribers
+    once++;
+  }
+#if 0
   DccPacketScheduler.update(); // This should be a thread started by the DccPacketScheduler.begin()
+#endif
+
+#if 0
 
   RCSOFTCHECK(rclc_executor_spin_some(&executor, RCL_MS_TO_NS(100)));
-
+#endif
 }

@@ -57,7 +57,7 @@ class DCCPacket
     inline uint8_t getAddressKind(void) { return address_kind; }
     inline void setAddress(uint16_t new_address) { address = new_address; }
     inline void setAddress(uint16_t new_address, uint8_t new_address_kind) { address = new_address; address_kind = new_address_kind; }
-    void addData(uint8_t new_data[], uint8_t new_size); //insert freeform data.
+    void addData(uint8_t *new_data, uint8_t new_size); //insert freeform data.
     inline void setKind(uint8_t new_kind) { kind = new_kind; }
     inline uint8_t getKind(void) { return kind; }
     inline void setRepeat(uint8_t new_repeat) { size_repeat = ((size_repeat&0xC0) | (new_repeat&0x3F)) ;}

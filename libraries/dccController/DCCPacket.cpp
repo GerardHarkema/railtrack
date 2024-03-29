@@ -2,8 +2,8 @@
 
 DCCPacket::DCCPacket(uint16_t new_address, uint8_t new_address_kind) : address(new_address), address_kind(new_address_kind), kind(idle_packet_kind), size_repeat(0x40) //size(1), repeat(0)
 {
-  address = new_address;
-  address_kind = new_address_kind;
+  //address = new_address;
+  //address_kind = new_address_kind;
   data[0] = 0x00; //default to idle packet
   data[1] = 0x00;
   data[2] = 0x00;
@@ -79,9 +79,11 @@ uint8_t DCCPacket::getSize(void)
   return (size_repeat>>6);
 }
 
-void DCCPacket::addData(uint8_t new_data[], uint8_t new_size) //insert freeform data.
+void DCCPacket::addData(uint8_t *new_data, uint8_t new_size) //insert freeform data.
 {
+#if 1
   for(int i = 0; i < new_size; ++i)
     data[i] = new_data[i];
   size_repeat = (size_repeat & 0x3F) | (new_size<<6);
+#endif
 }

@@ -61,9 +61,9 @@ void DCCPacketScheduler::setDefaultSpeedSteps(uint8_t new_speed_steps)
   default_speed_steps = new_speed_steps;
 }
     
-void DCCPacketScheduler::setup(void) //for any post-constructor initialization
+int DCCPacketScheduler::setup(void) //for any post-constructor initialization
 {
-  setup_DCC_waveform_generator();
+  if(setup_DCC_waveform_generator()) return -1;
   
   //Following RP 9.2.4, begin by putting 20 reset packets and 10 idle packets on the rails.
   //use the e_stop_queue to do this, to ensure these packets go out first!
@@ -89,7 +89,7 @@ void DCCPacketScheduler::setup(void) //for any post-constructor initialization
   p.setRepeat(10);
   p.setKind(idle_packet_kind);
   e_stop_queue.insertPacket(&p); //e_stop_queue will be empty, so no need to check if insertion was OK.
-  
+  return 0;
 }
 
 //helper functions
@@ -216,7 +216,10 @@ bool DCCPacketScheduler::setSpeed128(uint16_t address, uint8_t address_kind, int
   //why do we get things like this?
   // 03 3F 16 15 3F (speed packet addressed to loco 03)
   // 03 3F 11 82 AF  (speed packet addressed to loco 03, speed hex 0x11);
+
   DCCPacket p(address, address_kind);
+
+
   uint8_t dir = 1;
   uint16_t abs_speed = new_speed;
   uint8_t speed_data_uint8_ts[] = {0x3F,0x00};
@@ -231,7 +234,7 @@ bool DCCPacketScheduler::setSpeed128(uint16_t address, uint8_t address_kind, int
     speed_data_uint8_ts[1] = 0x00; //stop
   else //movement
     speed_data_uint8_ts[1] = abs_speed; //no conversion necessary.
-
+#if 0
   speed_data_uint8_ts[1] |= (0x80*dir); //flip bit 7 to indicate direction;
   p.addData(speed_data_uint8_ts,2);
   //Serial.print(speed_data_uint8_ts[0],BIN);
@@ -245,6 +248,9 @@ bool DCCPacketScheduler::setSpeed128(uint16_t address, uint8_t address_kind, int
   //speed packets get refreshed indefinitely, and so the repeat doesn't need to be set.
   //speed packets go to the high proirity queue
   return(high_priority_queue.insertPacket(&p));
+#else
+  return true;
+#endif
 }
 
 bool DCCPacketScheduler::setFunctions(uint16_t address, uint8_t address_kind, uint16_t functions)
@@ -374,7 +380,9 @@ bool DCCPacketScheduler::eStop(uint16_t address, uint8_t address_kind)
     // 111111111111 0	0AAAAAAA 0 01000001 0 EEEEEEEE 1
     DCCPacket e_stop_packet(address, address_kind);
     uint8_t data[] = {0x41}; //01000001
+
     e_stop_packet.addData(data,1);
+  #if 0
     e_stop_packet.setKind(e_stop_packet_kind);
     e_stop_packet.setRepeat(10);
     e_stop_queue.insertPacket(&e_stop_packet);
@@ -382,6 +390,7 @@ bool DCCPacketScheduler::eStop(uint16_t address, uint8_t address_kind)
     high_priority_queue.forget(address, address_kind);
     low_priority_queue.forget(address, address_kind);
     repeat_queue.forget(address, address_kind);
+  #endif
 }
 
 bool DCCPacketScheduler::setBasicAccessory(uint16_t address, uint8_t function)

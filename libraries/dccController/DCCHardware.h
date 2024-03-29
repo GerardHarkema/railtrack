@@ -7,7 +7,7 @@ extern "C"
 {
 #endif
 
-void setup_DCC_waveform_generator(void);
+int setup_DCC_waveform_generator(void);
 void DCC_waveform_generation_hasshin(void);
 
 #ifdef __cplusplus

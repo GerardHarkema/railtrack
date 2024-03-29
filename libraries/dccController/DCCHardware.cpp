@@ -1,13 +1,17 @@
 #include "Arduino.h"
 #include "DCCHardware.h"
 
-//#define DEBUG     
+#define DEBUG     
 #if defined DEBUG
   #define DEBUG_PRINT(x)      Serial.print(x)
+  #define DEBUG_PRINT2(x, y)  Serial.print(x, y)
   #define DEBUG_PRINTLN(x)    Serial.println(x)
+  #define TIMER_SCALER        1000
 #else
   #define DEBUG_PRINT(x)      
-  #define DEBUG_PRINTLN(x)    
+  #define DEBUG_PRINT2(x, y)
+  #define DEBUG_PRINTLN(x)  
+  #define TIMER_SCALER        1  
 #endif
 
 /// An enumerated type for keeping track of the state machine used in the timer1 ISR
@@ -43,34 +47,6 @@ volatile uint8_t current_bit_counter = 14; //init to 14 1's for the preamble
 //uint8_t DCC_Reset_Packet[3] = {0,0,0};
 
 
-/// Timer1 TOP values for one and zero
-/** S 9.1 A specifies that '1's are represented by a square wave with a half-period of 58us (valid range: 55-61us)
-    and '0's with a half-period of >100us (valid range: 95-9900us)
-    Because '0's are stretched to provide DC power to non-DCC locos, we need two zero counters,
-     one for the top half, and one for the bottom half.
-
-   Here is how to calculate the timer1 counter values (from ATMega168 datasheet, 15.9.2):
- f_{OC1A} = \frac{f_{clk_I/O}}{2*N*(1+OCR1A)})
- where N = prescalar, and OCR1A is the TOP we need to calculate.
- We know the desired half period for each case, 58us and >100us.
- So:
- for ones:
- 58us = (8*(1+OCR1A)) / (16MHz)
- 58us * 16MHz = 8*(1+OCR1A)
- 58us * 2MHz = 1+OCR1A
- OCR1A = 115
-
- for zeros:
- 100us * 2MHz = 1+OCR1A
- OCR1A = 199
- 
- Thus, we also know that the valid range for stretched-zero operation is something like this:
- 9900us = (8*(1+OCR1A)) / (16MHz)
- 9900us * 2MHz = 1+OCR1A
- OCR1A = 19799
- 
-*/
-
 uint16_t one_count=58; //58us
 uint16_t zero_high_count=100; //100us
 uint16_t zero_low_count=100; //100us
@@ -84,34 +60,38 @@ void IRAM_ATTR waveform_generator_timer_isr();
 #define OUTPUT_PIN 12
 uint8_t output_state = LOW;
 
-void setup_DCC_waveform_generator() {
+int setup_DCC_waveform_generator() {
 
   // see: https://deepbluembedded.com/esp32-timers-timer-interrupt-tutorial-arduino-ide/
-  waveform_generator_timer = timerBegin(3, 80, true); // Time 3 (is it free?) 80 MHz
-  if(waveform_generator_timer){
+  waveform_generator_timer = timerBegin(0, 80, true); // Time 3 (is it free?) 80 MHz
+  if(waveform_generator_timer == NULL){
     DEBUG_PRINT("Error creating waveform timer");
-    return 0;
+    return -1;
   }
   timerAttachInterrupt(waveform_generator_timer, &waveform_generator_timer_isr, true);
-  timerWrite(waveform_generator_timer, zero_high_count);
+  timerAlarmWrite(waveform_generator_timer, zero_high_count * TIMER_SCALER, true);
+
 
   output_state = LOW; //Power of the track
   pinMode(OUTPUT_PIN, OUTPUT);
   digitalWrite(OUTPUT_PIN, output_state);
-  
-  //timerStart(waveform_generator_timer);
+
+  //timerAlarmEnable(waveform_generator_timer);
+  return 0;
 }
 
 void DCC_waveform_generation_hasshin()
 {
   //enable the compare match interrupt
-  timerStart(waveform_generator_timer);
+  //timerStart(waveform_generator_timer);
 }
 
 /// This is the Interrupt Service Routine (ISR) for Timer1 compare match.
 void IRAM_ATTR waveform_generator_timer_isr()
 {
 
+  Serial.println("Int");
+#if 0
   //Toggle output
   output_state = output_state ? LOW : HIGH;
   digitalWrite(OUTPUT_PIN, output_state);
@@ -127,18 +107,18 @@ void IRAM_ATTR waveform_generator_timer_isr()
         if(!current_uint8_t_counter) //if no new packet
         {
           DEBUG_PRINTLN("X");
-          timerWrite(waveform_generator_timer, one_count); //just send ones if we don't know what else to do. safe bet.
+          timerAlarmWrite(waveform_generator_timer, one_count * TIMER_SCALER, true); //just send ones if we don't know what else to do. safe bet.
           break;
         }
         //looks like there's a new packet for us to dump on the wire!
         //for debugging purposes, let's print it out
-#if defined DEBUG
+#if 0//defined DEBUG
         if(current_packet[1] != 0xFF)
         {
           DEBUG_PRINT("Packet: ");
           for(uint8_t j = 0; j < current_packet_size; ++j)
           {
-            DEBUG_PRINT(current_packet[j],HEX);
+            DEBUG_PRINT2(current_packet[j],HEX);
             DEBUG_PRINT(" ");
           }
           DEBUG_PRINTLN("");
@@ -147,14 +127,14 @@ void IRAM_ATTR waveform_generator_timer_isr()
         DCC_state = dos_send_preamble; //and fall through to dos_send_preamble
       /// Preamble: In the process of producing 14 '1's, counter by current_bit_counter; when complete, move to dos_send_bstart
       case dos_send_preamble:
-        timerWrite(waveform_generator_timer, one_count);
+        timerAlarmWrite(waveform_generator_timer, one_count * TIMER_SCALER, true);
         DEBUG_PRINT("P");
         if(!--current_bit_counter)
           DCC_state = dos_send_bstart;
         break;
       /// About to send a data uint8_t, but have to peceed the data with a '0'. Send that '0', then move to dos_send_uint8_t
       case dos_send_bstart:
-        timerWrite(waveform_generator_timer, zero_high_count);
+        timerAlarmWrite(waveform_generator_timer, zero_high_count * TIMER_SCALER, true);
         DCC_state = dos_send_uint8_t;
         current_bit_counter = 8;
         DEBUG_PRINT(" 0 ");
@@ -163,12 +143,12 @@ void IRAM_ATTR waveform_generator_timer_isr()
       case dos_send_uint8_t:
         if(((current_packet[current_packet_size-current_uint8_t_counter])>>(current_bit_counter-1)) & 1) //is current bit a '1'?
         {
-          timerWrite(waveform_generator_timer, one_count);
+          timerAlarmWrite(waveform_generator_timer, one_count * TIMER_SCALER, true);
           DEBUG_PRINT("1");
         }
         else //or is it a '0'
         {
-          timerWrite(waveform_generator_timer, zero_high_count);
+          timerAlarmWrite(waveform_generator_timer, zero_high_count * TIMER_SCALER, true);
           DEBUG_PRINT("0");
         }
         if(!--current_bit_counter) //out of bits! time to either send a new uint8_t, or end the packet
@@ -185,11 +165,12 @@ void IRAM_ATTR waveform_generator_timer_isr()
         break;
       /// Done with the packet. Send out a final '1', then head back to dos_idle to check for a new packet.
       case dos_end_bit:
-        timerWrite(waveform_generator_timer, one_count);
+        timerAlarmWrite(waveform_generator_timer, one_count * TIMER_SCALER, true);
         DCC_state = dos_idle;
         current_bit_counter = 14; //in preparation for a premable...
         DEBUG_PRINTLN(" 1");
         break;
     }
   }
+#endif
 }
