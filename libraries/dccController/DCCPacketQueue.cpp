@@ -1,18 +1,30 @@
+#ifndef QUEUE_LIST_TYPE
 #include "DCCPacketQueue.h"
+
+#define SEMAPHORE_TIMEOUT 10
 
 DCCPacketQueue::DCCPacketQueue(void) : read_pos(0), write_pos(0), size(10), written(0)
 {
   return;
 }
 
+
+
 void DCCPacketQueue::setup(byte length)
 {
+  semaphore = xSemaphoreCreateMutex();
+  if(xSemaphoreTake(semaphore, SEMAPHORE_TIMEOUT) != pdTRUE){
+    Serial.println("Error taking Semaphore");
+    return;
+  };
+
   size = length;
   queue = (DCCPacket *)malloc(sizeof(DCCPacket) *size);
   for(int i = 0; i<size; ++i)
   {
     queue[i] = DCCPacket();
   }
+  xSemaphoreGive(semaphore);
 }
 
 bool DCCPacketQueue::insertPacket(DCCPacket *packet)
@@ -20,6 +32,12 @@ bool DCCPacketQueue::insertPacket(DCCPacket *packet)
 //  Serial.print("Enqueueing a packet of kind: ");
 //  Serial.println(packet->getKind(), DEC);
    //First: Overwrite any packet with the same address and kind; if no such packet THEN hitup the packet at write_pos
+  if(xSemaphoreTake(semaphore, SEMAPHORE_TIMEOUT) != pdTRUE){
+    Serial.println("Error taking Semaphore");
+    return false;
+  };
+  bool result = false;
+
   byte i = read_pos;
   while(i != (read_pos+written)%(size) )//(size+1) ) //size+1 so we can check the last slot, too…
   {
@@ -29,7 +47,8 @@ bool DCCPacketQueue::insertPacket(DCCPacket *packet)
 //      Serial.println(i, DEC);
       memcpy(&queue[i],packet,sizeof(DCCPacket));
       //do not increment written or modify write_pos
-      return true;
+      result = true;
+      break;
     }
     i = (i+1)%size;
   }
@@ -43,10 +62,11 @@ bool DCCPacketQueue::insertPacket(DCCPacket *packet)
 //    Serial.println(write_pos, DEC);
     write_pos = (write_pos + 1) % size;
     ++written;
-    return true;
+    result = true;
   }
 //  Serial.println("Queue is full!");
-  return false;
+  xSemaphoreGive(semaphore);
+  return result;
 }
 
 // void DCCPacketQueue::printQueue(void)
@@ -67,6 +87,12 @@ bool DCCPacketQueue::insertPacket(DCCPacket *packet)
 
 bool DCCPacketQueue::readPacket(DCCPacket *packet)
 {
+    if(xSemaphoreTake(semaphore, SEMAPHORE_TIMEOUT) != pdTRUE){
+    Serial.println("Error taking Semaphore");
+    return false;
+  };
+  bool result = false;
+
   if(!isEmpty())
   {
 //    Serial.print("Reading a packet from index: ");
@@ -74,13 +100,19 @@ bool DCCPacketQueue::readPacket(DCCPacket *packet)
     memcpy(packet,&queue[read_pos],sizeof(DCCPacket));
     read_pos = (read_pos + 1) % size;
     --written;
-    return true;
+    result = true;
   }
-  return false;
+  xSemaphoreGive(semaphore);
+  return result;
 }
 
 bool DCCPacketQueue::forget(uint16_t address, uint8_t address_kind)
 {
+  if(xSemaphoreTake(semaphore, SEMAPHORE_TIMEOUT) != pdTRUE){
+    Serial.println("Error taking Semaphore");
+    return false;
+  };
+
   bool found = false;
   for(int i = 0; i < size; ++i)
   {
@@ -91,11 +123,16 @@ bool DCCPacketQueue::forget(uint16_t address, uint8_t address_kind)
     }
   }
   --written;
+  xSemaphoreGive(semaphore);
   return found;
 }
 
 void DCCPacketQueue::clear(void)
 {
+  if(xSemaphoreTake(semaphore, SEMAPHORE_TIMEOUT) != pdTRUE){
+    Serial.println("Error taking Semaphore");
+    return;
+  };
   read_pos = 0;
   write_pos = 0;
   written = 0;
@@ -103,6 +140,7 @@ void DCCPacketQueue::clear(void)
   {
     queue[i] = DCCPacket();
   }
+  xSemaphoreGive(semaphore);
 }
 
 
@@ -114,15 +152,32 @@ DCCRepeatQueue::DCCRepeatQueue(void) : DCCPacketQueue()
 
 bool DCCRepeatQueue::insertPacket(DCCPacket *packet)
 {
+  if(xSemaphoreTake(semaphore, SEMAPHORE_TIMEOUT) != pdTRUE){
+    Serial.println("Error taking Semaphore");
+    return false;
+  };
+  bool result = false;
   if(packet->getRepeat())
   {
-    return(DCCPacketQueue::insertPacket(packet));
+    xSemaphoreGive(semaphore);
+    result = DCCPacketQueue::insertPacket(packet);
+    if(xSemaphoreTake(semaphore, SEMAPHORE_TIMEOUT) != pdTRUE){
+      Serial.println("Error taking Semaphore");
+      return false;
+    };
   }
-  return false;
+  xSemaphoreGive(semaphore);
+  return result;
 }
 
 bool DCCRepeatQueue::readPacket(DCCPacket *packet)
 {
+  if(xSemaphoreTake(semaphore, SEMAPHORE_TIMEOUT) != pdTRUE){
+    Serial.println("Error taking Semaphore");
+    return false;
+  };
+  bool result = false;
+
   if(!isEmpty())
   {
     memcpy(packet,&queue[read_pos],sizeof(DCCPacket));
@@ -132,11 +187,17 @@ bool DCCRepeatQueue::readPacket(DCCPacket *packet)
     if(packet->getRepeat()) //the packet needs to be sent out at least one more time
     {     
       packet->setRepeat(packet->getRepeat()-1);
+      xSemaphoreGive(semaphore);
       insertPacket(packet);
+      if(xSemaphoreTake(semaphore, SEMAPHORE_TIMEOUT) != pdTRUE){
+        Serial.println("Error taking Semaphore");
+        return false;
+      };
     }
-    return true;
+    result = true;
   }
-  return false;
+  xSemaphoreGive(semaphore);
+  return result;
 }
 
 
@@ -149,18 +210,30 @@ DCCEmergencyQueue::DCCEmergencyQueue(void) : DCCPacketQueue()
 /* Goes through each packet in the queue, repeats it getRepeat() times, and discards it */
 bool DCCEmergencyQueue::readPacket(DCCPacket *packet)
 {
+  if(xSemaphoreTake(semaphore, SEMAPHORE_TIMEOUT) != pdTRUE){
+    Serial.println("Error taking Semaphore");
+    return false;
+  };
+  bool result = false;
   if(!isEmpty()) //anything in the queue?
   {
     queue[read_pos].setRepeat(queue[read_pos].getRepeat()-1); //decrement the current packet's repeat count
     if(queue[read_pos].getRepeat()) //if the topmost packet needs repeating
     {
       memcpy(packet,&queue[read_pos],sizeof(DCCPacket));
-      return true;
+      result = true;
     }
     else //the topmost packet is ready to be discarded; use the DCCPacketQueue mechanism
     {
-      return(DCCPacketQueue::readPacket(packet));
+        xSemaphoreGive(semaphore);
+        result = DCCPacketQueue::readPacket(packet);
+        if(xSemaphoreTake(semaphore, SEMAPHORE_TIMEOUT) != pdTRUE){
+          Serial.println("Error taking Semaphore");
+          return false;
+        };
     }
   }
-  return false;
+  xSemaphoreGive(semaphore);
+  return result;
 }
+#endif

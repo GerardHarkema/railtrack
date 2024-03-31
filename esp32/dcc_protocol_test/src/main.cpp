@@ -14,7 +14,11 @@
 #include <stdio.h>
 
 #include <DCCPacket.h>
-#include <DCCPacketQueue.h>
+#ifndef QUEUE_LIST_TYPE
+#include "DCCPacketQueue.h"
+#else
+#include "DCCPacketQueueList.h"
+#endif
 #include <DCCPacketScheduler.h>
 
 
@@ -28,11 +32,15 @@
 #define RST_PIN 21
 
 
+#define LED_RED     0
+#define LED_GREEN   2
+#define LED_BLUE    4
+
 #ifndef LED_BUILTIN
-#define LED_BUILTIN 2
+#define LED_BUILTIN LED_RED
 #endif
 
-DCCPacketScheduler DccPacketScheduler;
+DCCPacketScheduler *DccPacketScheduler;
 
 void error_loop(){
   Serial.println("Error: System halted");
@@ -46,14 +54,15 @@ void error_loop(){
 void setup() {
 
   pinMode(LED_BUILTIN, OUTPUT);
-  digitalWrite(LED_BUILTIN, HIGH);
+  digitalWrite(LED_BUILTIN, LOW);
 
   Serial.begin(115200);
   while (!Serial);
   delay(2000);
   Serial.println("DCC controller started");
 
-  if(DccPacketScheduler.setup())error_loop();
+  DccPacketScheduler = new DCCPacketScheduler(); 
+  if(DccPacketScheduler->setup())error_loop();
 
 #if 0
   Serial.print("MOSI: ");Serial.println(MOSI);
@@ -71,17 +80,18 @@ void setup() {
 int once = 0;
 void loop() {
 
-  Serial.print("*");
+  //Serial.print("*");
 
   vTaskDelay(20);
   //delay(20);
-  char speed_byte = 0;
+  char speed_byte = 1;
   if(!once){
-    DccPacketScheduler.setSpeed128(3,DCC_SHORT_ADDRESS,speed_byte); //This should be in the call backs of the ROS subscribers
+    DccPacketScheduler->setSpeed128(3,DCC_SHORT_ADDRESS,10); //This should be in the call backs of the ROS subscribers
+    DccPacketScheduler->setSpeed128(60,DCC_SHORT_ADDRESS,20); //This should be in the call backs of the ROS subscribers
     once++;
   }
-#if 0
-  DccPacketScheduler.update(); // This should be a thread started by the DccPacketScheduler.begin()
+#if 1
+  //DccPacketScheduler->update(); // This should be a thread started by the DccPacketScheduler.begin()
 #endif
 
 }

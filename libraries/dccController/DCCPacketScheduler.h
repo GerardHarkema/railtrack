@@ -1,8 +1,11 @@
 #ifndef __DCCCOMMANDSTATION_H__
 #define __DCCCOMMANDSTATION_H__
 #include "DCCPacket.h"
+#ifndef QUEUE_LIST_TYPE
 #include "DCCPacketQueue.h"
-
+#else
+#include "DCCPacketQueueList.h"
+#endif
 
 #define E_STOP_QUEUE_SIZE           2
 #define HIGH_PRIORITY_QUEUE_SIZE    10
@@ -53,13 +56,17 @@ class DCCPacketScheduler
     //more specific functions
     bool eStop(void); //all locos
     bool eStop(uint16_t address, uint8_t address_kind); //just one specific loco
-    
+
+    static void scheduler_task(void *pvParameters);
+
     //to be called periodically within loop()
     void update(void); //checks queues, puts whatever's pending on the rails via global current_packet. easy-peasy
+
 
   //private:
   
   //  void stashAddress(DCCPacket *p); //remember the address to compare with the next packet
+    TaskHandle_t scheduler_task_h;
     void repeatPacket(DCCPacket *p); //insert into the appropriate repeat queue
     uint8_t default_speed_steps;
     uint16_t last_packet_address;

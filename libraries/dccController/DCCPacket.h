@@ -18,6 +18,7 @@ typedef unsigned char uint8_t;
 // };
 
 #define MULTIFUNCTION_PACKET_KIND_MASK 0x10
+#if 0
 #define idle_packet_kind            0x10
 #define e_stop_packet_kind          0x11
 #define speed_packet_kind           0x12
@@ -27,7 +28,19 @@ typedef unsigned char uint8_t;
 #define accessory_packet_kind       0x16
 #define reset_packet_kind           0x17
 #define ops_mode_programming_kind   0x18
+#endif
 
+typedef enum {
+  idle_packet_kind  = 0x10,
+  e_stop_packet_kind,
+  speed_packet_kind,
+  function_packet_1_kind,
+  function_packet_2_kind,
+  function_packet_3_kind,
+  accessory_packet_kind,
+  reset_packet_kind,
+  ops_mode_programming_kind
+} kind_type;
 
 #define ACCESSORY_PACKET_KIND_MASK 0x40
 #define basic_accessory_packet_kind 0x40
@@ -35,8 +48,17 @@ typedef unsigned char uint8_t;
 
 #define other_packet_kind           0x00
 
+#if 0
 #define DCC_SHORT_ADDRESS           0x00
 #define DCC_LONG_ADDRESS            0x01
+#endif
+
+typedef enum{
+  DCC_SHORT_ADDRESS,
+  DCC_LONG_ADDRESS
+
+}address_type;
+
 
 class DCCPacket
 {

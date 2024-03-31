@@ -32,7 +32,11 @@
 #include <SPI.h>
 
 #include <DCCPacket.h>
-#include <DCCPacketQueue.h>
+#ifndef QUEUE_LIST_TYPE
+#include "DCCPacketQueue.h"
+#else
+#include "DCCPacketQueueList.h"
+#endif
 #include <DCCPacketScheduler.h>
 
 //#include "tft_printf.h"

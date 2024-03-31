@@ -2,11 +2,11 @@
 #include "DCCHardware.h"
 
 #define DEBUG     
-#if defined DEBUG
+#ifdef DEBUG
   #define DEBUG_PRINT(x)      Serial.print(x)
   #define DEBUG_PRINT2(x, y)  Serial.print(x, y)
   #define DEBUG_PRINTLN(x)    Serial.println(x)
-  #define TIMER_SCALER        1000
+  #define TIMER_SCALER        100
 #else
   #define DEBUG_PRINT(x)      
   #define DEBUG_PRINT2(x, y)
@@ -55,9 +55,29 @@ uint16_t zero_low_count=100; //100us
 
 hw_timer_t *waveform_generator_timer = NULL;
 
+bool track_power_enable = false;
+
 void IRAM_ATTR waveform_generator_timer_isr();
 
-#define OUTPUT_PIN 12
+#define LED_RED     0
+#define LED_GREEN   2
+#define LED_BLUE    4
+
+#ifdef DEBUG
+#define TRACK_POWER_H_PIN LED_BLUE
+#define TRACK_POWER_L_PIN 26
+#define TRACK_POWER_ENABLE_PIN LED_GREEN
+#else
+#define TRACK_POWER_H_PIN 25
+#define TRACK_POWER_L_PIN 26
+#define TRACK_POWER_ENABLE_PIN 27
+#endif
+
+//#define TRACK_POWER_H_PIN 25
+//#define TRACK_POWER_L_PIN 26
+//#define TRACK_POWER_ENABLE_PIN 27
+#define TRACK_POWER_ON    HIGH
+#define TRACK_POWER_OFF   LOW
 uint8_t output_state = LOW;
 
 int setup_DCC_waveform_generator() {
@@ -71,12 +91,16 @@ int setup_DCC_waveform_generator() {
   timerAttachInterrupt(waveform_generator_timer, &waveform_generator_timer_isr, true);
   timerAlarmWrite(waveform_generator_timer, zero_high_count * TIMER_SCALER, true);
 
+  pinMode(TRACK_POWER_ENABLE_PIN, OUTPUT);
+  digitalWrite(TRACK_POWER_ENABLE_PIN, TRACK_POWER_OFF);
 
   output_state = LOW; //Power of the track
-  pinMode(OUTPUT_PIN, OUTPUT);
-  digitalWrite(OUTPUT_PIN, output_state);
+  pinMode(TRACK_POWER_H_PIN, OUTPUT);
+  digitalWrite(TRACK_POWER_H_PIN, LOW);
+  pinMode(TRACK_POWER_L_PIN, OUTPUT);
+  digitalWrite(TRACK_POWER_L_PIN, HIGH);
 
-  //timerAlarmEnable(waveform_generator_timer);
+  timerAlarmEnable(waveform_generator_timer);
   return 0;
 }
 
@@ -86,16 +110,30 @@ void DCC_waveform_generation_hasshin()
   //timerStart(waveform_generator_timer);
 }
 
+int enableTrackPower(){
+  track_power_enable = true;
+  return 0;
+}
+int disableTrackPower(){
+  track_power_enable = false;
+  return 0;
+}
+
 /// This is the Interrupt Service Routine (ISR) for Timer1 compare match.
 void IRAM_ATTR waveform_generator_timer_isr()
 {
 
-  Serial.println("Int");
-#if 0
-  //Toggle output
-  output_state = output_state ? LOW : HIGH;
-  digitalWrite(OUTPUT_PIN, output_state);
+  //Serial.println("Int");
+  // prevent shorting outputs ???
+  digitalWrite(TRACK_POWER_ENABLE_PIN, TRACK_POWER_OFF);
+  //Toggle outputs
+  digitalWrite(TRACK_POWER_L_PIN, output_state);
+  output_state = (output_state==HIGH)? LOW : HIGH;
+  digitalWrite(TRACK_POWER_H_PIN, output_state);
+  // enable trackpower
+  if(track_power_enable) digitalWrite(TRACK_POWER_ENABLE_PIN, TRACK_POWER_ON);
 
+#if 1
   if(output_state) //the pin is high. New cycle is begining. Here's where the real work goes.
   {
      //time to switch things up, maybe. send the current bit in the current packet.

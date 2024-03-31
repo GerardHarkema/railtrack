@@ -29,6 +29,19 @@
  *  
  */
 
+#define DEBUG     
+#ifdef DEBUG
+  #define DEBUG_PRINT(x)      Serial.print(x)
+  #define DEBUG_PRINT2(x, y)  Serial.print(x, y)
+  #define DEBUG_PRINTLN(x)    Serial.println(x)
+  #define DEBUG_PRINTLN2(x, y)    Serial.println(x, y)
+#else
+  #define DEBUG_PRINT(x)      
+  #define DEBUG_PRINT2(x, y)
+  #define DEBUG_PRINTLN(x)
+  #define DEBUG_PRINTLN2(x, y) 
+#endif
+
 /// The currently queued packet to be put on the rails. Default is a reset packet.
 extern uint8_t current_packet[6];
 /// How many data uint8_ts in the queued packet?
@@ -60,7 +73,18 @@ void DCCPacketScheduler::setDefaultSpeedSteps(uint8_t new_speed_steps)
 {
   default_speed_steps = new_speed_steps;
 }
-    
+
+
+void DCCPacketScheduler::scheduler_task(void *pvParameters)
+{
+  DCCPacketScheduler *instance = static_cast<DCCPacketScheduler*>(pvParameters);
+	while(1)
+	{
+    instance->update();
+		taskYIELD();
+	}
+}
+
 int DCCPacketScheduler::setup(void) //for any post-constructor initialization
 {
   if(setup_DCC_waveform_generator()) return -1;
@@ -89,6 +113,16 @@ int DCCPacketScheduler::setup(void) //for any post-constructor initialization
   p.setRepeat(10);
   p.setKind(idle_packet_kind);
   e_stop_queue.insertPacket(&p); //e_stop_queue will be empty, so no need to check if insertion was OK.
+  
+  int app_cpu = xPortGetCoreID();
+  xTaskCreatePinnedToCore(scheduler_task,
+                        "scheduler_task", 
+                        1024,
+                        this,
+                        1,
+                        &scheduler_task_h,
+                        app_cpu);
+  
   return 0;
 }
 
@@ -161,7 +195,7 @@ bool DCCPacketScheduler::setSpeed14(uint16_t address, uint8_t address_kind, int8
   else //movement
     speed_data_uint8_ts[0] |= map(abs_speed, 2, 127, 2, 15); //convert from [2-127] to [1-14]
   speed_data_uint8_ts[0] |= (0x20*dir); //flip bit 3 to indicate direction;
-  //Serial.println(speed_data_uint8_ts[0],BIN);
+  DEBUG_PRINTLN2(speed_data_uint8_ts[0],BIN);
   p.addData(speed_data_uint8_ts,1);
 
   p.setRepeat(SPEED_REPEAT);
@@ -184,8 +218,8 @@ bool DCCPacketScheduler::setSpeed28(uint16_t address, uint8_t address_kind, int8
     dir = 0;
     abs_speed = new_speed * -1;
   }
-//  Serial.println(speed);
-//  Serial.println(dir);
+//  DEBUG_PRINTLN(speed);
+//  DEBUG_PRINTLN(dir);
   if(new_speed == 0) //estop!
     return eStop(address, address_kind);//speed_data_uint8_ts[0] |= 0x01; //estop
   else if (abs_speed == 1) //regular stop!
@@ -197,8 +231,8 @@ bool DCCPacketScheduler::setSpeed28(uint16_t address, uint8_t address_kind, int8
     speed_data_uint8_ts[0] = (speed_data_uint8_ts[0]&0xE0) | ((speed_data_uint8_ts[0]&0x1F) >> 1) | ((speed_data_uint8_ts[0]&0x01) << 4);
   }
   speed_data_uint8_ts[0] |= (0x20*dir); //flip bit 3 to indicate direction;
-//  Serial.println(speed_data_uint8_ts[0],BIN);
-//  Serial.println("=======");
+//  DEBUG_PRINTLN(speed_data_uint8_ts[0],BIN);
+//  DEBUG_PRINTLN("=======");
   p.addData(speed_data_uint8_ts,1);
   
   p.setRepeat(SPEED_REPEAT);
@@ -234,12 +268,12 @@ bool DCCPacketScheduler::setSpeed128(uint16_t address, uint8_t address_kind, int
     speed_data_uint8_ts[1] = 0x00; //stop
   else //movement
     speed_data_uint8_ts[1] = abs_speed; //no conversion necessary.
-#if 0
+
   speed_data_uint8_ts[1] |= (0x80*dir); //flip bit 7 to indicate direction;
   p.addData(speed_data_uint8_ts,2);
-  //Serial.print(speed_data_uint8_ts[0],BIN);
-  //Serial.print(" ");
-  //Serial.println(speed_data_uint8_ts[1],BIN);
+  DEBUG_PRINT2(speed_data_uint8_ts[0],BIN);
+  DEBUG_PRINT(" ");
+  DEBUG_PRINTLN2(speed_data_uint8_ts[1],BIN);
   
   p.setRepeat(SPEED_REPEAT);
   
@@ -247,15 +281,13 @@ bool DCCPacketScheduler::setSpeed128(uint16_t address, uint8_t address_kind, int
   
   //speed packets get refreshed indefinitely, and so the repeat doesn't need to be set.
   //speed packets go to the high proirity queue
-  return(high_priority_queue.insertPacket(&p));
-#else
-  return true;
-#endif
+  bool result = high_priority_queue.insertPacket(&p);
+  return result;
 }
 
 bool DCCPacketScheduler::setFunctions(uint16_t address, uint8_t address_kind, uint16_t functions)
 {
-//  Serial.println(functions,HEX);
+//  DEBUG_PRINTLN(functions,HEX);
   if(setFunctions0to4(address, address_kind, functions&0x1F))
     if(setFunctions5to8(address, address_kind, (functions>>5)&0x0F))
       if(setFunctions9to12(address, address_kind, (functions>>9)&0x0F))
@@ -274,8 +306,8 @@ bool DCCPacketScheduler::setFunctions(uint16_t address, uint8_t address_kind, ui
 
 bool DCCPacketScheduler::setFunctions0to4(uint16_t address, uint8_t address_kind, uint8_t functions)
 {
-//  Serial.println("setFunctions0to4");
-//  Serial.println(functions,HEX);
+//  DEBUG_PRINTLN("setFunctions0to4");
+//  DEBUG_PRINTLN(functions,HEX);
   DCCPacket p(address, address_kind);
   uint8_t data[] = {0x80};
   
@@ -296,8 +328,8 @@ bool DCCPacketScheduler::setFunctions0to4(uint16_t address, uint8_t address_kind
 
 bool DCCPacketScheduler::setFunctions5to8(uint16_t address, uint8_t address_kind, uint8_t functions)
 {
-//  Serial.println("setFunctions5to8");
-//  Serial.println(functions,HEX);
+//  DEBUG_PRINTLN("setFunctions5to8");
+//  DEBUG_PRINTLN(functions,HEX);
   DCCPacket p(address, address_kind);
   uint8_t data[] = {0xB0};
   
@@ -311,8 +343,8 @@ bool DCCPacketScheduler::setFunctions5to8(uint16_t address, uint8_t address_kind
 
 bool DCCPacketScheduler::setFunctions9to12(uint16_t address, uint8_t address_kind, uint8_t functions)
 {
-//  Serial.println("setFunctions9to12");
-//  Serial.println(functions,HEX);
+//  DEBUG_PRINTLN("setFunctions9to12");
+//  DEBUG_PRINTLN(functions,HEX);
   DCCPacket p(address, address_kind);
   uint8_t data[] = {0xA0};
   
@@ -380,9 +412,9 @@ bool DCCPacketScheduler::eStop(uint16_t address, uint8_t address_kind)
     // 111111111111 0	0AAAAAAA 0 01000001 0 EEEEEEEE 1
     DCCPacket e_stop_packet(address, address_kind);
     uint8_t data[] = {0x41}; //01000001
+  #if 0
 
     e_stop_packet.addData(data,1);
-  #if 0
     e_stop_packet.setKind(e_stop_packet_kind);
     e_stop_packet.setRepeat(10);
     e_stop_queue.insertPacket(&e_stop_packet);
@@ -454,26 +486,26 @@ void DCCPacketScheduler::update(void) //checks queues, puts whatever's pending o
       //else if(doRepeat)
       if(doRepeat)
       {
-        //Serial.println("repeat");
+        DEBUG_PRINTLN("repeat");
         repeat_queue.readPacket(&p);
         ++packet_counter;
       }
       else if(doLow)
       {
-        //Serial.println("low");
+        DEBUG_PRINTLN("low");
         low_priority_queue.readPacket(&p);
         ++packet_counter;
       }
       else if(doHigh)
       {
-        //Serial.println("high");
+        DEBUG_PRINTLN("high");
         high_priority_queue.readPacket(&p);
         ++packet_counter;
       }
       //if none of these conditions hold, DCCPackets initialize to the idle packet, so that's what'll get sent.
       //++packet_counter; //it's a uint8_t; let it overflow, that's OK.
       //enqueue the packet for repitition, if necessary:
-      //Serial.println("idle");
+      DEBUG_PRINTLN("idle");
       repeatPacket(&p);
     }
     last_packet_address = p.getAddress(); //remember the address to compare with the next packet
@@ -483,10 +515,10 @@ void DCCPacketScheduler::update(void) //checks queues, puts whatever's pending o
     //{
     //  for(uint8_t i = 0; i < current_packet_size; ++i)
     //  {
-    //    Serial.print(current_packet[i],BIN);
-    //    Serial.print(" ");
+    //    DEBUG_PRINT(current_packet[i],BIN);
+    //    DEBUG_PRINT(" ");
     //  }
-    //  Serial.println("");
+    //  DEBUG_PRINTLN("");
     //}
     current_uint8_t_counter = current_packet_size;
   }

@@ -1,6 +1,7 @@
-#ifndef __DCCPACKETQUEUE_H__
-#define __DCCPACKETQUEUE_H__
-#ifndef QUEUE_LIST_TYPE
+#ifndef __DCCPACKETQUEUELIST_H__
+#define __DCCPACKETQUEUELIST_H__
+
+#ifdef QUEUE_LIST_TYPE
 #include "Arduino.h"
 
 /**
@@ -10,16 +11,21 @@
 **/
 
 #include "DCCPacket.h"
+#include <list>
 
 class DCCPacketQueue
 {
   public: //protected:
-    DCCPacket *queue;
-    byte read_pos;
-    byte write_pos;
+
+    std::list<DCCPacket> queue;
+    std::list<DCCPacket>::iterator begin_pos;
+    std::list<DCCPacket>::iterator read_pos;
+
     byte size;
-    byte written; //how many cells have valid data? used for determining full status.  
+    byte written; //how many cells have valid data? used for determining full status.
+    bool queue_full = false; 
     SemaphoreHandle_t semaphore = NULL;
+
   public:
     DCCPacketQueue(void);
     
@@ -27,25 +33,27 @@ class DCCPacketQueue
     
     ~DCCPacketQueue(void)
     {
+      #if 0
       free(queue);
+      #endif
     }
     
     virtual inline bool isFull(void)
     {
-      return (written == size);
+      return queue_full;
     }
     virtual inline bool isEmpty(void)
     {
-      return (written == 0);
+      return (queue.size() == 0);
     }
     virtual inline bool notEmpty(void)
     {
-      return (written > 0);
+      return (queue.size());
     }
     
     virtual inline bool notRepeat(unsigned int address)
     {
-      return (address != queue[read_pos].getAddress());
+      return (address != read_pos->getAddress());
     }
     
     //void printQueue(void);
@@ -74,5 +82,5 @@ class DCCEmergencyQueue: public DCCPacketQueue
     DCCEmergencyQueue(void);
     bool readPacket(DCCPacket *packet);
 };
-#endif
-#endif //__DCCPACKETQUEUE_H__
+#endif //QUEUE_LIST_TYPE
+#endif //__DCCPACKETQUEUELIST_H__
