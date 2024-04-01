@@ -51,7 +51,9 @@ class DCCPacketQueue
     //void printQueue(void);
     
     virtual bool insertPacket(DCCPacket *packet); //makes a local copy, does not take over memory management!
+    virtual bool insertPacketCtx(DCCPacket *packet); //makes a local copy, does not take over memory management!
     virtual bool readPacket(DCCPacket *packet); //does not hand off memory management of packet. used immediately.
+    virtual bool readPacketCtx(DCCPacket *packet); //does not hand off memory management of packet. used immediately.
     
     bool forget(uint16_t address, uint8_t address_kind);
     void clear(void);
@@ -64,6 +66,7 @@ class DCCRepeatQueue: public DCCPacketQueue
     DCCRepeatQueue(void);
     //void setup(byte length);
     bool insertPacket(DCCPacket *packet);
+    bool insertPacketCtx(DCCPacket *packet);
     bool readPacket(DCCPacket *packet);
 };
 

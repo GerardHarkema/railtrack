@@ -72,39 +72,52 @@ except KeyError:
     line = "#define  NUMBER_OF_ACTIVE_LOCOMOTIVES   0\n"
     header = header + line + "\n"
 
-try:
-    turnouts = track_config["Turnouts"]["railbox_controlled"]
-    line = "unsigned short int active_turnouts_railbox[] = {"
-    for i in range(len(turnouts)-1):
-        line = line + str(turnouts[i]["number"]) + ", "
-    line  = line + str(turnouts[len(turnouts)-1]["number"]) + "};\n"
+#try:
+turnouts = track_config["Turnouts"]
+number_of_mm_turnouts = 0;
+for turnout in turnouts:
+    if (turnout["protocol"] == "MM1") or (turnout["protocol"] == "MM2"):
+        number_of_mm_turnouts = number_of_mm_turnouts + 1;
+
+if number_of_mm_turnouts:
+    line = "unsigned short int active_turnouts_mm[] = {"
+    for turnout in turnouts:
+        if (turnout["protocol"] == "MM1") or (turnout["protocol"] == "MM2"):
+            line = line + str(turnout["number"]) + ", "
+    line  = line + "};\n"
     header = header + line
-    line = "#define  NUMBER_OF_ACTIVE_TURNOUTS_RAILBOX   " + str(len(turnouts)) + "\n"
+    line = "#define  NUMBER_OF_ACTIVE_TURNOUTS_MM   " + str(number_of_mm_turnouts) + "\n"
     header = header + line  + "\n"
-except KeyError:
-    line = "//!!! Dummy pointer to active_turnouts_railbox !!!\n"
+else:
+    line = "//!!! Dummy pointer to active_turnouts_mm !!!\n"
     header = header + line
-    line = "unsigned short int *active_turnouts_railbox;\n"
+    line = "unsigned short int *active_turnouts_mm;\n"
     header = header + line
-    line = "#define  NUMBER_OF_ACTIVE_TURNOUTS_RAILBOX  0\n"
+    line = "#define  NUMBER_OF_ACTIVE_TURNOUTS_MM  0\n"
     header = header + line  + "\n"
 
-try:
-    turnouts = track_config["Turnouts"]["ros_controlled"]
+
+number_of_ros_turnouts = 0;
+for turnout in turnouts:
+    if turnout["protocol"] == "ROS":
+        number_of_ros_turnouts = number_of_ros_turnouts + 1;
+
+if number_of_ros_turnouts:
     line = "unsigned short int active_turnouts_ros[] = {"
-    for i in range(len(turnouts)-1):
-        line = line + str(turnouts[i]["number"]) + ", "
-    line  = line + str(turnouts[len(turnouts)-1]["number"]) + "};\n"
+    for turnout in turnouts:
+        if turnout["protocol"] == "ROS":
+            line = line + str(turnout["number"]) + ", "
+    line  = line + "};\n"
     header = header + line
-    line = "#define  NUMBER_OF_ACTIVE_TURNOUTS_ROS   " + str(len(turnouts)) + "\n"
-    header = header + line + "\n"
-except KeyError:
-    line = "//!!! Dummy pointer to active_turnouts_ros !!!\n"
+    line = "#define  NUMBER_OF_ACTIVE_TURNOUTS_ROS   " + str(number_of_ros_turnouts) + "\n"
+    header = header + line  + "\n"
+else:
+    line = "//!!! Dummy pointer to active_turnouts_mm !!!\n"
     header = header + line
-    line = "unsigned short int *active_turnouts_ros;\n"
+    line = "unsigned short int *active_turnouts_mm;\n"
     header = header + line
-    line = "#define  NUMBER_OF_ACTIVE_TURNOUTS_ROS   0\n"
-    header = header + line + "\n"
+    line = "#define  NUMBER_OF_ACTIVE_TURNOUTS_MM  0\n"
+    header = header + line  + "\n"
 
 
 line = "#endif //_TRACK_CONFIG_\n"

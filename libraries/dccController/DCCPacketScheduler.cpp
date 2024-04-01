@@ -29,7 +29,7 @@
  *  
  */
 
-#define DEBUG     
+//#define DEBUG     
 #ifdef DEBUG
   #define DEBUG_PRINT(x)      Serial.print(x)
   #define DEBUG_PRINT2(x, y)  Serial.print(x, y)
@@ -85,9 +85,9 @@ void DCCPacketScheduler::scheduler_task(void *pvParameters)
 	}
 }
 
-int DCCPacketScheduler::setup(void) //for any post-constructor initialization
+bool DCCPacketScheduler::setup(void) //for any post-constructor initialization
 {
-  if(setup_DCC_waveform_generator()) return -1;
+  if(!setup_DCC_waveform_generator()) return false;
   
   //Following RP 9.2.4, begin by putting 20 reset packets and 10 idle packets on the rails.
   //use the e_stop_queue to do this, to ensure these packets go out first!
@@ -123,7 +123,16 @@ int DCCPacketScheduler::setup(void) //for any post-constructor initialization
                         &scheduler_task_h,
                         app_cpu);
   
-  return 0;
+  return true;
+}
+
+bool DCCPacketScheduler::enableTrackPower(){
+  return enableTrackPower();
+}
+
+bool DCCPacketScheduler::disableTrackPower(){
+  return disableTrackPower();
+
 }
 
 //helper functions

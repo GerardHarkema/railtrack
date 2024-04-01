@@ -4,31 +4,28 @@
 
 
 */
-
-
-
 #include <Arduino.h>
 #include <EEPROM.h>
 
 //#include <micro_ros_platformio.h>
 
 #include <stdio.h>
-//#include <rcl/rcl.h>
-//#include <rcl/error_handling.h>
-//#include <rclc/rclc.h>
-//#include <rclc/executor.h>
+#include <rcl/rcl.h>
+#include <rcl/error_handling.h>
+#include <rclc/rclc.h>
+#include <rclc/executor.h>
 
 #include <std_msgs/msg/bool.h>
 
-//#include <railway_interfaces/msg/turnout_control.h>
-//#include <railway_interfaces/msg/turnout_state.h>
-//#include <railway_interfaces/msg/locomotive_control.h>
-//#include <railway_interfaces/msg/locomotive_state.h>
+#include <railway_interfaces/msg/turnout_control.h>
+#include <railway_interfaces/msg/turnout_state.h>
+#include <railway_interfaces/msg/locomotive_control.h>
+#include <railway_interfaces/msg/locomotive_state.h>
 
-//#include <Adafruit_GFX.h> // Core graphics library
-//#include <Fonts/FreeSansBold9pt7b.h>
-//#include <Fonts/Tiny3x3a2pt7b.h>
-//#include <Adafruit_ST7735.h> // Hardware-specific library
+#include <Adafruit_GFX.h> // Core graphics library
+#include <Fonts/FreeSansBold9pt7b.h>
+#include <Fonts/Tiny3x3a2pt7b.h>
+#include <Adafruit_ST7735.h> // Hardware-specific library
 #include <SPI.h>
 
 #include <DCCPacket.h>
@@ -73,9 +70,14 @@ typedef enum{
     MM1, MM2, DCC, MFX
 }PROTOCOL;
 
+typedef enum{
+    SS_128, SS_28, SS_14, SS_INVALID, SS_NOT_USED
+}DCC_SPEED_STEPS;
+
 typedef struct{
     unsigned int id;
     PROTOCOL protocol;
+    DCC_SPEED_STEPS speed_steps;
     unsigned int address;
 }LOCOMOTIVE;
 
@@ -84,8 +86,8 @@ typedef struct{
 
 IPAddress agent_ip(ip_address[0], ip_address[1], ip_address[2], ip_address[3]);
 
-#if NUMBER_OF_ACTIVE_TURNOUTS_RAILBOX
-railway_interfaces__msg__TurnoutState turnout_status[NUMBER_OF_ACTIVE_TURNOUTS_RAILBOX] = {0};
+#if NUMBER_OF_ACTIVE_TURNOUTS_MM
+railway_interfaces__msg__TurnoutState turnout_status[NUMBER_OF_ACTIVE_TURNOUTS_MM] = {0};
 #else
 // Dummy pointer to turnout_status if no turnouts are defined
 railway_interfaces__msg__TurnoutState *turnout_status;
@@ -112,7 +114,7 @@ rcl_timer_t power_state_publisher_timer;
 #define RCSOFTCHECK(fn) { rcl_ret_t temp_rc = fn; if((temp_rc != RCL_RET_OK)){}}
 #endif
 
-DCCPacketScheduler DccPacketScheduler;
+DCCPacketScheduler *DccPacketScheduler;
 
 void error_loop(){
   Serial.println("Error: System halted");
@@ -165,10 +167,10 @@ char* getDirectionTxt(int direction){
 
 bool lookupTurnoutIndex(int turnout_number, int *turnout_index){
   int i;
-  for(i = 0; i < NUMBER_OF_ACTIVE_TURNOUTS_RAILBOX; i++){
-    if(active_turnouts_railbox[i] == turnout_number) break;
+  for(i = 0; i < NUMBER_OF_ACTIVE_TURNOUTS_MM; i++){
+    if(active_turnouts_mm[i] == turnout_number) break;
   }
-  if(i >= NUMBER_OF_ACTIVE_TURNOUTS_RAILBOX) return false;
+  if(i >= NUMBER_OF_ACTIVE_TURNOUTS_MM) return false;
   *turnout_index = i;
   return true;
 }
@@ -187,10 +189,10 @@ int turnout_state_index = 0;
 
 void turnout_state_publisher_timer_callback(rcl_timer_t * timer, int64_t last_call_time) {
   RCLC_UNUSED(last_call_time);
-  if (timer != NULL && NUMBER_OF_ACTIVE_TURNOUTS_RAILBOX) {
+  if (timer != NULL && NUMBER_OF_ACTIVE_TURNOUTS_MM) {
     RCSOFTCHECK(rcl_publish(&turnout_status_publisher, &turnout_status[turnout_state_index], NULL));
     turnout_state_index++;
-    if(turnout_state_index == NUMBER_OF_ACTIVE_TURNOUTS_RAILBOX) turnout_state_index = 0;
+    if(turnout_state_index == NUMBER_OF_ACTIVE_TURNOUTS_MM) turnout_state_index = 0;
   }
 }
 
@@ -304,7 +306,8 @@ void setup() {
   delay(2000);
   Serial.println("DCC controller started");
 
-  if(DccPacketScheduler.setup())error_loop();
+  DccPacketScheduler = new DCCPacketScheduler(); 
+  if(!DccPacketScheduler->setup())error_loop();
 
 #if 0
   Serial.print("MOSI: ");Serial.println(MOSI);
@@ -333,12 +336,12 @@ void setup() {
 
 #if 0
 
-  EEPROM.begin(NUMBER_OF_ACTIVE_TURNOUTS_RAILBOX);
+  EEPROM.begin(NUMBER_OF_ACTIVE_TURNOUTS_MM);
 
   power_status.data = false;
 
-  for(int i = 0; i < NUMBER_OF_ACTIVE_TURNOUTS_RAILBOX; i++){
-    turnout_status[i].number = active_turnouts_railbox[i];
+  for(int i = 0; i < NUMBER_OF_ACTIVE_TURNOUTS_MM; i++){
+    turnout_status[i].number = active_turnouts_mm[i];
     turnout_status[i].state = EEPROM.readBool(i);
     ////ctrl-->getTurnout(turnout_status[i].number, &turnout_status[i].state);
   }
@@ -450,7 +453,7 @@ void setup() {
   // create timer,
 #define CYCLE_TIME    500
   // prevent division by zero
-  unsigned int timer_timeout = CYCLE_TIME / (NUMBER_OF_ACTIVE_TURNOUTS_RAILBOX + 1);
+  unsigned int timer_timeout = CYCLE_TIME / (NUMBER_OF_ACTIVE_TURNOUTS_MM + 1);
   RCCHECK(rclc_timer_init_default(
     &turnout_state_publisher_timer,
     &support,
@@ -500,12 +503,10 @@ void loop() {
   //delay(20);
   char speed_byte = 0;
   if(!once){
-    DccPacketScheduler.setSpeed128(3,DCC_SHORT_ADDRESS,speed_byte); //This should be in the call backs of the ROS subscribers
+    DccPacketScheduler->setSpeed128(3,DCC_SHORT_ADDRESS,speed_byte); //This should be in the call backs of the ROS subscribers
     once++;
   }
-#if 0
-  DccPacketScheduler.update(); // This should be a thread started by the DccPacketScheduler.begin()
-#endif
+
 
 #if 0
 

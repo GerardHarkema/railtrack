@@ -97,15 +97,8 @@ class RailTrackNode(Node):
                         with ui.grid(columns=3):
 
                             try:
-                                for turnout in self.track_config["Turnouts"]["railbox_controlled"]:
+                                for turnout in self.track_config["Turnouts"]:
                                     self.turnouts.append(turnout["number"])
-                            except KeyError:
-                                pass
-
-                            try:
-                                for turnout in self.track_config["Turnouts"]["ros_controlled"]:
-                                    self.turnouts.append(turnout["number"]) 
-
                             except KeyError:
                                 pass
 

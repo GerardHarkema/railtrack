@@ -62,7 +62,7 @@ void setup() {
   Serial.println("DCC controller started");
 
   DccPacketScheduler = new DCCPacketScheduler(); 
-  if(DccPacketScheduler->setup())error_loop();
+  if(!DccPacketScheduler->setup())error_loop();
 
 #if 0
   Serial.print("MOSI: ");Serial.println(MOSI);
@@ -90,8 +90,6 @@ void loop() {
     DccPacketScheduler->setSpeed128(60,DCC_SHORT_ADDRESS,20); //This should be in the call backs of the ROS subscribers
     once++;
   }
-#if 1
-  //DccPacketScheduler->update(); // This should be a thread started by the DccPacketScheduler.begin()
-#endif
+
 
 }
