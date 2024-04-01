@@ -21,6 +21,7 @@ from railway_interfaces.msg import LocomotiveState
 from railway_interfaces.msg import TurnoutControl  
 from railway_interfaces.msg import TurnoutState  
 
+
 from turnout_control import turnout_control
 from locomotive_control import locomotive_control
 
@@ -128,10 +129,7 @@ class railtracklayout_control(Node):
         self.turnout_control_publisher = turnout_control_publisher;
         self.turnouts = []
         self.layout = ui.interactive_image(railtracklayout_image_filemage, on_mouse=self.mouse_handler, events=['mousedown', 'mouseup'], cross=True).classes('w-512')
-        for turnout in turnouts["railbox_controlled"]:
-            tc = turnout_control_on_layout(turnout, self.layout, self.turnout_control_publisher)
-            self.turnouts.append(tc)
-        for turnout in turnouts["ros_controlled"]:
+        for turnout in turnouts:
             tc = turnout_control_on_layout(turnout, self.layout, self.turnout_control_publisher)
             self.turnouts.append(tc)
         self.notify_mouse_events = False

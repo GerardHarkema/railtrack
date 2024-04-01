@@ -19,7 +19,8 @@ from std_msgs.msg import Bool;
 from railway_interfaces.msg import LocomotiveControl  
 from railway_interfaces.msg import LocomotiveState  
 from railway_interfaces.msg import TurnoutControl  
-from railway_interfaces.msg import TurnoutState  
+from railway_interfaces.msg import TurnoutState
+from railway_interfaces.msg import PowerState   
 
 from turnout_control import turnout_control
 from locomotive_control import locomotive_control
@@ -58,7 +59,7 @@ class RailTrackNode(Node):
         self.locomotive_control_publisher = self.create_publisher(LocomotiveControl, topic, 1)
 
         topic = "/railtrack/power_status"
-        self.power_status_subscription = self.create_subscription(Bool, topic,  self.power_status_callback, qos_profile=self.qos_profile)
+        self.power_status_subscription = self.create_subscription(PowerState, topic,  self.power_status_callback, qos_profile=self.qos_profile)
 
         topic = "/railtrack/power_control"
         self.power_control_publisher = self.create_publisher(Bool, topic,  1)
@@ -130,6 +131,7 @@ class RailTrackNode(Node):
             with ui.grid(columns=3):
                 self.power_button = ui.button('STOP', on_click=lambda:self.power()).classes('drop-shadow bg-red')
                 self.active = ui.icon('fiber_manual_record', size='3em').classes('drop-shadow text-green')
+                self.current = ui.label("0.0 A")
             self.active_status = False;
 
 
@@ -149,8 +151,8 @@ class RailTrackNode(Node):
         for loc in self.locomotivesui:
             loc.set_status(status)
 
-    def power_status_callback(self, power):
-        if power.data:
+    def power_status_callback(self, status):
+        if status.state:
             self.power_state = True
             self.power_button.classes('drop-shadow bg-red', remove='bg-green')
             self.power_button.text = 'STOP'
@@ -164,6 +166,9 @@ class RailTrackNode(Node):
         else:
             self.active.classes('text-red', remove='text-green')
             self.active_status = True
+        text = str(status.current) + " A"
+        #print(text)
+        self.current.text = text
 
 
         #print("power_callback")

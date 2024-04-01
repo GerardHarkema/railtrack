@@ -455,6 +455,11 @@ class TrackController {
     boolean getTurnout(word address, boolean *straight);
 
     /**
+     * Queries the current on the track. 
+     */
+    float getCurrent();
+
+    /**
      * Writes the given value to the given config number of the given
      * locomotive.  The return value reflects whether the call was
      * successful.

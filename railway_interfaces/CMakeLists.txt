@@ -32,6 +32,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/LocomotiveState.msg"
   "msg/TurnoutControl.msg"
   "msg/TurnoutState.msg"
+  "msg/PowerState.msg"
   DEPENDENCIES std_msgs
  )
 

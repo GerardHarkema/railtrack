@@ -575,6 +575,26 @@ boolean TrackController::getLocoSpeed(word address, word *speed) {
 	}
 }
 
+#define CURRENT_RESOLUTION  	0.000976562
+float TrackController::getCurrent() {
+	TrackMessage message;
+	float current;
+
+	message.clear();
+	message.command = 0x00;
+	message.length = 0x06;
+	message.data[4] = 0x0b;
+	message.data[5] = 1;
+
+	if (exchangeMessage(message, message, 1000)) {
+		current = ((message.data[6] << 8) + message.data[7]) * CURRENT_RESOLUTION;
+		return current;
+	} else {
+		return 0.0;
+	}
+	return current;
+}
+
 boolean TrackController::getLocoFunction(word address, byte function,
 		byte *power) {
 	TrackMessage message;

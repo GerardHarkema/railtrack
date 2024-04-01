@@ -15,6 +15,7 @@
 #include <railway_interfaces/msg/turnout_state.h>
 #include <railway_interfaces/msg/locomotive_control.h>
 #include <railway_interfaces/msg/locomotive_state.h>
+#include <railway_interfaces/msg/power_state.h>
 
 #include <Adafruit_GFX.h> // Core graphics library
 #include <Fonts/FreeSansBold9pt7b.h>
@@ -85,7 +86,7 @@ railway_interfaces__msg__LocomotiveState locomotive_status[NUMBER_OF_ACTIVE_LOCO
 // Dummy pointer to locomotive_status if no locomotives are defined
 railway_interfaces__msg__LocomotiveState *locomotive_status;
 #endif
-std_msgs__msg__Bool power_status = {0};
+railway_interfaces__msg__PowerState power_status;
 
 
 rclc_support_t support;
@@ -191,6 +192,8 @@ void locomotive_state_publisher_timer_callback(rcl_timer_t * timer, int64_t last
 void power_state_publisher_timer_callback(rcl_timer_t * timer, int64_t last_call_time) {
   RCLC_UNUSED(last_call_time);
   if (timer != NULL) {
+    power_status.current = ctrl->getCurrent();
+    //Serial.printf("current = %f A\n", power_status.current);
     RCSOFTCHECK(rcl_publish(&power_status_publisher, &power_status, NULL));
   }
 
@@ -202,7 +205,7 @@ void turnout_control_callback(const void * msgin)
   int index;
   boolean straight = control->state ? true : false;
   // update controller always !!!
-  if(power_status.data){
+  if(power_status.state){
     ctrl->setTurnout(TURNOUT_BASE_ADDRESS + control->number - 1, straight);
     if(lookupTurnoutIndex(control->number, &index)){
       EEPROM.writeBool(index, straight);
@@ -267,8 +270,8 @@ void power_control_callback(const void * msgin)
 {  
   const std_msgs__msg__Bool * control = (const std_msgs__msg__Bool *)msgin;
   ctrl->setPower(control->data);
-  power_status.data = control->data;
-  tft_printf(ST77XX_GREEN, "ROS msg\nSystem: %s", power_status.data ? "Go" : "Stop");
+  power_status.state = control->data;
+  tft_printf(ST77XX_GREEN, "ROS msg\nSystem: %s", power_status.state ? "Go" : "Stop");
 
 }
 
@@ -311,7 +314,8 @@ void setup() {
 
   EEPROM.begin(NUMBER_OF_ACTIVE_TURNOUTS_MM);
 
-  power_status.data = false;
+  power_status.state = false;
+  power_status.current = 0;
 
   for(int i = 0; i < NUMBER_OF_ACTIVE_TURNOUTS_MM; i++){
     turnout_status[i].number = active_turnouts_mm[i];
@@ -413,7 +417,7 @@ void setup() {
   RCCHECK(rclc_publisher_init_best_effort(
     &power_status_publisher,
     &node,
-    ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Bool),
+    ROSIDL_GET_MSG_TYPE_SUPPORT(railway_interfaces, msg, PowerState),
     topic_name));
 
   sprintf(topic_name, "railtrack/power_control");
@@ -491,11 +495,11 @@ void loop() {
       case SYSTEM_BEFEHL:
         switch(message.data[4]){
           case SYSTEM_STOP:
-              power_status.data = false;
+              power_status.state = false;
                tft_printf(ST77XX_GREEN, "CANBUS msg\nSystem: Stop");
             break;
           case SYSTEM_GO:
-              power_status.data = true;
+              power_status.state = true;
                tft_printf(ST77XX_GREEN, "CANBUS msg\nSystem: Go");
             break;
           default:
