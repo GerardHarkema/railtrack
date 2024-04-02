@@ -581,10 +581,10 @@ float TrackController::getCurrent() {
 	float current;
 
 	message.clear();
-	message.command = 0x00;
+	message.command = SYSTEM_BEFEHL;
 	message.length = 0x06;
-	message.data[4] = 0x0b;
-	message.data[5] = 1;
+	message.data[4] = STATUS;
+	message.data[5] = STATUS_CHANNEL_CURRENT;
 
 	if (exchangeMessage(message, message, 1000)) {
 		current = ((message.data[6] << 8) + message.data[7]) * CURRENT_RESOLUTION;
@@ -593,6 +593,46 @@ float TrackController::getCurrent() {
 		return 0.0;
 	}
 	return current;
+}
+#define VOLTAGE_RESOLUTION  	(18.6/1608)
+
+float TrackController::getVoltage() {
+	TrackMessage message;
+	float voltage;
+
+	message.clear();
+	message.command = SYSTEM_BEFEHL;
+	message.length = 0x06;
+	message.data[4] = STATUS;
+	message.data[5] = STATUS_CHANNEL_VOLTAGE;
+
+	if (exchangeMessage(message, message, 1000)) {
+		voltage = ((message.data[6] << 8) + message.data[7]) * VOLTAGE_RESOLUTION;
+		return voltage;
+	} else {
+		return 0.0;
+	}
+	return voltage;
+}
+
+#define TEMPERATURE_RESOLUTION  	(20.0/55)
+float TrackController::getTemperature() {
+	TrackMessage message;
+	float temperature;
+
+	message.clear();
+	message.command = SYSTEM_BEFEHL;
+	message.length = 0x06;
+	message.data[4] = STATUS;
+	message.data[5] = STATUS_CHANNEL_TEMPERATURE;
+
+	if (exchangeMessage(message, message, 1000)) {
+		temperature = ((message.data[6] << 8) + message.data[7]) * TEMPERATURE_RESOLUTION;
+		return temperature;
+	} else {
+		return 0.0;
+	}
+	return temperature;
 }
 
 boolean TrackController::getLocoFunction(word address, byte function,

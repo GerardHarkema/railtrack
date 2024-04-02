@@ -193,8 +193,13 @@ void power_state_publisher_timer_callback(rcl_timer_t * timer, int64_t last_call
   RCLC_UNUSED(last_call_time);
   if (timer != NULL) {
     power_status.current = ctrl->getCurrent();
+    power_status.voltage = ctrl->getVoltage();
+    power_status.temperature = ctrl->getTemperature();
     //Serial.printf("current = %f A\n", power_status.current);
     RCSOFTCHECK(rcl_publish(&power_status_publisher, &power_status, NULL));
+    power_status.current_overload = false;
+    power_status.voltage_overload = false;
+    power_status.temperature_overload = false;
   }
 
 }
@@ -502,6 +507,20 @@ void loop() {
               power_status.state = true;
                tft_printf(ST77XX_GREEN, "CANBUS msg\nSystem: Go");
             break;
+          case UBERLAST:
+            switch(message.data[5]){
+              case STATUS_CHANNEL_CURRENT:
+                power_status.current_overload = true;
+                tft_printf(ST77XX_BLUE, "Current\nOverload");
+                break;
+              case STATUS_CHANNEL_VOLTAGE:
+                power_status.voltage_overload = true;
+                tft_printf(ST77XX_BLUE, "Voltage\nOverload");
+                break;
+              case STATUS_CHANNEL_TEMPERATURE:
+                power_status.temperature_overload = true;
+                tft_printf(ST77XX_BLUE, "Temperature\nOverload");
+                break;            }
           default:
             break;
         }

@@ -117,6 +117,10 @@
 #define UBERLAST          0x0a
 #define STATUS            0x0b
 
+#define STATUS_CHANNEL_CURRENT      1
+#define STATUS_CHANNEL_VOLTAGE      3
+#define STATUS_CHANNEL_TEMPERATURE  4
+
 // Memory location defines
 
 #define TURNOUT_BASE_ADDRESS    0x3000
@@ -458,6 +462,16 @@ class TrackController {
      * Queries the current on the track. 
      */
     float getCurrent();
+
+    /**
+     * Queries the current on the track. 
+     */
+    float getVoltage();
+
+    /**
+     * Queries the current on the track. 
+     */
+    float getTemperature();
 
     /**
      * Writes the given value to the given config number of the given
