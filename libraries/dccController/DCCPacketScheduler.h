@@ -1,11 +1,7 @@
 #ifndef __DCCCOMMANDSTATION_H__
 #define __DCCCOMMANDSTATION_H__
 #include "DCCPacket.h"
-#ifndef QUEUE_LIST_TYPE
-#include "DCCPacketQueue.h"
-#else
 #include "DCCPacketQueueList.h"
-#endif
 
 #define E_STOP_QUEUE_SIZE           2
 #define HIGH_PRIORITY_QUEUE_SIZE    10
@@ -22,6 +18,7 @@
 #define E_STOP_REPEAT     5
 #define OPS_MODE_PROGRAMMING_REPEAT 3
 #define OTHER_REPEAT      2
+
 
 class DCCPacketScheduler
 {
@@ -75,18 +72,8 @@ class DCCPacketScheduler
     uint16_t last_packet_address;
   
     uint8_t packet_counter;
-    
-    DCCEmergencyQueue e_stop_queue;
-    DCCPacketQueue high_priority_queue;
-    DCCPacketQueue low_priority_queue;
-    DCCRepeatQueue repeat_queue;
-    //DCCTemporalQueue periodic_refresh_queue;
-    
-    //TODO to be completed later.
-    //DCC_Packet ops_programming_queue[10];
-    
-    //some handy thingers
-    //DCCPacket idle_packet;
+  
+//    DCCPacketQueue *queue;
 };
 
 //DCCPacketScheduler packet_scheduler;

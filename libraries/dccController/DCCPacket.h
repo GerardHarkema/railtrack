@@ -18,7 +18,7 @@ typedef unsigned char uint8_t;
 // };
 
 #define MULTIFUNCTION_PACKET_KIND_MASK 0x10
-#if 0
+#if 1
 #define idle_packet_kind            0x10
 #define e_stop_packet_kind          0x11
 #define speed_packet_kind           0x12
@@ -28,7 +28,7 @@ typedef unsigned char uint8_t;
 #define accessory_packet_kind       0x16
 #define reset_packet_kind           0x17
 #define ops_mode_programming_kind   0x18
-#endif
+#else
 
 typedef enum {
   idle_packet_kind  = 0x10,
@@ -41,6 +41,7 @@ typedef enum {
   reset_packet_kind,
   ops_mode_programming_kind
 } kind_type;
+#endif
 
 #define ACCESSORY_PACKET_KIND_MASK 0x40
 #define basic_accessory_packet_kind 0x40
@@ -56,9 +57,11 @@ typedef enum {
 typedef enum{
   DCC_SHORT_ADDRESS,
   DCC_LONG_ADDRESS
-
 }address_type;
 
+#define HIGH_PRIORIY    true
+#define LOW_PRIORIY     false
+#define REPEAT_COUNT_CONTINOUS  -1
 
 class DCCPacket
 {
@@ -67,14 +70,16 @@ class DCCPacket
     uint16_t address;
     uint8_t address_kind;
     uint8_t data[3];
-    uint8_t size_repeat;  //a bit field! 0b11000000 = 0xC0 = size; 0x00111111 = 0x3F = repeat
+    int8_t repeat_count; 
+    uint8_t size;  
     uint8_t kind;
+    bool priority;
     
   public:
     DCCPacket(uint16_t decoder_address=0xFF, uint8_t decoder_address_kind=0x00);
     
     uint8_t getBitstream(uint8_t rawuint8_ts[]); //returns size of array.
-    uint8_t getSize(void);
+    //uint8_t getSize(void);
     inline uint16_t getAddress(void) { return address; }
     inline uint8_t getAddressKind(void) { return address_kind; }
     inline void setAddress(uint16_t new_address) { address = new_address; }
@@ -82,8 +87,11 @@ class DCCPacket
     void addData(uint8_t *new_data, uint8_t new_size); //insert freeform data.
     inline void setKind(uint8_t new_kind) { kind = new_kind; }
     inline uint8_t getKind(void) { return kind; }
-    inline void setRepeat(uint8_t new_repeat) { size_repeat = ((size_repeat&0xC0) | (new_repeat&0x3F)) ;}
-    inline uint8_t getRepeat(void) { return size_repeat & 0x3F; }//return repeat; }
+    inline void setRepeatCount(uint8_t new_repeat_count) { repeat_count = new_repeat_count;}
+    inline uint8_t getRepeatCount(void) { return repeat_count; }//return repeat; }
+    inline uint8_t getSize(void) { return size ; }
+    inline bool isHighPriority(void) { return priority; }
+    inline void setPriority(bool new_priority) {  priority = new_priority; }
 };
 
 #endif //__DCCPACKET_H__

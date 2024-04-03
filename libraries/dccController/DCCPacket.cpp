@@ -1,6 +1,13 @@
 #include "DCCPacket.h"
 
-DCCPacket::DCCPacket(uint16_t new_address, uint8_t new_address_kind) : address(new_address), address_kind(new_address_kind), kind(idle_packet_kind), size_repeat(0x40) //size(1), repeat(0)
+DCCPacket::DCCPacket(uint16_t new_address, 
+					 uint8_t new_address_kind) : 
+					 	address(new_address), 
+						address_kind(new_address_kind), 
+						kind(idle_packet_kind), 
+						size(1), 
+						repeat_count(1),
+						priority(false) 
 {
   //address = new_address;
   //address_kind = new_address_kind;
@@ -74,16 +81,10 @@ uint8_t DCCPacket::getBitstream(uint8_t rawbytes[]) //returns size of array.
 	return 0; //ERROR! SHOULD NEVER REACH HERE! do something useful, like transform it into an idle packet or something! TODO
 }
 
-uint8_t DCCPacket::getSize(void)
-{
-  return (size_repeat>>6);
-}
 
 void DCCPacket::addData(uint8_t *new_data, uint8_t new_size) //insert freeform data.
 {
-#if 1
   for(int i = 0; i < new_size; ++i)
     data[i] = new_data[i];
-  size_repeat = (size_repeat & 0x3F) | (new_size<<6);
-#endif
+  size = new_size;
 }

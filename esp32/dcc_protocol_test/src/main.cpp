@@ -10,17 +10,10 @@
 #include <Arduino.h>
 #include <EEPROM.h>
 
-
 #include <stdio.h>
-
 #include <DCCPacket.h>
-#ifndef QUEUE_LIST_TYPE
-#include "DCCPacketQueue.h"
-#else
 #include "DCCPacketQueueList.h"
-#endif
 #include <DCCPacketScheduler.h>
-
 
 #if !defined(ESP32) && !defined(TARGET_PORTENTA_H7_M7) && !defined(ARDUINO_NANO_RP2040_CONNECT) && !defined(ARDUINO_WIO_TERMINAL)
 #error This application is only avaible for Arduino Portenta, Arduino Nano RP2040 Connect, ESP32 Dev module and Wio Terminal

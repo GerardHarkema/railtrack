@@ -2,7 +2,7 @@ import json
 from datetime import datetime
 
 
-track_config_file = '../../config/track_config.json'
+track_config_file = '../../config/track_config_DCC.json'
 with open(track_config_file, 'r', encoding='utf-8') as f:
     track_config = json.load(f)
 

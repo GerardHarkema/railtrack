@@ -6,7 +6,7 @@
   #define DEBUG_PRINT(x)      Serial.print(x)
   #define DEBUG_PRINT2(x, y)  Serial.print(x, y)
   #define DEBUG_PRINTLN(x)    Serial.println(x)
-  #define TIMER_SCALER        50
+  #define TIMER_SCALER        200
 #else
   #define DEBUG_PRINT(x)      
   #define DEBUG_PRINT2(x, y)
@@ -80,10 +80,12 @@ void IRAM_ATTR waveform_generator_timer_isr();
 #define TRACK_POWER_OFF   LOW
 uint8_t output_state = LOW;
 
+#define TIMER_NUMBER      2
+
 bool setup_DCC_waveform_generator() {
 
   // see: https://deepbluembedded.com/esp32-timers-timer-interrupt-tutorial-arduino-ide/
-  waveform_generator_timer = timerBegin(0, 80, true); // Time 3 (is it free?) 80 MHz
+  waveform_generator_timer = timerBegin(TIMER_NUMBER, 80, true); // Time 3 (is it free?) 80 MHz
   if(waveform_generator_timer == NULL){
     DEBUG_PRINT("Error creating waveform timer");
     return false;
@@ -107,7 +109,7 @@ bool setup_DCC_waveform_generator() {
 void DCC_waveform_generation_hasshin()
 {
   //enable the compare match interrupt
-  //timerStart(waveform_generator_timer);
+  //timerAlarmEnable(waveform_generator_timer);
 }
 
 bool enableTrackPower(){
