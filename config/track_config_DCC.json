@@ -1,0 +1,230 @@
+{
+  "railtrack_layout_image" : "railtrack_layout.jpg",
+  "Locomotives": [
+    {
+      "name": "NS1212",
+      "type": "Elektrische Locomotief",
+      "image": "NS1212.jpg",
+      "protocol": "DCC",
+      "address": 60,
+      "speed_steps" : 128,
+      "max_speed" : 900,
+      "decrement_speed_step" : 50,
+      "increment_speed_step" : 50,
+      "functions":[
+        {
+          "number": 0,
+          "title" : "Shunting light",
+          "icon" : "lightbulb"
+        }
+      ] 
+    },
+    {
+      "name": "mp3000 NS",
+      "type": "Treinstel",
+      "image": "mp3000-ns.jpg",
+      "protocol": "MM1",
+      "address": 30,
+      "max_speed" : 1000,
+      "decrement_speed_step" : 50,
+      "increment_speed_step" : 50,
+      "functions":[
+        {
+          "number": 0,
+          "title" : "Shunting light",
+          "icon" : "lightbulb"
+        }
+      ] 
+    },
+    {
+      "name": "NS 6505 Henschel HDG",
+      "type": "Diesel Locomotief",
+      "image": "NS_6505_DHG.jpg",
+      "protocol": "MM1",
+      "address": 78,
+      "max_speed" : 1000,
+      "decrement_speed_step" : 100,
+      "increment_speed_step" : 100
+
+    }
+  ],
+  "Turnouts": [
+    {
+      "number" : 1,
+      "protocol": "MM1",
+      "layout_positions" : [
+        {
+          "position" :{
+            "x" :513,
+            "y" :105
+          },
+          "size" :{
+            "radius" :18
+          }
+        },
+        {
+          "position" :{
+            "x" :989,
+            "y" :105
+          },
+          "size" :{
+            "radius" :18
+          }
+        }
+      ]          
+    },
+    {
+      "number" : 2,
+      "protocol": "MM1",
+      "layout_positions" : [
+        {
+          "position" :{
+            "x" :274,
+            "y" :316
+          },
+          "size" :{
+            "radius" :18
+          }
+        },
+        {
+          "position" :{
+            "x" :1230,
+            "y" :316
+          },
+          "size" :{
+            "radius" :18
+          }
+        }          
+      ]
+    },
+    {
+      "number" : 3,
+      "protocol": "MM1",
+      "layout_positions" : [
+        {
+          "position" :{
+            "x" :605,
+            "y" :523
+          },
+          "size" :{
+            "radius" :18
+          }
+        }         
+      ]
+    },
+    {
+      "number" : 4,
+      "protocol": "MM1",
+      "layout_positions" : [
+        {
+          "position" :{
+            "x" :690,
+            "y" :563
+          },
+          "size" :{
+            "radius" :18
+          }
+        }
+      ]
+    },
+    {
+      "number" : 11,
+      "protocol": "ROS",
+      "layout_positions" : [
+        {
+          "position" :{
+            "x" :692,
+            "y" :20
+          },
+          "size" :{
+            "radius" :18
+          }
+        },          
+        {
+          "position" :{
+            "x" :791,
+            "y" :60
+          },
+          "size" :{
+            "radius" :18
+          }
+        }
+      ]
+    },
+    {
+      "number" : 12,
+      "protocol": "ROS",
+      "layout_positions" : [
+        {
+          "position" :{
+            "x" :980,
+            "y" :604
+          },
+          "size" :{
+            "radius" :18
+          }
+        }
+      ]         
+    },
+    {
+      "number" : 21,
+      "protocol": "ROS",
+      "layout_positions" : [
+        {
+          "position" :{
+            "x" :125,
+            "y" :67
+          },
+          "size" :{
+            "radius" :18
+          }
+        }          
+      ]
+    },
+    {
+      "number" : 22,
+      "protocol": "ROS",
+      "layout_positions" : [
+        {
+          "position" :{
+            "x" :70,
+            "y" :151
+          },
+          "size" :{
+            "radius" :18
+          }
+        }          
+      ]
+    },
+    {
+      "number" : 23,
+      "protocol": "ROS",
+      "layout_positions" : [
+        {
+          "position" :{
+            "x" :61,
+            "y" :257
+          },
+          "size" :{
+            "radius" :18
+          }
+        }          
+      ]
+    },
+    {
+      "number" : 24,
+      "protocol": "ROS",
+      "layout_positions" : [
+        {
+          "position" :{
+            "x" :61,
+            "y" :355
+          },
+          "size" :{
+            "radius" :18
+          }
+        } 
+      ]         
+    }
+  ]
+}
