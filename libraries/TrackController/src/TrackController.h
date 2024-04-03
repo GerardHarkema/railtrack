@@ -464,12 +464,12 @@ class TrackController {
     float getCurrent();
 
     /**
-     * Queries the current on the track. 
+     * Queries the voltage on the track. 
      */
     float getVoltage();
 
     /**
-     * Queries the current on the track. 
+     * Queries the temperature of the controller
      */
     float getTemperature();
 

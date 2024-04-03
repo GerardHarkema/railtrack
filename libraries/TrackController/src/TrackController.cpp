@@ -575,7 +575,7 @@ boolean TrackController::getLocoSpeed(word address, word *speed) {
 	}
 }
 
-#define CURRENT_RESOLUTION  	0.000976562
+#define CURRENT_RESOLUTION  	(5.0/0x1000)
 float TrackController::getCurrent() {
 	TrackMessage message;
 	float current;
@@ -594,7 +594,7 @@ float TrackController::getCurrent() {
 	}
 	return current;
 }
-#define VOLTAGE_RESOLUTION  	(18.6/1608)
+#define VOLTAGE_RESOLUTION  	(50.0/0x1000)
 
 float TrackController::getVoltage() {
 	TrackMessage message;
@@ -615,7 +615,7 @@ float TrackController::getVoltage() {
 	return voltage;
 }
 
-#define TEMPERATURE_RESOLUTION  	(20.0/55)
+#define TEMPERATURE_RESOLUTION  	(1500.0/0x1000)
 float TrackController::getTemperature() {
 	TrackMessage message;
 	float temperature;

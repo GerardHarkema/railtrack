@@ -200,6 +200,12 @@ void power_state_publisher_timer_callback(rcl_timer_t * timer, int64_t last_call
     power_status.current_overload = false;
     power_status.voltage_overload = false;
     power_status.temperature_overload = false;
+    char text[100];
+    sprintf(text, "U= %0.1fV\nI= %0.1fA\nT= %0.1f°C", 
+      power_status.voltage,
+      power_status.current,
+      power_status.temperature);
+    tft_printf(ST77XX_GREEN, text);
   }
 
 }

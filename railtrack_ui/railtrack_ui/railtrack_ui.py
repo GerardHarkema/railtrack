@@ -128,16 +128,27 @@ class RailTrackNode(Node):
                         pass
                 except KeyError:
                     pass
-            with ui.grid(columns=3):
-                self.power_button = ui.button('STOP', on_click=lambda:self.power()).classes('drop-shadow bg-red')
-                self.active = ui.icon('fiber_manual_record', size='3em').classes('drop-shadow text-green')
-            with ui.grid(columns=3):
-                self.current = ui.label("0.0 A")
-                self.voltage = ui.label("0.0 V")
-                self.temperature = ui.label("0.0 C")
-                self.current_overload = ui.icon('fiber_manual_record', size='3em').classes('drop-shadow text-green')
-                self.voltage_overload = ui.icon('fiber_manual_record', size='3em').classes('drop-shadow text-green')
-                self.temperature_overload = ui.icon('fiber_manual_record', size='3em').classes('drop-shadow text-green')
+            with ui.grid(columns=4):
+                with ui.card():
+                    ui.label("Track Power")
+                    self.power_button = ui.button('STOP', on_click=lambda:self.power()).classes('drop-shadow bg-red')
+                    ui.label("Connection state (Flash)")
+                    self.active = ui.icon('fiber_manual_record', size='3em').classes('drop-shadow text-green')
+                with ui.card():
+                    ui.label("Current")
+                    self.current = ui.label("0.0 A")
+                    ui.label("Overload")
+                    self.current_overload = ui.icon('fiber_manual_record', size='3em').classes('drop-shadow text-green')
+                with ui.card():
+                    ui.label("Voltage")
+                    self.voltage = ui.label("0.0 V")
+                    ui.label("Overload")
+                    self.voltage_overload = ui.icon('fiber_manual_record', size='3em').classes('drop-shadow text-green')
+                with ui.card():
+                    ui.label("Temperature")
+                    self.temperature = ui.label("0.0 °C")
+                    ui.label("Overload")
+                    self.temperature_overload = ui.icon('fiber_manual_record', size='3em').classes('drop-shadow text-green')
             self.active_status = False;
 
 
@@ -176,7 +187,7 @@ class RailTrackNode(Node):
         self.current.text = text
         text = str(round(status.voltage, 1)) + " V"
         self.voltage.text = text
-        text = str(round(status.temperature, 1)) + " C"
+        text = str(round(status.temperature, 1)) + " °C"
         self.temperature.text = text
         if(status.current_overload):
             self.current_overload.classes('text-red', remove='text-green')
