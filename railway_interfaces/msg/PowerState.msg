@@ -1,3 +1,4 @@
+int8 track_index  # Not used, for future implementation
 bool state
 float32 current
 float32 voltage

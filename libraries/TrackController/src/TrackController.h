@@ -39,10 +39,14 @@
  * Constants for protocol base addresses.
  */
 #define ADDR_MM2     0x0000 // MM2 locomotive
+#define ADDR_MM2_MAX 0x03ff // MM2 locomotive
 #define ADDR_SX1     0x0800 // Selectrix (old) locomotive
 #define ADDR_MFX     0x4000 // MFX locomotive
+#define ADDR_MFX_MAX 0x7fff // MFX locomotive
 #define ADDR_SX2     0x8000 // Selectrix (new) locomotive
+#define ADDR_SX2_MAX 0xbfff // Selectrix (new) locomotive
 #define ADDR_DCC     0xC000 // DCC locomotive
+#define ADDR_DCC_MAX 0xffff // DCC locomotive
 #define ADDR_ACC_SX1 0x2000 // Selectrix (old) magnetic accessory
 #define ADDR_ACC_MM2 0x2FFF // MM2 magnetic accessory
 #define ADDR_ACC_DCC 0x3800 // DCC magnetic accessory

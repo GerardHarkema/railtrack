@@ -10,7 +10,16 @@ int8 DIRECTION_TOGGLE = 3
 int8 FUNCTION_STATE_FALSE = 0
 int8 FUNCTION_STATE_TRUE = 1
 
+int8 PROTOCOL_UNKNOWN = 0
+int8 PROTOCOL_ROS = 1
+int8 PROTOCOL_MM1 = 2
+int8 PROTOCOL_MM2 = 3
+int8 PROTOCOL_DCC = 4
+int8 PROTOCOL_MFX = 5
+
 int8 command
+int8 track_index  # Not used, for future implementation
+int8 protocol
 int32 address
 int16 speed
 # direction: false = forward true = reverse

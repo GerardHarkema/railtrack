@@ -9,12 +9,11 @@
 #include <rclc/rclc.h>
 #include <rclc/executor.h>
 
-#include <std_msgs/msg/bool.h>
-
 #include <railway_interfaces/msg/turnout_control.h>
 #include <railway_interfaces/msg/turnout_state.h>
 #include <railway_interfaces/msg/locomotive_control.h>
 #include <railway_interfaces/msg/locomotive_state.h>
+#include <railway_interfaces/msg/power_control.h>
 #include <railway_interfaces/msg/power_state.h>
 
 #include <Adafruit_GFX.h> // Core graphics library
@@ -51,7 +50,7 @@ rclc_executor_t executor;
 
 railway_interfaces__msg__TurnoutControl turnout_control;
 railway_interfaces__msg__LocomotiveControl locomotive_control;
-std_msgs__msg__Bool power_control;
+railway_interfaces__msg__PowerControl power_control;
 
 // int8_t cs, int8_t dc, int8_t rst
 #define CS_PIN  16
@@ -60,13 +59,16 @@ std_msgs__msg__Bool power_control;
 Adafruit_ST7735 *tft;
 
 typedef enum{
-    MM1, MM2, DCC, MFX
+    ROS = railway_interfaces__msg__LocomotiveControl__PROTOCOL_ROS, 
+    MM1 = railway_interfaces__msg__LocomotiveControl__PROTOCOL_MM1, 
+    MM2 = railway_interfaces__msg__LocomotiveControl__PROTOCOL_MM2, 
+    DCC = railway_interfaces__msg__LocomotiveControl__PROTOCOL_DCC, 
+    MFX = railway_interfaces__msg__LocomotiveControl__PROTOCOL_MFX
 }PROTOCOL;
 
 typedef struct{
-    unsigned int id;
-    PROTOCOL protocol;
     unsigned int address;
+    PROTOCOL protocol;
 }LOCOMOTIVE;
 
 #include "track_config.h"
@@ -110,25 +112,25 @@ void error_loop(){
     delay(100);
   }
 }
-void lookupLocomotiveProtocolAddress(int address, char *protocol, int *sub_address){
-  if(address >= ADDR_MM2 && address < ADDR_SX1){
-    strcpy(protocol, "MM");
-    
-    *sub_address = address;
-  }
-  else if (address >= ADDR_MFX && address < (ADDR_MFX + 0x0fff))
-  {
-    strcpy(protocol, "MFX");
-    *sub_address = address - ADDR_MFX;
-  }
-  else if (address >= ADDR_DCC && address < (ADDR_DCC + 0x0fff))
-  {
-    strcpy(protocol, "DCC");
-    *sub_address = address - ADDR_DCC;
-  }
-  else {
-     strcpy(protocol, "???");
-    *sub_address = 0;
+void lookupLocomotiveProtocol(PROTOCOL protocol, char *protocol_txt){
+  switch(protocol){
+    case ROS:
+      strcpy(protocol_txt, "ROS");
+      break;
+    case MM1:
+      strcpy(protocol_txt, "MM1");
+      break;    
+    case MM2:
+      strcpy(protocol_txt, "MM2");
+      break;    
+    case DCC:
+      strcpy(protocol_txt, "DCC");
+      break;
+    case MFX:
+      strcpy(protocol_txt, "MFX");
+      break;
+    default:
+      strcpy(protocol_txt, "Invalid");
   }
 }
 
@@ -156,10 +158,11 @@ bool lookupTurnoutIndex(int turnout_number, int *turnout_index){
   return true;
 }
 
-bool lookupLocomotiveIndex(int locomotive_address, int *locomotive_index){
+bool lookupLocomotiveIndex(int locomotive_address, PROTOCOL protocol, int *locomotive_index){
   int i;
   for(i = 0; i < NUMBER_OF_ACTIVE_LOCOMOTIVES; i++){
-    if(locomotive_status[i].address == locomotive_address) break;
+    if((locomotive_status[i].address == locomotive_address) 
+      && (locomotive_status[i].protocol == protocol)) break;
   }
   if(i >= NUMBER_OF_ACTIVE_LOCOMOTIVES) return false;
   *locomotive_index = i;
@@ -229,6 +232,18 @@ void turnout_control_callback(const void * msgin)
 
 }
 
+uint getCANAdress(PROTOCOL protocol, uint address){
+  switch(protocol){
+    case DCC:
+      return(address + ADDR_DCC);
+    break;
+    case MFX:
+      return(address + ADDR_MFX);
+    break;
+  }
+  return address;
+}
+
 void locomotive_control_callback(const void * msgin)
 {  
   const railway_interfaces__msg__LocomotiveControl * control = (const railway_interfaces__msg__LocomotiveControl *)msgin;
@@ -236,41 +251,43 @@ void locomotive_control_callback(const void * msgin)
   int locomotive_index;
   char* direction_txt;
   char protocol_txt[10];
-  int sub_address;
+  uint address;
 
   switch(control->command){
     case railway_interfaces__msg__LocomotiveControl__SET_SPEED:
-      ctrl->setLocoSpeed(control->address, control->speed);
+      address = getCANAdress((PROTOCOL)control->protocol, control->address);
+      ctrl->setLocoSpeed(address, control->speed);
       //Serial.printf("Address: %i\n", control->address);
       //Serial.printf("Speed: %i\n", control->speed);
 
-      if(lookupLocomotiveIndex(control->address, &locomotive_index)){
+      if(lookupLocomotiveIndex(control->address, (PROTOCOL)control->protocol, &locomotive_index)){
         //Serial.printf("Found\n");
         locomotive_status[locomotive_index].speed = control->speed;
 
       }
-      lookupLocomotiveProtocolAddress(control->address, protocol_txt, &sub_address);
+      lookupLocomotiveProtocol((PROTOCOL)control->protocol, protocol_txt);
       tft_printf(ST77XX_GREEN, "ROS msg\nLocomotive\nAddress(%s): %i\nSet speed: %i\n",
-            protocol_txt, sub_address, control->speed);
+            protocol_txt, address, control->speed);
       break;
     case railway_interfaces__msg__LocomotiveControl__SET_DIRECTION:
-      ctrl->setLocoDirection(control->address, control->direction);
-      if(lookupLocomotiveIndex(control->address, &locomotive_index)){
+      address = getCANAdress((PROTOCOL)control->protocol, control->address);
+      ctrl->setLocoDirection(address, control->direction);
+      if(lookupLocomotiveIndex(control->address, (PROTOCOL)control->protocol, &locomotive_index)){
         locomotive_status[locomotive_index].direction = control->direction;
       }
       direction_txt = getDirectionTxt(control->direction);
-      lookupLocomotiveProtocolAddress(control->address, protocol_txt, &sub_address);      
+      lookupLocomotiveProtocol((PROTOCOL)control->protocol, protocol_txt);
       tft_printf(ST77XX_GREEN, "ROS msg\nLocomotive\nAddress(%s): %i\nSet dir: %s\n",
-            protocol_txt, sub_address, direction_txt);      
+            protocol_txt, address, direction_txt);      
       break;
     case railway_interfaces__msg__LocomotiveControl__SET_FUNCTION:
-      ctrl->setLocoFunction(control->address, control->function_index, control->function_state);
-      if(lookupLocomotiveIndex(control->address, &locomotive_index)){
+      address = getCANAdress((PROTOCOL)control->protocol, control->address);
+      if(lookupLocomotiveIndex(address, (PROTOCOL)control->protocol, &locomotive_index)){
         locomotive_status[locomotive_index].function_state.data[control->function_index] = control->function_state;
       }
-      lookupLocomotiveProtocolAddress(control->address, protocol_txt, &sub_address);      
+      lookupLocomotiveProtocol((PROTOCOL)control->protocol, protocol_txt);
       tft_printf(ST77XX_GREEN, "ROS msg\nLocomotive\nAddress(%s): %i\nSet Func. %i: %s\n",
-            protocol_txt, sub_address, control->function_index, control->function_state ? "True" : "False");
+            protocol_txt, address, control->function_index, control->function_state ? "True" : "False");
       break;
     default:
       Serial.println("Invalid command");
@@ -279,13 +296,35 @@ void locomotive_control_callback(const void * msgin)
 
 void power_control_callback(const void * msgin)
 {  
-  const std_msgs__msg__Bool * control = (const std_msgs__msg__Bool *)msgin;
-  ctrl->setPower(control->data);
-  power_status.state = control->data;
+  const railway_interfaces__msg__PowerControl * control = (const railway_interfaces__msg__PowerControl *)msgin;
+  ctrl->setPower(control->enable);
+  power_status.state = control->enable;
   tft_printf(ST77XX_GREEN, "ROS msg\nSystem: %s", power_status.state ? "Go" : "Stop");
 
 }
 
+
+bool getProtocolFromAddress(uint address, uint *subaddress, PROTOCOL *protocol){
+
+  if(address <= 0x3FF){
+    *protocol = MM1;
+    *subaddress = address;
+    return true;
+  }
+
+  if((address >= ADDR_MFX) && (address <= ADDR_MFX_MAX)){
+    *protocol = MFX;
+    *subaddress = address - ADDR_MFX;
+    return true;
+  }
+
+  if((address >= ADDR_DCC) && (address <= ADDR_DCC_MAX)){
+    *protocol = DCC;
+    *subaddress = address - ADDR_DCC;
+    return true;
+  }
+  return false;
+}
 
 void setup() {
   Serial.begin(115200);
@@ -335,20 +374,9 @@ void setup() {
   }
 
   for(int i = 0; i < NUMBER_OF_ACTIVE_LOCOMOTIVES; i++){
+    locomotive_status[i].protocol = active_locomotives[i].protocol;
+    locomotive_status[i].address = active_locomotives[i].address;
     locomotive_status[i].direction = railway_interfaces__msg__LocomotiveState__DIRECTION_FORWARD;
-    switch(active_locomotives[i].protocol){
-      case MM1:
-      case MM2:
-        locomotive_status[i].address = active_locomotives[i].id;     
-        break;
-      case DCC:
-        locomotive_status[i].address = active_locomotives[i].id + ADDR_DCC;     
-      break;
-      case MFX:
-        locomotive_status[i].address = active_locomotives[i].id + ADDR_MFX;    
-      break;
-
-    }
     word speed;
     ctrl->getLocoSpeed(locomotive_status[i].address, &speed);
     locomotive_status[i].speed = speed;
@@ -436,7 +464,7 @@ void setup() {
   RCCHECK(rclc_subscription_init_default(
     &power_control_subscriber,
     &node,
-    ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Bool),
+    ROSIDL_GET_MSG_TYPE_SUPPORT(railway_interfaces, msg, PowerControl),
     topic_name));
 
   // create timer,
@@ -494,13 +522,15 @@ void loop() {
     int index = 0;
     bool straight = 0;
     char protocol_txt[10];
-    int sub_address = 0;
+    uint sub_address = 0;
     int function_index = 0;
     int function_enable = 0;
     word speed;
     int turnout_number;
     word position;
     char* direction_txt;
+    PROTOCOL protocol;
+
 
     switch(message.command){
       case SYSTEM_BEFEHL:
@@ -561,20 +591,25 @@ void loop() {
       case LOC_GESCHWINDIGHEID:
           speed = (message.data[4] << 8) 
                  + message.data[5];
-          if(lookupLocomotiveIndex(address, &index)){
-            locomotive_status[index].speed = speed;
+          if(getProtocolFromAddress(address, &sub_address, &protocol)){
+            lookupLocomotiveProtocol(protocol, protocol_txt);
+            if(lookupLocomotiveIndex(sub_address, protocol, &index)){
+              locomotive_status[index].speed = speed;
+            }
+            tft_printf(ST77XX_GREEN, "CANBUS msg\nLocomotive\nAddress(%s): %i\nSet speed: %i\n",
+              protocol_txt, sub_address, speed);
           }
-          lookupLocomotiveProtocolAddress(address, protocol_txt, &sub_address);
-          tft_printf(ST77XX_GREEN, "CANBUS msg\nLocomotive\nAddress(%s): %i\nSet speed: %i\n",
-            protocol_txt, sub_address, speed);
           break;
       case LOC_RICHTUNG:
+#if 0
           if(lookupLocomotiveIndex(address, &index)){
             locomotive_status[index].direction = message.data[4];
             locomotive_status[index].speed = 0;
           }
+#endif
           direction_txt = getDirectionTxt(message.data[4]);
-          lookupLocomotiveProtocolAddress(address, protocol_txt, &sub_address);
+        //lookupLocomotiveProtocol(control->protocol, protocol_txt);
+
 #if 0
             Serial.printf("Length %i\n", message.length);
             Serial.printf("CANBUS msg\nLocomotive\nAddress(%s): %i\nSet dir: %s\n",
@@ -584,14 +619,18 @@ void loop() {
               protocol_txt, sub_address, direction_txt);      
           break;
       case LOC_FUNCTION:
-          lookupLocomotiveProtocolAddress(address, protocol_txt, &sub_address);
+          //lookupLocomotiveProtocol(address, protocol_txt, &sub_address);
+          //lookupLocomotiveProtocol(control->protocol, protocol_txt);
+
           function_index = message.data[4];
           function_enable = message.data[5];
           tft_printf(ST77XX_GREEN, "CANBUS msg\nLocomotive\nAddress(%s): %i\nSet Func. %i: %s\n",
             protocol_txt, sub_address, function_index, function_enable ? "True" : "False");
+          #if 0
           if(lookupLocomotiveIndex(address, &index)){
             locomotive_status[index].function_state.data[function_index] = function_enable ? true : false;
-          }  
+          } 
+          #endif 
         break;
       default:
         break;    

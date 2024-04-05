@@ -55,12 +55,12 @@ try:
     line = "LOCOMOTIVE active_locomotives[] = {"
     for i in range(len(locomotives) - 1):
         line = line + "{" + str(locomotives[i]["address"]) + ', '
-        line = line + str(locomotives[i]["protocol"]) + ', '
-        line = line + "0},"
+        line = line + str(locomotives[i]["protocol"]) + '}, '
+
 
     line = line + "{" + str(locomotives[len(locomotives) - 1]["address"]) + ', '
-    line = line + str(locomotives[len(locomotives) - 1]["protocol"]) + ', '
-    line = line + " 0}};\n"
+    line = line + str(locomotives[len(locomotives) - 1]["protocol"]) + '}, '
+    line = line + "};\n"
     header = header + line
     line = "#define  NUMBER_OF_ACTIVE_LOCOMOTIVES   " + str(len(locomotives)) + "\n"
     header = header + line + "\n"

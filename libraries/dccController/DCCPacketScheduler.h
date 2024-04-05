@@ -25,14 +25,17 @@ class DCCPacketScheduler
   public:
   
     DCCPacketScheduler(void);
-    
+
+    DCCPacketQueue *packet_buffer;
+
     //for configuration
     void setDefaultSpeedSteps(uint8_t new_speed_steps);
     bool setup(void); //for any post-constructor initialization
 
-    bool enableTrackPower();
-    bool disableTrackPower();
+    void EnableWaveformGeneration();
 
+    bool trackPower(bool enable);
+   
     //for enqueueing packets
     bool setSpeed(uint16_t address, uint8_t address_kind, int8_t new_speed, uint8_t steps = 0); //new_speed: [-127,127]
     bool setSpeed14(uint16_t address, uint8_t address_kind, int8_t new_speed, bool F0=true); //new_speed: [-13,13], and optionally F0 settings.
@@ -66,12 +69,12 @@ class DCCPacketScheduler
   //private:
   
   //  void stashAddress(DCCPacket *p); //remember the address to compare with the next packet
-    TaskHandle_t scheduler_task_h;
-    void repeatPacket(DCCPacket *p); //insert into the appropriate repeat queue
+    TaskHandle_t scheduler_task_h = NULL;
     uint8_t default_speed_steps;
     uint16_t last_packet_address;
   
     uint8_t packet_counter;
+
   
 //    DCCPacketQueue *queue;
 };

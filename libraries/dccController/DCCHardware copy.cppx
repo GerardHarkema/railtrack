@@ -1,5 +1,4 @@
 #include "Arduino.h"
-#include "FunctionalInterrupt.h"
 #include "DCCHardware.h"
 
 //#define DEBUG     
@@ -58,6 +57,7 @@ hw_timer_t *waveform_generator_timer = NULL;
 
 bool track_power_enable = false;
 
+void IRAM_ATTR waveform_generator_timer_isr();
 
 #define LED_RED     0
 #define LED_GREEN   2
@@ -82,7 +82,7 @@ uint8_t output_state = LOW;
 
 #define TIMER_NUMBER      3
 
-bool waveform_generator::setup_DCC_waveform_generator() {
+bool setup_DCC_waveform_generator() {
 
   pinMode(TRACK_POWER_ENABLE_PIN, OUTPUT);
   digitalWrite(TRACK_POWER_ENABLE_PIN, TRACK_POWER_OFF);
@@ -99,11 +99,7 @@ bool waveform_generator::setup_DCC_waveform_generator() {
     DEBUG_PRINT("Error creating waveform timer");
     return false;
   }
-
-//timerAttachInterrupt(waveform_generator_timer, [this](){ waveform_generator_timer_isr(); }, true);
-
-//  timerAttachInterrupt(waveform_generator_timer, std::bind(&waveform_generator::waveform_generator_timer_isr, this), true);
-  timerAttachInterrupt(waveform_generator_timer, &this->waveform_generator_timer_isr, true);
+  timerAttachInterrupt(waveform_generator_timer, waveform_generator_timer_isr, true);
   timerAlarmWrite(waveform_generator_timer, zero_high_count * TIMER_SCALER, true);
 
   timerAlarmEnable(waveform_generator_timer);
@@ -111,25 +107,25 @@ bool waveform_generator::setup_DCC_waveform_generator() {
   return true;
 }
 
-void waveform_generator::EnableWaveformGenerator()
+void EnableWaveformGenerator()
 {
   //enable the compare match interrupt
   //timerAlarmEnable(waveform_generator_timer);
 }
 
-bool waveform_generator::enableTrackPower(){
+bool enableTrackPower(){
   track_power_enable = true;
   Serial.println("PE");
   return true;
 }
-bool waveform_generator::disableTrackPower(){
+bool disableTrackPower(){
   Serial.println("PD");
   track_power_enable = false;
   return true;
 }
 
 /// This is the Interrupt Service Routine (ISR) for Timer1 compare match.
-void waveform_generator::waveform_generator_timer_isr()
+void IRAM_ATTR waveform_generator_timer_isr()
 {
 
   Serial.println("I");

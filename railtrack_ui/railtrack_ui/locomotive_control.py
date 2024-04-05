@@ -18,8 +18,7 @@ from rclpy.qos import QoSProfile, QoSReliabilityPolicy, QoSHistoryPolicy
 from std_msgs.msg import Bool;
 from railway_interfaces.msg import LocomotiveControl  
 from railway_interfaces.msg import LocomotiveState  
-from railway_interfaces.msg import TurnoutControl  
-from railway_interfaces.msg import TurnoutState  
+
 
 class locomotive_control(Node):
 
@@ -30,17 +29,25 @@ class locomotive_control(Node):
         self.control_publisher = control_publisher;
         self.locomotive_msg = LocomotiveControl()
         match locomotive_descr['protocol']:
+            case "ROS":
+                self.locomotive_msg.address = locomotive_descr['address']
+                self.locomotive_msg.protocol = LocomotiveControl().__class__.PROTOCOL_ROS
+                self.number_of_functions = 4
             case "MM1":
                 self.locomotive_msg.address = locomotive_descr['address']
+                self.locomotive_msg.protocol = LocomotiveControl().__class__.PROTOCOL_MM1
                 self.number_of_functions = 4
             case "MM2":    
                 self.locomotive_msg.address = locomotive_descr['address']
+                self.locomotive_msg.protocol = LocomotiveControl().__class__.PROTOCOL_MM2
                 self.number_of_functions = 4
             case "DCC":
-                self.locomotive_msg.address = locomotive_descr['address'] + 0xC000
+                self.locomotive_msg.address = locomotive_descr['address']
+                self.locomotive_msg.protocol = LocomotiveControl().__class__.PROTOCOL_DCC
                 self.number_of_functions = 16
             case "MFX":
-                self.locomotive_msg.address = locomotive_descr['address'] + 0x4000
+                self.locomotive_msg.address = locomotive_descr['address']
+                self.locomotive_msg.protocol = LocomotiveControl().__class__.PROTOCOL_MFX
                 self.number_of_functions = 32
             case _:
                 pass
@@ -191,7 +198,7 @@ class locomotive_control(Node):
 
     def set_status(self, status) -> None:
         #print("set_status_indicator")
-        if(self.locomotive_msg.address == status.address):
+        if((self.locomotive_msg.address == status.address) and (self.locomotive_msg.protocol == status.protocol)):
             #print(status)
             self.speed_slider.disable()
             self.speed_slider.value = status.speed

@@ -2,18 +2,15 @@
 #define __DCCHARDWARE_H__
 
 
-#ifdef __cplusplus
-extern "C"
-{
-#endif
+class waveform_generator{
+    private:
+        static void waveform_generator_timer_isr();
+    public:
+        bool setup_DCC_waveform_generator(void);
+        void EnableWaveformGenerator(void);
+        bool enableTrackPower();
+        bool disableTrackPower();
+};
 
-bool setup_DCC_waveform_generator(void);
-void DCC_waveform_generation_hasshin(void);
-bool enableTrackPower();
-bool disableTrackPower();
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif //__DCCHARDWARE_H__

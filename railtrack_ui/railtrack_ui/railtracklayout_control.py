@@ -16,8 +16,6 @@ from functools import partial
 from rclpy.qos import QoSProfile, QoSReliabilityPolicy, QoSHistoryPolicy
 
 from std_msgs.msg import Bool;
-from railway_interfaces.msg import LocomotiveControl  
-from railway_interfaces.msg import LocomotiveState  
 from railway_interfaces.msg import TurnoutControl  
 from railway_interfaces.msg import TurnoutState  
 
@@ -51,6 +49,20 @@ class turnout_control_on_layout(Node):
         self.turnout_msg = TurnoutControl()
         self.turnout_msg.number = turnout["number"]
         self.control_publisher = turnout_control_publisher
+
+        match turnout['protocol']:
+            case "ROS":
+                self.turnout_msg.protocol = TurnoutControl().__class__.PROTOCOL_ROS
+            case "MM1":
+                self.turnout_msg.protocol = TurnoutControl().__class__.PROTOCOL_MM1
+            case "MM2":    
+                self.turnout_msg.protocol = TurnoutControl().__class__.PROTOCOL_MM2
+            case "DCC":
+                self.turnout_msg.protocol = TurnoutControl().__class__.PROTOCOL_DCC
+            case "MFX":
+                self.turnout_msg.protocol = TurnoutControl().__class__.PROTOCOL_MFX
+            case _:
+                pass
 
         try:
             for layout_position in turnout["layout_positions"]:
@@ -108,7 +120,7 @@ class turnout_control_on_layout(Node):
     def set_status_indicator(self, status):
 
         if self.first_ui_update or self.old_status != status.state:
-            if(self.turnout_msg.number == status.number):
+            if((self.turnout_msg.number == status.number) and (self.turnout_msg.protocol == status.protocol)):
                 if status.state:
                     #for content in self.red_contents:
                     #    self.image.content -= content

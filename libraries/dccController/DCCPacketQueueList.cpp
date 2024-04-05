@@ -57,13 +57,28 @@ void DCCPacketQueue::printQueue(void)
   };  
   int i = 0;
   std::list<DCCPacket>::iterator queue_packet;
+#if 1
   if(queue.size()){
     for (queue_packet = queue.begin(); queue_packet != queue.end(); ++queue_packet){
-      Serial.printf("%i: Address = 0x%04x, Repeatcount = %i\n", i,
-        queue_packet->getAddress(), queue_packet->getRepeatCount());
+      Serial.printf("%i: Address = 0x%04x, Kind = %i, Repeatcount = %i", i,
+        queue_packet->getAddress(), 
+        queue_packet->getKind(), 
+        queue_packet->getRepeatCount());
+      u_int8_t data_size = queue_packet->getSize();
+      Serial.printf(", Size = %i", data_size);
+      if(data_size){
+        Serial.printf(", Data =");
+        for(int j = 0; j < data_size; j++)
+          Serial.printf(" 0x%02x", queue_packet->getData(j));
+      }
+      Serial.printf("\n");
       i++;
     }
   }
+  else{
+    Serial.printf("Queue Empty\n");    
+  }
+#endif
   xSemaphoreGive(semaphore);
 }
 
@@ -90,9 +105,7 @@ bool DCCPacketQueue::readPacket(DCCPacket &packet)
   }
 #if 0
     }
-
-
-    queue_full = false;
+   queue_full = false;
     result = true;
   }
 #endif

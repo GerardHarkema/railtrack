@@ -20,6 +20,7 @@ from railway_interfaces.msg import LocomotiveControl
 from railway_interfaces.msg import LocomotiveState  
 from railway_interfaces.msg import TurnoutControl  
 from railway_interfaces.msg import TurnoutState
+from railway_interfaces.msg import PowerControl   
 from railway_interfaces.msg import PowerState   
 
 from turnout_control import turnout_control
@@ -62,7 +63,11 @@ class RailTrackNode(Node):
         self.power_status_subscription = self.create_subscription(PowerState, topic,  self.power_status_callback, qos_profile=self.qos_profile)
 
         topic = "/railtrack/power_control"
-        self.power_control_publisher = self.create_publisher(Bool, topic,  1)
+        self.power_control_publisher = self.create_publisher(PowerControl, topic,  1)
+
+        self.power_msg = PowerControl()
+        self.power_msg.enable = False
+
 
         self.turnoutsui= []
         self.locomotivesui = []
@@ -99,11 +104,11 @@ class RailTrackNode(Node):
 
                             try:
                                 for turnout in self.track_config["Turnouts"]:
-                                    self.turnouts.append(turnout["number"])
+                                    self.turnouts.append(turnout)
                             except KeyError:
                                 pass
 
-                            self.turnouts.sort()
+                            #self.turnouts.sort()
                             for turnout in self.turnouts:
                                 tc = turnout_control(turnout, self.turnout_control_publisher)
                                 self.turnoutsui.append(tc)
@@ -128,31 +133,32 @@ class RailTrackNode(Node):
                         pass
                 except KeyError:
                     pass
-            with ui.grid(columns=4):
+            with ui.grid(columns=3):
                 with ui.card():
+                    ui.label("Control")
                     ui.label("Track Power")
                     self.power_button = ui.button('STOP', on_click=lambda:self.power()).classes('drop-shadow bg-red')
                     ui.label("Connection state (Flash)")
                     self.active = ui.icon('fiber_manual_record', size='3em').classes('drop-shadow text-green')
                 with ui.card():
-                    ui.label("Current")
-                    self.current = ui.label("0.0 A")
-                    ui.label("Overload")
-                    self.current_overload = ui.icon('fiber_manual_record', size='3em').classes('drop-shadow text-green')
-                with ui.card():
-                    ui.label("Voltage")
-                    self.voltage = ui.label("0.0 V")
-                    ui.label("Overload")
-                    self.voltage_overload = ui.icon('fiber_manual_record', size='3em').classes('drop-shadow text-green')
-                with ui.card():
-                    ui.label("Temperature")
-                    self.temperature = ui.label("0.0 °C")
-                    ui.label("Overload")
-                    self.temperature_overload = ui.icon('fiber_manual_record', size='3em').classes('drop-shadow text-green')
+                    ui.label("Status")
+                    with ui.grid(columns=3):                
+                        with ui.card():
+                            ui.label("Current")
+                            self.current = ui.label("0.0 A")
+                            ui.label("Overload")
+                            self.current_overload = ui.icon('fiber_manual_record', size='3em').classes('drop-shadow text-green')
+                        with ui.card():
+                            ui.label("Voltage")
+                            self.voltage = ui.label("0.0 V")
+                            ui.label("Overload")
+                            self.voltage_overload = ui.icon('fiber_manual_record', size='3em').classes('drop-shadow text-green')
+                        with ui.card():
+                            ui.label("Temperature")
+                            self.temperature = ui.label("0.0 °C")
+                            ui.label("Overload")
+                            self.temperature_overload = ui.icon('fiber_manual_record', size='3em').classes('drop-shadow text-green')
             self.active_status = False;
-
-
-        self.power_state = False
 
     def turnout_status_callback(self, status):
         try:
@@ -170,11 +176,11 @@ class RailTrackNode(Node):
 
     def power_status_callback(self, status):
         if status.state:
-            self.power_state = True
+            self.power_msg.enable = True
             self.power_button.classes('drop-shadow bg-red', remove='bg-green')
             self.power_button.text = 'STOP'
         else:
-            self.power_state = False
+            self.power_msg.enable = False
             self.power_button.classes('drop-shadow bg-green', remove='bg-red') 
             self.power_button.text = 'ENABLE'
         if(self.active_status):
@@ -208,20 +214,17 @@ class RailTrackNode(Node):
 
     def power(self):
         #ui.notify(self.power_button.text)
-        msg = Bool()
         if(self.power_button.text == 'STOP'):
             self.power_button.classes('drop-shadow bg-green', remove='bg-red') 
             self.power_button.text = 'ENABLE'
-            msg.data = False
-            self.power_state = False
+            self.power_msg.enable = False
         else:
             self.power_button.classes('drop-shadow bg-red', remove='bg-green')
             self.power_button.text = 'STOP'
-            msg.data = True
-            self.power_state = True
-        self.power_control_publisher.publish(msg)  
+            self.power_msg.enable = True
+        self.power_control_publisher.publish(self.power_msg)  
         notify_text = "Power "
-        if(self.power_state):
+        if self.power_msg.enable:
             notify_text = notify_text + ": Enable"
         else:
             notify_text = notify_text + ": Disable"

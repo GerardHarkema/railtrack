@@ -33,7 +33,7 @@
 #define LED_BUILTIN LED_RED
 #endif
 
-DCCPacketScheduler *DccPacketScheduler;
+DCCPacketScheduler DccPacketScheduler;
 
 void error_loop(){
   Serial.println("Error: System halted");
@@ -54,8 +54,8 @@ void setup() {
   delay(2000);
   Serial.println("DCC controller started");
 
-  DccPacketScheduler = new DCCPacketScheduler(); 
-  if(!DccPacketScheduler->setup())error_loop();
+  //DccPacketScheduler = new DCCPacketScheduler(); 
+  if(!DccPacketScheduler.setup())error_loop();
 
 #if 0
   Serial.print("MOSI: ");Serial.println(MOSI);
@@ -63,11 +63,13 @@ void setup() {
   Serial.print("SCK: ");Serial.println(SCK);
   Serial.print("SS: ");Serial.println(SS);  
 #endif
+  DccPacketScheduler.EnableWaveformGeneration();
 
   Serial.println("Controller Started");
 
   Serial.println("!!! Ready for operating !!!");
   //tft_printf(ST77XX_MAGENTA, "DCC\ncanbus\ncontroller\nReady\n");
+
 }
 
 int once = 0;
@@ -77,10 +79,12 @@ void loop() {
 
   vTaskDelay(20);
   //delay(20);
+
+
   char speed_byte = 1;
   if(!once){
-    DccPacketScheduler->setSpeed128(3,DCC_SHORT_ADDRESS,10); //This should be in the call backs of the ROS subscribers
-    DccPacketScheduler->setSpeed128(60,DCC_SHORT_ADDRESS,20); //This should be in the call backs of the ROS subscribers
+    DccPacketScheduler.setSpeed128(3,DCC_SHORT_ADDRESS,10); //This should be in the call backs of the ROS subscribers
+    DccPacketScheduler.setSpeed128(60,DCC_SHORT_ADDRESS,20); //This should be in the call backs of the ROS subscribers
     once++;
   }
 

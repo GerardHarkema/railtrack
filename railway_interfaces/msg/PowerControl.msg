@@ -1,5 +1,3 @@
 int8 track_index  # Not used, for future implementation
-int32 number
-int8 protocol
-bool state
+bool enable
 
