@@ -540,6 +540,10 @@ void loop() {
   // Measure voltage
   // Measure Temperature
 
+#ifndef THREAD_SAFE_QUEUE
+  DccPacketScheduler.update();
+#endif
+
   RCSOFTCHECK(rclc_executor_spin_some(&executor, RCL_MS_TO_NS(100)));
 
 }

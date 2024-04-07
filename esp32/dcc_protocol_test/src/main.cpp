@@ -75,11 +75,14 @@ void setup() {
 int once = 0;
 void loop() {
 
-  //Serial.print("*");
+  Serial.print("*");
 
   vTaskDelay(20);
   //delay(20);
 
+#ifndef THREAD_SAFE_QUEUE
+  DccPacketScheduler.update();
+#endif
 
   char speed_byte = 1;
   if(!once){

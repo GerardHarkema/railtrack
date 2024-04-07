@@ -1,12 +1,12 @@
 #include "Arduino.h"
 #include "DCCHardware.h"
 
-//#define DEBUG     
+#define DEBUG     
 #ifdef DEBUG
   #define DEBUG_PRINT(x)      Serial.print(x)
   #define DEBUG_PRINT2(x, y)  Serial.print(x, y)
   #define DEBUG_PRINTLN(x)    Serial.println(x)
-  #define TIMER_SCALER        200
+  #define TIMER_SCALER        100
 #else
   #define DEBUG_PRINT(x)      
   #define DEBUG_PRINT2(x, y)
@@ -84,6 +84,7 @@ uint8_t output_state = LOW;
 
 bool setup_DCC_waveform_generator() {
 
+#if 0
   pinMode(TRACK_POWER_ENABLE_PIN, OUTPUT);
   digitalWrite(TRACK_POWER_ENABLE_PIN, TRACK_POWER_OFF);
 
@@ -92,7 +93,7 @@ bool setup_DCC_waveform_generator() {
   digitalWrite(TRACK_POWER_H_PIN, LOW);
   pinMode(TRACK_POWER_L_PIN, OUTPUT);
   digitalWrite(TRACK_POWER_L_PIN, HIGH);
-
+#endif
   // see: https://deepbluembedded.com/esp32-timers-timer-interrupt-tutorial-arduino-ide/
   waveform_generator_timer = timerBegin(TIMER_NUMBER, 80, true); // Time 3 (is it free?) 80 MHz
   if(!waveform_generator_timer){
@@ -129,7 +130,7 @@ void IRAM_ATTR waveform_generator_timer_isr()
 {
 
   Serial.println("I");
-#if 1
+#if 0
   // prevent shorting outputs ???
   digitalWrite(TRACK_POWER_ENABLE_PIN, TRACK_POWER_OFF);
   //Toggle outputs

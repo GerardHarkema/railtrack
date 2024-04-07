@@ -26,7 +26,7 @@ class DCCPacketScheduler
   
     DCCPacketScheduler(void);
 
-    DCCPacketQueue *packet_buffer;
+    DCCPacketQueue packet_buffer;
 
     //for configuration
     void setDefaultSpeedSteps(uint8_t new_speed_steps);

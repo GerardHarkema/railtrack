@@ -1,13 +1,13 @@
 #include "Arduino.h"
 #include "FunctionalInterrupt.h"
-#include "DCCHardware.h"
+#include "DCCHardwareClass.h"
 
 //#define DEBUG     
 #ifdef DEBUG
   #define DEBUG_PRINT(x)      Serial.print(x)
   #define DEBUG_PRINT2(x, y)  Serial.print(x, y)
   #define DEBUG_PRINTLN(x)    Serial.println(x)
-  #define TIMER_SCALER        200
+  #define TIMER_SCALER        500
 #else
   #define DEBUG_PRINT(x)      
   #define DEBUG_PRINT2(x, y)
@@ -71,6 +71,12 @@ bool track_power_enable = false;
 #define TRACK_POWER_H_PIN 25
 #define TRACK_POWER_L_PIN 26
 #define TRACK_POWER_ENABLE_PIN 27
+
+#endif
+
+#define HARDWARE_DEBUG
+#ifdef HARDWARE_DEBUG
+  #define TRACK_TRIGGER_PIN   28
 #endif
 
 //#define TRACK_POWER_H_PIN 25
@@ -82,7 +88,7 @@ uint8_t output_state = LOW;
 
 #define TIMER_NUMBER      3
 
-bool waveform_generator::setup_DCC_waveform_generator() {
+bool waveform_generator_class::setup_DCC_waveform_generator() {
 
   pinMode(TRACK_POWER_ENABLE_PIN, OUTPUT);
   digitalWrite(TRACK_POWER_ENABLE_PIN, TRACK_POWER_OFF);
@@ -93,6 +99,12 @@ bool waveform_generator::setup_DCC_waveform_generator() {
   pinMode(TRACK_POWER_L_PIN, OUTPUT);
   digitalWrite(TRACK_POWER_L_PIN, HIGH);
 
+
+#ifdef HARDWARE_DEBUG
+  pinMode(TRACK_TRIGGER_PIN, OUTPUT);
+  digitalWrite(TRACK_TRIGGER_PIN, LOW);
+#endif
+
   // see: https://deepbluembedded.com/esp32-timers-timer-interrupt-tutorial-arduino-ide/
   waveform_generator_timer = timerBegin(TIMER_NUMBER, 80, true); // Time 3 (is it free?) 80 MHz
   if(!waveform_generator_timer){
@@ -102,7 +114,7 @@ bool waveform_generator::setup_DCC_waveform_generator() {
 
 //timerAttachInterrupt(waveform_generator_timer, [this](){ waveform_generator_timer_isr(); }, true);
 
-//  timerAttachInterrupt(waveform_generator_timer, std::bind(&waveform_generator::waveform_generator_timer_isr, this), true);
+//  timerAttachInterrupt(waveform_generator_timer, std::bind(&waveform_generator_class::waveform_generator_timer_isr, this), true);
   timerAttachInterrupt(waveform_generator_timer, &this->waveform_generator_timer_isr, true);
   timerAlarmWrite(waveform_generator_timer, zero_high_count * TIMER_SCALER, true);
 
@@ -111,31 +123,33 @@ bool waveform_generator::setup_DCC_waveform_generator() {
   return true;
 }
 
-void waveform_generator::EnableWaveformGenerator()
+void waveform_generator_class::EnableWaveformGenerator()
 {
   //enable the compare match interrupt
   //timerAlarmEnable(waveform_generator_timer);
 }
 
-bool waveform_generator::enableTrackPower(){
+bool waveform_generator_class::enableTrackPower(){
+  Serial.println("Track power enable");
   track_power_enable = true;
   Serial.println("PE");
   return true;
 }
-bool waveform_generator::disableTrackPower(){
-  Serial.println("PD");
+bool waveform_generator_class::disableTrackPower(){
+  Serial.println("Track power disable");
+  digitalWrite(TRACK_POWER_ENABLE_PIN, TRACK_POWER_OFF);
   track_power_enable = false;
   return true;
 }
 
 /// This is the Interrupt Service Routine (ISR) for Timer1 compare match.
-void waveform_generator::waveform_generator_timer_isr()
+void waveform_generator_class::waveform_generator_timer_isr()
 {
 
-  Serial.println("I");
+  //Serial.println("I");
 #if 1
   // prevent shorting outputs ???
-  digitalWrite(TRACK_POWER_ENABLE_PIN, TRACK_POWER_OFF);
+  //digitalWrite(TRACK_POWER_ENABLE_PIN, TRACK_POWER_OFF);
   //Toggle outputs
   digitalWrite(TRACK_POWER_L_PIN, output_state);
   output_state = (output_state==HIGH)? LOW : HIGH;
@@ -145,6 +159,7 @@ void waveform_generator::waveform_generator_timer_isr()
 
   if(output_state) //the pin is high. New cycle is begining. Here's where the real work goes.
   {
+
      //time to switch things up, maybe. send the current bit in the current packet.
      //if this is the last bit to send, queue up another packet (might be the idle packet).
     switch(DCC_state)
@@ -159,6 +174,10 @@ void waveform_generator::waveform_generator_timer_isr()
         }
         //looks like there's a new packet for us to dump on the wire!
         //for debugging purposes, let's print it out
+#ifdef HARDWARE_DEBUG
+        digitalWrite(TRACK_TRIGGER_PIN, HIGH);
+#endif
+
 #if 0//defined DEBUG
         if(current_packet[1] != 0xFF)
         {
@@ -174,6 +193,9 @@ void waveform_generator::waveform_generator_timer_isr()
         DCC_state = dos_send_preamble; //and fall through to dos_send_preamble
       /// Preamble: In the process of producing 14 '1's, counter by current_bit_counter; when complete, move to dos_send_bstart
       case dos_send_preamble:
+#ifdef HARDWARE_DEBUG
+        digitalWrite(TRACK_TRIGGER_PIN, LOW);
+#endif
         timerAlarmWrite(waveform_generator_timer, one_count * TIMER_SCALER, true);
         DEBUG_PRINT("P");
         if(!--current_bit_counter)

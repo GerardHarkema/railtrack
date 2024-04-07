@@ -1,8 +1,8 @@
-#ifndef __DCCHARDWARE_H__
-#define __DCCHARDWARE_H__
+#ifndef __DCCHARDWARE_CLASS_H__
+#define __DCCHARDWARE_CLASS_H__
 
 
-class waveform_generator{
+class waveform_generator_class{
     private:
         static void waveform_generator_timer_isr();
     public:
