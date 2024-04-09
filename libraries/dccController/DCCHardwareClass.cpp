@@ -76,7 +76,7 @@ bool track_power_enable = false;
 
 #define HARDWARE_DEBUG
 #ifdef HARDWARE_DEBUG
-  #define TRACK_TRIGGER_PIN   28
+  #define TRACK_TRIGGER_PIN   32
 #endif
 
 //#define TRACK_POWER_H_PIN 25

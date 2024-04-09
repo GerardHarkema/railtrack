@@ -28,9 +28,10 @@
 #error This application is only avaible for Arduino Portenta, Arduino Nano RP2040 Connect, ESP32 Dev module and Wio Terminal
 #endif
 
-#include <DCCPacket.h>
-#include "DCCPacketQueueList.h"
-#include <DCCPacketScheduler.h>
+#include <config.h>
+#include <TrackManager.h>
+#include <DCC.h>
+
 
 #define SPEED_STEP_RESOLUTION_128     ((int)(1000/128))
 #define SPEED_STEP_RESOLUTION_28      ((int)(1000/28))
@@ -109,8 +110,6 @@ rcl_timer_t turnout_state_publisher_timer;
 rcl_timer_t locomotive_state_publisher_timer;
 rcl_timer_t power_state_publisher_timer;
 
-
-
 #define LED_RED     0
 #define LED_GREEN   2
 #define LED_BLUE    4
@@ -119,11 +118,13 @@ rcl_timer_t power_state_publisher_timer;
 #define LED_BUILTIN LED_RED
 #endif
 
-DCCPacketScheduler DccPacketScheduler;
+
+#define MEASUREMENT_SWITCH_PIN    27
+bool display_measurents = false;
 
 void error_loop(){
   Serial.println("Error: System halted");
-  tft_printf(ST77XX_BLUE, "CANBUS\ncontroller\nError\nSystem halted");
+  tft_printf(ST77XX_BLUE, "controller\nError\nSystem halted");
 
   while(1){
     digitalWrite(LED_BUILTIN, !digitalRead(LED_BUILTIN));
@@ -226,7 +227,10 @@ void power_state_publisher_timer_callback(rcl_timer_t * timer, int64_t last_call
       power_status.voltage,
       power_status.current,
       power_status.temperature);
-    //tft_printf(ST77XX_GREEN, text);
+    if(display_measurents == true){
+      tft_printf(ST77XX_GREEN, text);
+      //Serial.printf(text);
+    }
   }
 
 }
@@ -258,12 +262,12 @@ void locomotive_control_callback(const void * msgin)
   int locomotive_index;
   char* direction_txt;
   char protocol_txt[10];
-  uint address;
 
   switch(control->command){
     case railway_interfaces__msg__LocomotiveControl__SET_SPEED:
-      //Serial.printf("Address: %i\n", control->address);
-      //Serial.printf("Speed: %i\n", control->speed);
+      Serial.printf("Address: %i\n", control->address);
+      Serial.printf("Speed: %i\n", control->speed);
+
       if(lookupLocomotiveIndex(control->address, (PROTOCOL)control->protocol, &locomotive_index)){
         //Serial.printf("Found\n");
         uint8_t speed;
@@ -274,8 +278,8 @@ void locomotive_control_callback(const void * msgin)
               case SS_128:
                 speed = (uint8_t)(control->speed / SPEED_STEP_RESOLUTION_128);
                 speed = locomotive_status[locomotive_index].direction ? speed * -1 : speed;
+                DCC::setThrottle(control->address, control->direction, speed);
                 Serial.printf("Set Speed 128: %i\n", speed);
-                DccPacketScheduler.setSpeed128(control->address, DCC_SHORT_ADDRESS,speed); //This should be in the call backs of the ROS subscribers
                 break;
               case SS_28:
                 speed = (uint8_t)(control->speed / SPEED_STEP_RESOLUTION_28);
@@ -292,6 +296,7 @@ void locomotive_control_callback(const void * msgin)
               default:
                 break;
             }
+            //DCC::displayCabList();
             break;
           case MM1:
           case MM2:
@@ -305,7 +310,7 @@ void locomotive_control_callback(const void * msgin)
       }
       lookupLocomotiveProtocol((PROTOCOL)control->protocol, protocol_txt);
       tft_printf(ST77XX_GREEN, "ROS msg\nLocomotive\nAddress(%s): %i\nSet speed: %i\n",
-            protocol_txt, address, control->speed);
+            protocol_txt, control->address, control->speed);
       break;
     case railway_interfaces__msg__LocomotiveControl__SET_DIRECTION:
       //address = getCANAdress((PROTOCOL)control->protocol, control->address);
@@ -316,16 +321,16 @@ void locomotive_control_callback(const void * msgin)
       direction_txt = getDirectionTxt(control->direction);
       lookupLocomotiveProtocol((PROTOCOL)control->protocol, protocol_txt);
       tft_printf(ST77XX_GREEN, "ROS msg\nLocomotive\nAddress(%s): %i\nSet dir: %s\n",
-            protocol_txt, address, direction_txt);      
+            protocol_txt, control->address, direction_txt);      
       break;
     case railway_interfaces__msg__LocomotiveControl__SET_FUNCTION:
       //address = getCANAdress((PROTOCOL)control->protocol, control->address);
-      if(lookupLocomotiveIndex(address, (PROTOCOL)control->protocol, &locomotive_index)){
+      if(lookupLocomotiveIndex(control->address, (PROTOCOL)control->protocol, &locomotive_index)){
         locomotive_status[locomotive_index].function_state.data[control->function_index] = control->function_state;
       }
       lookupLocomotiveProtocol((PROTOCOL)control->protocol, protocol_txt);
       tft_printf(ST77XX_GREEN, "ROS msg\nLocomotive\nAddress(%s): %i\nSet Func. %i: %s\n",
-            protocol_txt, address, control->function_index, control->function_state ? "True" : "False");
+            protocol_txt, control->address, control->function_index, control->function_state ? "True" : "False");
       break;
     default:
       Serial.println("Invalid command");
@@ -335,7 +340,6 @@ void locomotive_control_callback(const void * msgin)
 void power_control_callback(const void * msgin)
 {  
   const railway_interfaces__msg__PowerControl * control = (const railway_interfaces__msg__PowerControl *)msgin;
-  DccPacketScheduler.trackPower(control->enable);
   power_status.state = control->enable;
   tft_printf(ST77XX_GREEN, "ROS msg\nSystem: %s", power_status.state ? "Go" : "Stop");
 
@@ -345,8 +349,10 @@ void power_control_callback(const void * msgin)
 void setup() {
   Serial.begin(115200);
   while (!Serial);
+  
   delay(2000);
-  Serial.println("DCC/MM controller started");
+  
+  Serial.println("DCC-Ex controller started");
 #if 0
   Serial.print("MOSI: ");Serial.println(MOSI);
   Serial.print("MISO: ");Serial.println(MISO);
@@ -366,8 +372,8 @@ void setup() {
   tft->setTextColor(ST77XX_CYAN);
   tft->setTextSize(1);
   tft->setCursor(1, 22);
-  tft->println("DCC/MM Control");
-  tft_printf(ST77XX_MAGENTA, "DCC/MM\ncontroller\nstarted\n");
+  tft->println("DCC-Ex Control");
+  tft_printf(ST77XX_MAGENTA, "DCC-Ex\ncontroller\nstarted\n");
 
   EEPROM.begin(NUMBER_OF_ACTIVE_TURNOUTS_MM);
 
@@ -401,7 +407,7 @@ void setup() {
       locomotive_status[i].function_state.data[j] = power ? true : false;
     }
   }
-  WiFi.setHostname("DccMMController");
+  WiFi.setHostname("DccExController");
   set_microros_wifi_transports(SSID, PASSWORD, agent_ip, (size_t)PORT);
 
   pinMode(LED_BUILTIN, OUTPUT);
@@ -498,8 +504,9 @@ void setup() {
     RCL_MS_TO_NS((int)timer_timeout),
     power_state_publisher_timer_callback));
 
-  //DccPacketScheduler = new DCCPacketScheduler(); 
-  if(!DccPacketScheduler.setup())error_loop();
+  TrackManager::Setup(MOTOR_SHIELD_TYPE);
+
+  DCC::begin();
 
   // create executor
   int number_of_executors = 6;
@@ -516,31 +523,32 @@ void setup() {
   RCCHECK(rclc_executor_add_timer(&executor, &power_state_publisher_timer));
   RCCHECK(rclc_executor_add_subscription(&executor, &power_control_subscriber, &power_control, &power_control_callback, ON_NEW_DATA));
 
-  DccPacketScheduler.EnableWaveformGeneration();
+  pinMode(MEASUREMENT_SWITCH_PIN, INPUT_PULLUP);
+
   Serial.println("!!! Ready for operating !!!");
-  tft_printf(ST77XX_MAGENTA, "DCC/MM\ncontroller\nReady\n");
+  tft_printf(ST77XX_MAGENTA, "DCC-Ex\ncontroller\nReady\n");
 }
 
-
+int old_display_measurents_switch = HIGH;
 void loop() {
-
-  //Serial.print("*");
-  char speed_byte = 1;
-//  if(!once){
-    //DccPacketScheduler.setSpeed128(3,DCC_SHORT_ADDRESS,10); //This should be in the call backs of the ROS subscribers
-    //DccPacketScheduler.setSpeed128(60,DCC_SHORT_ADDRESS,20); //This should be in the call backs of the ROS subscribers
-//    once++;
-//  }
+#if 1
+  int new_display_measurents_switch = digitalRead(MEASUREMENT_SWITCH_PIN);
+  if((old_display_measurents_switch != new_display_measurents_switch) && (new_display_measurents_switch == LOW)){
+    display_measurents = display_measurents ? false : true;
+    //Serial.println("Toggle");
+    //Serial.println(display_measurents);
+    tft_printf(ST77XX_GREEN,"");
+  }
+  old_display_measurents_switch = new_display_measurents_switch;
+#endif
   vTaskDelay(20);
-  //delay(20);
+
 
   // Measure current
   // Measure voltage
   // Measure Temperature
 
-#ifndef THREAD_SAFE_QUEUE
-  DccPacketScheduler.update();
-#endif
+  DCC::loop();
 
   RCSOFTCHECK(rclc_executor_spin_some(&executor, RCL_MS_TO_NS(100)));
 
