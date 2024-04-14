@@ -29,7 +29,7 @@ class turnout_control(Node):
 
         match turnout_descr['protocol']:
             case "ROS":
-                self.turnout_msg.protocol = TurnoutControl().__class__.PROTOCOL_DCC
+                self.turnout_msg.protocol = TurnoutControl().__class__.PROTOCOL_ROS
             case "MM1":
                 self.turnout_msg.protocol = TurnoutControl().__class__.PROTOCOL_MM1
             case "MM2":    
@@ -66,6 +66,7 @@ class turnout_control(Node):
     def set_status_indicator(self, status) -> None:
         #print("set_status_indicator " + str(self.turnout_msg.number))
         #print(status.number)
+        #print()
         if((self.turnout_msg.number == status.number) and (self.turnout_msg.protocol == status.protocol)):
             if status.state:
                 self.led.classes('text-green', remove='text-red')

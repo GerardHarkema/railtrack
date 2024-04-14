@@ -28,11 +28,21 @@
 #error This application is only avaible for Arduino Portenta, Arduino Nano RP2040 Connect, ESP32 Dev module and Wio Terminal
 #endif
 
-#include <config.h>
+//#include <config.h>
 #include <TrackManager.h>
-#include <DCC.h>
+#include <DCCEX.h>
+#include <DCCTimer.h>
+//#include <MotorDriver.h>
 
+#if 0
+#define MY_IBT_2_WITH_ESP32 F("MY_IBT_2_WITH_ESP32"),                                              \
+                         new MotorDriver(0, 2, 4, UNUSED_PIN, 35, 41.54, 5000, UNUSED_PIN), \
+                         new MotorDriver(12, 32, UNUSED_PIN, UNUSED_PIN, 35, 2.99, 1500, UNUSED_PIN)
 
+#else
+#define MY_IBT_2_WITH_ESP32 F("MY_IBT_2_WITH_ESP32"),                                              \
+                         new MotorDriver(0, 2, UNUSED_PIN, UNUSED_PIN, 35, 41.54, 5000, UNUSED_PIN)
+#endif
 #define SPEED_STEP_RESOLUTION_128     ((int)(1000/128))
 #define SPEED_STEP_RESOLUTION_28      ((int)(1000/28))
 #define SPEED_STEP_RESOLUTION_14      ((int)(1000/14))
@@ -267,6 +277,7 @@ void locomotive_control_callback(const void * msgin)
     case railway_interfaces__msg__LocomotiveControl__SET_SPEED:
       Serial.printf("Address: %i\n", control->address);
       Serial.printf("Speed: %i\n", control->speed);
+      //Serial.printf("Di: %i\n", control->speed);
 
       if(lookupLocomotiveIndex(control->address, (PROTOCOL)control->protocol, &locomotive_index)){
         //Serial.printf("Found\n");
@@ -276,9 +287,9 @@ void locomotive_control_callback(const void * msgin)
             Serial.printf("Protocol DCC\n");         
             switch(active_locomotives[locomotive_index].speed_steps){
               case SS_128:
+              
                 speed = (uint8_t)(control->speed / SPEED_STEP_RESOLUTION_128);
-                speed = locomotive_status[locomotive_index].direction ? speed * -1 : speed;
-                DCC::setThrottle(control->address, control->direction, speed);
+                DCC::setThrottle(control->address, speed, locomotive_status[locomotive_index].direction);
                 Serial.printf("Set Speed 128: %i\n", speed);
                 break;
               case SS_28:
@@ -296,7 +307,7 @@ void locomotive_control_callback(const void * msgin)
               default:
                 break;
             }
-            //DCC::displayCabList();
+            DCC::displayCabList(&USB_SERIAL);
             break;
           case MM1:
           case MM2:
@@ -317,6 +328,8 @@ void locomotive_control_callback(const void * msgin)
       //ctrlsetLocoDirection(address, control->direction);
       if(lookupLocomotiveIndex(control->address, (PROTOCOL)control->protocol, &locomotive_index)){
         locomotive_status[locomotive_index].direction = control->direction;
+        DCC::setThrottle(control->address, 0, locomotive_status[locomotive_index].direction);
+        locomotive_status[locomotive_index].speed = 0;
       }
       direction_txt = getDirectionTxt(control->direction);
       lookupLocomotiveProtocol((PROTOCOL)control->protocol, protocol_txt);
@@ -340,6 +353,15 @@ void locomotive_control_callback(const void * msgin)
 void power_control_callback(const void * msgin)
 {  
   const railway_interfaces__msg__PowerControl * control = (const railway_interfaces__msg__PowerControl *)msgin;
+  if(control->enable){
+
+
+  TrackManager::setTrackMode(0, TRACK_MODE::TRACK_MODE_MAIN, 0);
+  TrackManager::setDCCSignal(true);
+    TrackManager::setPower(POWERMODE::ON);
+  }
+  else
+    TrackManager::setPower(POWERMODE::OFF);
   power_status.state = control->enable;
   tft_printf(ST77XX_GREEN, "ROS msg\nSystem: %s", power_status.state ? "Go" : "Stop");
 
@@ -374,6 +396,17 @@ void setup() {
   tft->setCursor(1, 22);
   tft->println("DCC-Ex Control");
   tft_printf(ST77XX_MAGENTA, "DCC-Ex\ncontroller\nstarted\n");
+
+  //SerialManager::init();
+  //IODevice::begin();
+  //ADCee::begin();
+  TrackManager::Setup(MY_IBT_2_WITH_ESP32);
+
+  DCC::begin();
+
+
+
+  //RMFT::begin();
 
   EEPROM.begin(NUMBER_OF_ACTIVE_TURNOUTS_MM);
 
@@ -504,9 +537,7 @@ void setup() {
     RCL_MS_TO_NS((int)timer_timeout),
     power_state_publisher_timer_callback));
 
-  TrackManager::Setup(MOTOR_SHIELD_TYPE);
 
-  DCC::begin();
 
   // create executor
   int number_of_executors = 6;
@@ -531,6 +562,7 @@ void setup() {
 
 int old_display_measurents_switch = HIGH;
 void loop() {
+
 #if 1
   int new_display_measurents_switch = digitalRead(MEASUREMENT_SWITCH_PIN);
   if((old_display_measurents_switch != new_display_measurents_switch) && (new_display_measurents_switch == LOW)){
@@ -541,7 +573,7 @@ void loop() {
   }
   old_display_measurents_switch = new_display_measurents_switch;
 #endif
-  vTaskDelay(20);
+  //vTaskDelay(20);
 
 
   // Measure current
@@ -549,6 +581,13 @@ void loop() {
   // Measure Temperature
 
   DCC::loop();
+  //SerialManager::loop();
+
+  //RMFT::loop();  // ignored if no automation
+  //IODevice::loop();
+  //IODevice::DumpAll();
+
+  //Sensor::checkAll(); // Update and print changes
 
   RCSOFTCHECK(rclc_executor_spin_some(&executor, RCL_MS_TO_NS(100)));
 

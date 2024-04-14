@@ -75,6 +75,9 @@ void DCC::begin() {
 
 void DCC::setThrottle( uint16_t cab, uint8_t tSpeed, bool tDirection)  {
   byte speedCode = (tSpeed & 0x7F)  + tDirection * 128;
+  //Serial.printf("speed = %i\n", tSpeed);
+  //Serial.printf("Direction = %i\n", tDirection);
+  //Serial.printf("speedcode = 0x%02x\n", (int)speedCode);
   setThrottle2(cab, speedCode);
   TrackManager::setDCSignal(cab,speedCode); // in case this is a dcc track on this addr
   // retain speed for loco reminders

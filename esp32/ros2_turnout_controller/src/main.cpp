@@ -66,6 +66,14 @@ typedef enum{
   DIGITAL_OUT
 }TURNOUT_TYPE;
 
+typedef enum{
+    ROS = railway_interfaces__msg__TurnoutControl__PROTOCOL_ROS, 
+    MM1 = railway_interfaces__msg__TurnoutControl__PROTOCOL_MM1, 
+    MM2 = railway_interfaces__msg__TurnoutControl__PROTOCOL_MM2, 
+    DCC = railway_interfaces__msg__TurnoutControl__PROTOCOL_DCC, 
+    MFX = railway_interfaces__msg__TurnoutControl__PROTOCOL_MFX
+}PROTOCOL;
+
 typedef struct{
   TURNOUT_TYPE type;
   int turnout_number;
@@ -269,6 +277,7 @@ void setup() {
   for(int i=0; i < NUMBER_OF_TURNOUTS; i++){
     turnout_status[i].number = turnout_config[i].turnout_number;
     turnout_status[i].state = EEPROM.readBool(i);
+    turnout_status[i].protocol = ROS;
     bool state;
     int analog_value;
     int pwm_value;

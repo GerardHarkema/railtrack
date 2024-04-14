@@ -66,6 +66,7 @@ void setEOT(rmt_item32_t* item) {
 RMTChannel *channelHandle[8] = { 0 };
 
 void IRAM_ATTR interrupt(rmt_channel_t channel, void *t) {
+  //Serial.printf("R");
   RMTChannel *tt = channelHandle[channel];
   if (tt) tt->RMTinterrupt();
   if (channel == 0)
@@ -185,9 +186,9 @@ int RMTChannel::RMTfillData(const byte buffer[], byte byteCount, byte repeatCoun
   for(byte n=0; n<byteCount; n++) {
     for(byte bit=0; bit<8; bit++) {
       if (buffer[n] & transmitMask[bit])
-	setDCCBit1(data + bitcounter++);
+	      setDCCBit1(data + bitcounter++);
       else
-	setDCCBit0(data + bitcounter++);
+	      setDCCBit0(data + bitcounter++);
     }
     setDCCBit0(data + bitcounter++); // zero at end of each byte
   }

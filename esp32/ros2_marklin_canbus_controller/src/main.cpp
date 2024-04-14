@@ -102,6 +102,8 @@ rcl_timer_t power_state_publisher_timer;
 #define RCCHECK(fn) { rcl_ret_t temp_rc = fn; if((temp_rc != RCL_RET_OK)){error_loop();}}
 #define RCSOFTCHECK(fn) { rcl_ret_t temp_rc = fn; if((temp_rc != RCL_RET_OK)){}}
 
+#define MEASUREMENT_SWITCH_PIN    27
+bool display_measurents = false;
 
 void error_loop(){
   Serial.println("Error: System halted");
@@ -208,7 +210,7 @@ void power_state_publisher_timer_callback(rcl_timer_t * timer, int64_t last_call
       power_status.voltage,
       power_status.current,
       power_status.temperature);
-    tft_printf(ST77XX_GREEN, text);
+    if(display_measurents) tft_printf(ST77XX_GREEN, text);
   }
 
 }
@@ -370,6 +372,7 @@ void setup() {
   for(int i = 0; i < NUMBER_OF_ACTIVE_TURNOUTS_MM; i++){
     turnout_status[i].number = active_turnouts_mm[i];
     turnout_status[i].state = EEPROM.readBool(i);
+    turnout_status[i].protocol = railway_interfaces__msg__TurnoutControl__PROTOCOL_MM1;
     //ctrl->getTurnout(turnout_status[i].number, &turnout_status[i].state);
   }
 
@@ -507,12 +510,26 @@ void setup() {
   RCCHECK(rclc_executor_add_timer(&executor, &power_state_publisher_timer));
   RCCHECK(rclc_executor_add_subscription(&executor, &power_control_subscriber, &power_control, &power_control_callback, ON_NEW_DATA));
 
+  pinMode(MEASUREMENT_SWITCH_PIN, INPUT_PULLUP);
+
   Serial.println("!!! Ready for operating !!!");
   tft_printf(ST77XX_MAGENTA, "Marklin\ncanbus\ncontroller\nReady\n");
 }
 
+int old_display_measurents_switch = HIGH;
 
 void loop() {
+
+#if 1
+  int new_display_measurents_switch = digitalRead(MEASUREMENT_SWITCH_PIN);
+  if((old_display_measurents_switch != new_display_measurents_switch) && (new_display_measurents_switch == LOW)){
+    display_measurents = display_measurents ? false : true;
+    //Serial.println("Toggle");
+    //Serial.println(display_measurents);
+    tft_printf(ST77XX_GREEN,"");
+  }
+  old_display_measurents_switch = new_display_measurents_switch;
+#endif
 
   //Serial.print("*");
   if(ctrl->receiveMessage(message)){
