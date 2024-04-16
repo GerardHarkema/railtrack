@@ -1,5 +1,5 @@
 #include "DCCPacketScheduler.h"
-#include "DCCHardwareClass.h"
+#include "TrackManager.h"
 
 /*
  * DCC Waveform Generator
@@ -45,19 +45,21 @@
 #endif
 
 /// The currently queued packet to be put on the rails. Default is a reset packet.
-extern uint8_t current_packet[6];
+//extern uint8_t current_packet[6];
 /// How many data uint8_ts in the queued packet?
-extern volatile uint8_t current_packet_size;
+//extern volatile uint8_t current_packet_size;
 /// How many uint8_ts remain to be put on the rails?
-extern volatile uint8_t current_uint8_t_counter;
+//extern volatile uint8_t current_uint8_t_counter;
 /// How many bits remain in the current data uint8_t/preamble before changing states?
-extern volatile uint8_t current_bit_counter; //init to 14 1's for the preamble
+//extern volatile uint8_t current_bit_counter; //init to 14 1's for the preamble
 /// A fixed-content packet to send when idle
 //uint8_t DCC_Idle_Packet[3] = {255,0,255};
 /// A fixed-content packet to send to reset all decoders on layout
 //uint8_t DCC_Reset_Packet[3] = {0,0,0};
 
-waveform_generator_class waveform_generator;
+//waveform_generator_class waveform_generator;
+
+TrackManager track;
 
 ///////////////////////////////////////////////
 ///////////////////////////////////////////////
@@ -100,7 +102,7 @@ bool DCCPacketScheduler::setup(void) //for any post-constructor initialization
   if(!packet_buffer.setup()) return false;
   //if(!setup_DCC_waveform_generator()) return false;
 
-  waveform_generator.setup_DCC_waveform_generator();
+  //waveform_generator.setup_DCC_waveform_generator();
 
   DCCPacket p;
   uint8_t data[] = {0x00};
@@ -141,15 +143,14 @@ bool DCCPacketScheduler::setup(void) //for any post-constructor initialization
     return false;
   }
 #endif  
+  track.begin();
   return true;
 }
 
 bool DCCPacketScheduler::trackPower(bool enable){
-  if(enable) return waveform_generator.enableTrackPower();
-  else return waveform_generator.disableTrackPower();
+  if(enable) return track.enableTrackPower();
+  else return track.disableTrackPower();
 }
-
-
     
 //for enqueueing packets
 
@@ -453,24 +454,38 @@ bool DCCPacketScheduler::setBasicAccessory(uint16_t address, uint8_t function)
 
 bool DCCPacketScheduler::unsetBasicAccessory(uint16_t address, uint8_t function)
 {
-		DCCPacket p(address);
+  DCCPacket p(address);
 
-		uint8_t data[] = { ((function & 0x03) << 1) };
-		p.addData(data, 1);
-		p.setKind(basic_accessory_packet_kind);
-		p.setRepeatCount(OTHER_REPEAT);
+  uint8_t data[] = { ((function & 0x03) << 1) };
+  p.addData(data, 1);
+  p.setKind(basic_accessory_packet_kind);
+  p.setRepeatCount(OTHER_REPEAT);
 
-	  return packet_buffer.insertPacket(p);
+  return packet_buffer.insertPacket(p);
 }
 
 void DCCPacketScheduler::EnableWaveformGeneration(){
-  waveform_generator.EnableWaveformGenerator();
+  //waveform_generator.EnableWaveformGenerator();
 }
 
 //to be called periodically within loop()
 void DCCPacketScheduler::update() //checks queues, puts whatever's pending on the rails via global current_packet. easy-peasy
 {
+  if(track.requestNewPacket()){
 
+    DCCPacket p;
+    uint8_t data_size;
+    uint8_t current_packet[6];
+
+    if(packet_buffer.isEmpty()) return;
+    //packet_buffer.printQueue();
+    packet_buffer.readPacket(p);
+
+    data_size = p.getBitstream(current_packet);
+    track.RMTfillData(current_packet, data_size);
+  }
+
+#if 0
   //Serial.print("s");
   if(!current_uint8_t_counter) //if the ISR needs a packet:
   {
@@ -496,4 +511,5 @@ void DCCPacketScheduler::update() //checks queues, puts whatever's pending on th
     current_uint8_t_counter = current_packet_size;
     #endif
   }
+#endif
 }

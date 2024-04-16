@@ -65,6 +65,13 @@ void setEOT(rmt_item32_t* item) {
 // is only ONE common ISR routine for all channels.
 RMTChannel *channelHandle[8] = { 0 };
 
+static void inline updateMinimumFreeMemoryISR(unsigned char extraBytes=0)
+  __attribute__((always_inline)) {
+  int spare = freeMemory()-extraBytes;
+  if (spare < 0) spare = 0;
+  if (spare < minimum_free_memory) minimum_free_memory = spare;
+};
+
 void IRAM_ATTR interrupt(rmt_channel_t channel, void *t) {
   //Serial.printf("R");
   RMTChannel *tt = channelHandle[channel];
