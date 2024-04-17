@@ -25,7 +25,16 @@
 //#include "DCCWaveform.h" // for MAX_PACKET_SIZE
 #include "soc/gpio_sig_map.h"
 
-
+#if 0
+rmt_item32_t *idle;
+byte idleLen;
+rmt_item32_t *idle_message;
+byte startDataIndex;
+byte dataLen;
+rmt_item32_t *data_message;
+volatile bool dataReady = false;    // do we have real data available or send idle
+volatile bool request_new_packet = false;
+#endif
 
 #define LED_RED     0
 #define LED_GREEN   2
@@ -99,7 +108,7 @@ void IRAM_ATTR interrupt(rmt_channel_t channel, void *t) {
 #endif
 }
 
-#define MEX_PACKET_LEN  64
+#define MAX_PACKET_LEN  64
 #define PREAMBLE_LEN    12
 #define RMT_CHANNEL     (rmt_channel_t)0
 
@@ -114,7 +123,7 @@ void TrackManager::begin(){
 
   // Create idle message
   idleLen = 0;
-  idle_message = (rmt_item32_t*)malloc(MEX_PACKET_LEN*sizeof(rmt_item32_t));
+  idle_message = (rmt_item32_t*)malloc(MAX_PACKET_LEN*sizeof(rmt_item32_t));
   for (byte n=0; n<PREAMBLE_LEN; n++){
     setDCCBit1(idle_message + idleLen++);      // preamble bits
   }
@@ -140,7 +149,7 @@ void TrackManager::begin(){
 
  // Create preamble for data message
   startDataIndex = 0; // calculates th index whare data is stored
-  data_message = (rmt_item32_t*)malloc(MEX_PACKET_LEN*sizeof(rmt_item32_t));
+  data_message = (rmt_item32_t*)malloc((MAX_PACKET_LEN)*sizeof(rmt_item32_t));
   for (byte n=0; n<PREAMBLE_LEN; n++){
     setDCCBit1(data_message + startDataIndex++);      // preamble bits
   }
@@ -184,6 +193,7 @@ void TrackManager::begin(){
   rmt_fill_tx_items(RMT_CHANNEL, idle_message, idleLen, 0);
 
   dataReady = false;
+  request_new_packet = true;
 
 }
 
@@ -202,17 +212,22 @@ bool TrackManager::disableTrackPower(){
   return true;
 }
 
+
+bool TrackManager::requestNewPacket(){ 
+  return request_new_packet;
+}
+
+
 const byte transmitMask[] = {0x80, 0x40, 0x20, 0x10, 0x08, 0x04, 0x02, 0x01};
 
 int TrackManager::RMTfillData(const byte buffer[], byte byteCount) {
 
-  if(!requestNewPacket()) return 0; // no data neded
+if(!requestNewPacket()) return 0; // no data neded
   request_new_packet = false;
 
   // convert bytes to RMT stream of "bits"
 
-  byte dataLen = startDataIndex;
-  rmt_item32_t *data_message;
+  dataLen = startDataIndex;
   for(byte n=0; n<byteCount; n++) {
     for(byte bit=0; bit<8; bit++) {
       if (buffer[n] & transmitMask[bit])
@@ -222,43 +237,25 @@ int TrackManager::RMTfillData(const byte buffer[], byte byteCount) {
     }
     setDCCBit0(data_message + dataLen++); // zero at end of each byte
   }
+
   setDCCBit1(data_message + dataLen-1);     // overwrite previous zero bit with one bit
   setEOT(data_message + dataLen++);         // EOT marker
-
+  //Serial.printf("dataLen = %i\n", dataLen);
   noInterrupts();                      // keep dataReady and dataRepeat consistnet to each other
   dataReady = true;
   interrupts();
+
   return 0;
 }
 
 void IRAM_ATTR TrackManager::RMTinterrupt() {
     if(dataReady){
+      dataReady = false;
       rmt_fill_tx_items(RMT_CHANNEL, data_message, dataLen, 0);
       request_new_packet = true;
-      dataReady = false;
     }
     else
       rmt_fill_tx_items(RMT_CHANNEL, idle_message, idleLen, 0);
-
-#if 0
-  //no rmt_tx_start(channel,true) as we run in loop mode
-  //preamble is always loaded at beginning of buffer
-  packetCounter++;
-  if (!dataReady && dataRepeat == 0) { // we did run empty
-    rmt_fill_tx_items(channel, idle, idleLen, preambleLen-1);
-    return; // nothing to do about that
-  }
-
-  // take care of incoming data
-  if (dataReady) {            // if we have new data, fill while preamble is running
-    rmt_fill_tx_items(channel, data, dataLen, preambleLen-1);
-    dataReady = false;
-    //if (dataRepeat == 0)       // all data should go out at least once
-      //DIAG(F("Channel %d DCC signal lost data"), channel);
-  }
-  if (dataRepeat > 0)         // if a repeat count was specified, work on that
-    dataRepeat--;
-#endif    
 }
 
 #endif //ESP32

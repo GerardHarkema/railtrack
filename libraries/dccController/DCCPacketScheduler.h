@@ -59,8 +59,9 @@ class DCCPacketScheduler
     //more specific functions
     bool eStop(void); //all locos
     bool eStop(uint16_t address, uint8_t address_kind); //just one specific loco
-
+#if THREAD_SAFE_QUEUE 
     static void scheduler_task(void *pvParameters);
+#endif
 
     //to be called periodically within loop()
     void update(void); //checks queues, puts whatever's pending on the rails via global current_packet. easy-peasy

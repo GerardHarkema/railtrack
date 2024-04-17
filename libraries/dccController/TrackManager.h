@@ -36,13 +36,14 @@ class TrackManager {
 
   void IRAM_ATTR RMTinterrupt();
   int RMTfillData(const byte buffer[], byte byteCount);
-  inline bool requestNewPacket(){ return request_new_packet;};
+  bool requestNewPacket();
 
   bool disableTrackPower();
   bool enableTrackPower();
 
  private:
   // 2 types of data to send idle or data
+#if 1
   rmt_item32_t *idle;
   byte idleLen;
   rmt_item32_t *idle_message;
@@ -52,6 +53,7 @@ class TrackManager {
   // flags 
   volatile bool dataReady = false;    // do we have real data available or send idle
   volatile bool request_new_packet = false;
+#endif
   bool track_power_enable = false;
 
 };

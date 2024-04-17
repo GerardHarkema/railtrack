@@ -64,6 +64,7 @@ TrackManager track;
 ///////////////////////////////////////////////
 ///////////////////////////////////////////////
 ///////////////////////////////////////////////
+ 
   
 DCCPacketScheduler::DCCPacketScheduler(void) : default_speed_steps(128), last_packet_address(255), packet_counter(1)
 {
@@ -80,7 +81,7 @@ void DCCPacketScheduler::setDefaultSpeedSteps(uint8_t new_speed_steps)
   default_speed_steps = new_speed_steps;
 }
 
-
+#if THREAD_SAFE_QUEUE 
 void DCCPacketScheduler::scheduler_task(void *pvParameters)
 {
   DCCPacketScheduler *instance = static_cast<DCCPacketScheduler*>(pvParameters);
@@ -91,7 +92,7 @@ void DCCPacketScheduler::scheduler_task(void *pvParameters)
 		//taskYIELD();
 	}
 }
-
+#endif
 bool DCCPacketScheduler::setup(void) //for any post-constructor initialization
 {
   
@@ -99,7 +100,10 @@ bool DCCPacketScheduler::setup(void) //for any post-constructor initialization
   //use the e_stop_queue to do this, to ensure these packets go out first!
 
   //if(!packet_buffer) return false;
-  if(!packet_buffer.setup()) return false;
+  if(!packet_buffer.setup()){
+    Serial.printf("Unable to create packet_buffer\n");
+    return false;
+  }
   //if(!setup_DCC_waveform_generator()) return false;
 
   //waveform_generator.setup_DCC_waveform_generator();
@@ -130,7 +134,7 @@ bool DCCPacketScheduler::setup(void) //for any post-constructor initialization
 
   packet_buffer.printQueue();
 
-#if 1
+#if THREAD_SAFE_QUEUE
   int app_cpu = xPortGetCoreID();
   xTaskCreatePinnedToCore(scheduler_task,
                         "scheduler_task", 
@@ -140,6 +144,7 @@ bool DCCPacketScheduler::setup(void) //for any post-constructor initialization
                         &scheduler_task_h,
                         app_cpu);
   if(!scheduler_task_h){
+    Serial.printf("Unable to start task\n");
     return false;
   }
 #endif  
@@ -159,6 +164,7 @@ bool DCCPacketScheduler::trackPower(bool enable){
 // a value of 0 = estop
 // a value of 1/-1 = stop
 // a value >1 (or <-1) means go.
+#if 0
 // valid non-estop speeds are in the range [1,127] / [-127,-1] with 1 = stop
 bool DCCPacketScheduler::setSpeed(uint16_t address, uint8_t address_kind, int8_t new_speed, uint8_t steps)
 {
@@ -178,7 +184,7 @@ bool DCCPacketScheduler::setSpeed(uint16_t address, uint8_t address_kind, int8_t
   }
   return false; //invalid number of steps specified.
 }
-
+#endif
 bool DCCPacketScheduler::setSpeed14(uint16_t address, uint8_t address_kind, int8_t new_speed, bool F0)
 {
   DCCPacket p(address, address_kind);
@@ -190,13 +196,15 @@ bool DCCPacketScheduler::setSpeed14(uint16_t address, uint8_t address_kind, int8
     dir = 0;
     abs_speed = new_speed * -1;
   }
+  if(abs_speed > 14)abs_speed = 14;
+
   if(!new_speed) //estop!
     return eStop(address, speed_packet_kind);//speed_data_uint8_ts[0] |= 0x01; //estop
     
   else if (abs_speed == 1) //regular stop!
     speed_data_uint8_ts[0] |= 0x00; //stop
   else //movement
-    speed_data_uint8_ts[0] |= map(abs_speed, 2, 127, 2, 15); //convert from [2-127] to [1-14]
+    speed_data_uint8_ts[0] |= abs_speed;
   speed_data_uint8_ts[0] |= (0x20*dir); //flip bit 3 to indicate direction;
   DEBUG_PRINTLN2(speed_data_uint8_ts[0],BIN);
   p.addData(speed_data_uint8_ts,1);
@@ -221,6 +229,9 @@ bool DCCPacketScheduler::setSpeed28(uint16_t address, uint8_t address_kind, int8
     dir = 0;
     abs_speed = new_speed * -1;
   }
+  if(abs_speed > 27)abs_speed = 27;
+
+
 //  DEBUG_PRINTLN(speed);
 //  DEBUG_PRINTLN(dir);
   if(new_speed == 0) //estop!
@@ -229,7 +240,7 @@ bool DCCPacketScheduler::setSpeed28(uint16_t address, uint8_t address_kind, int8
     speed_data_uint8_ts[0] |= 0x00; //stop
   else //movement
   {
-    speed_data_uint8_ts[0] |= map(abs_speed, 2, 127, 2, 0X1F); //convert from [2-127] to [2-31]  
+    speed_data_uint8_ts[0] |= abs_speed;
     //most least significant bit has to be shufled around
     speed_data_uint8_ts[0] = (speed_data_uint8_ts[0]&0xE0) | ((speed_data_uint8_ts[0]&0x1F) >> 1) | ((speed_data_uint8_ts[0]&0x01) << 4);
   }
@@ -267,10 +278,7 @@ bool DCCPacketScheduler::setSpeed128(uint16_t address, uint8_t address_kind, int
 
   if(abs_speed > 0x7f)abs_speed = 0x7f;
 
-  if(!new_speed){ //estop!
-    //packet_buffer.forget(address, speed_packet_kind);
-    //packet_buffer.printQueue();
-    //return true;
+  if(!new_speed){
     return eStop(address, speed_packet_kind);//speed_data_uint8_ts[0] |= 0x01; //estop
   }
   else 
@@ -482,34 +490,7 @@ void DCCPacketScheduler::update() //checks queues, puts whatever's pending on th
     packet_buffer.readPacket(p);
 
     data_size = p.getBitstream(current_packet);
+    //Serial.printf("data_size = %i\n", data_size);
     track.RMTfillData(current_packet, data_size);
   }
-
-#if 0
-  //Serial.print("s");
-  if(!current_uint8_t_counter) //if the ISR needs a packet:
-  {
-    DCCPacket p;
-
-    if(packet_buffer.notEmpty()){
-      //packet_buffer.printQueue();
-      packet_buffer.readPacket(p);
-    }
-  #if 1
-    last_packet_address = p.getAddress(); //remember the address to compare with the next packet
-    current_packet_size = p.getBitstream(current_packet); //feed to the starving ISR.
-    //output the packet, for checking:
-    //if(current_packet[0] != 0xFF) //if not idle
-    //{
-    //  for(uint8_t i = 0; i < current_packet_size; ++i)
-    //  {
-    //    DEBUG_PRINT(current_packet[i],BIN);
-    //    DEBUG_PRINT(" ");
-    //  }
-    //  DEBUG_PRINTLN("");
-    //}
-    current_uint8_t_counter = current_packet_size;
-    #endif
-  }
-#endif
 }

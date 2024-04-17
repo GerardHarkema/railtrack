@@ -250,7 +250,7 @@ void turnout_control_callback(const void * msgin)
 
 }
 
-
+#define MAX_NUMBER_OF_FUNCTIONS   14
 void locomotive_control_callback(const void * msgin)
 {  
   const railway_interfaces__msg__LocomotiveControl * control = (const railway_interfaces__msg__LocomotiveControl *)msgin;
@@ -258,36 +258,36 @@ void locomotive_control_callback(const void * msgin)
   int locomotive_index;
   char* direction_txt;
   char protocol_txt[10];
-  uint address;
-
+  //uint address;
+  uint16_t functions = 0; 
   switch(control->command){
     case railway_interfaces__msg__LocomotiveControl__SET_SPEED:
-      //Serial.printf("Address: %i\n", control->address);
-      //Serial.printf("Speed: %i\n", control->speed);
       if(lookupLocomotiveIndex(control->address, (PROTOCOL)control->protocol, &locomotive_index)){
         //Serial.printf("Found\n");
-        uint8_t speed;
+        int8_t speed;
         switch(active_locomotives[locomotive_index].protocol){
           case DCC:
             Serial.printf("Protocol DCC\n");         
             switch(active_locomotives[locomotive_index].speed_steps){
               case SS_128:
                 speed = (uint8_t)(control->speed / SPEED_STEP_RESOLUTION_128);
-                speed = locomotive_status[locomotive_index].direction ? speed * -1 : speed;
+                if(locomotive_status[locomotive_index].direction ==
+                  railway_interfaces__msg__LocomotiveControl__DIRECTION_REVERSE)
+                    speed = speed * -1;
                 Serial.printf("Set Speed 128: %i\n", speed);
-                DccPacketScheduler.setSpeed128(control->address, DCC_SHORT_ADDRESS,speed); //This should be in the call backs of the ROS subscribers
+                DccPacketScheduler.setSpeed128(control->address, DCC_SHORT_ADDRESS, speed); //This should be in the call backs of the ROS subscribers
                 break;
               case SS_28:
                 speed = (uint8_t)(control->speed / SPEED_STEP_RESOLUTION_28);
                 speed = locomotive_status[locomotive_index].direction ? speed * -1 : speed;
                 Serial.printf("Speed dcc 28: %i\n", speed);
-                //DccPacketScheduler.setSpeed28(control->address,DCC_SHORT_ADDRESS,speed); //This should be in the call backs of the ROS subscribers
+                DccPacketScheduler.setSpeed28(control->address, DCC_SHORT_ADDRESS,speed); //This should be in the call backs of the ROS subscribers
                 break;
               case SS_14:
                 speed = (uint8_t)(control->speed / SPEED_STEP_RESOLUTION_14);
                 speed = locomotive_status[locomotive_index].direction ? speed * -1 : speed;
                 Serial.printf("Speed dcc 14: %i\n", speed);
-                //DccPacketScheduler.setSpeed14(control->address,DCC_SHORT_ADDRESS,speed); //This should be in the call backs of the ROS subscribers
+                DccPacketScheduler.setSpeed14(control->address, DCC_SHORT_ADDRESS,speed); //This should be in the call backs of the ROS subscribers
                 break;
               default:
                 break;
@@ -305,20 +305,80 @@ void locomotive_control_callback(const void * msgin)
       }
       lookupLocomotiveProtocol((PROTOCOL)control->protocol, protocol_txt);
       tft_printf(ST77XX_GREEN, "ROS msg\nLocomotive\nAddress(%s): %i\nSet speed: %i\n",
-            protocol_txt, address, control->speed);
+            protocol_txt, control->address, control->speed);
       break;
     case railway_interfaces__msg__LocomotiveControl__SET_DIRECTION:
-      //address = getCANAdress((PROTOCOL)control->protocol, control->address);
-      //ctrlsetLocoDirection(address, control->direction);
+
       if(lookupLocomotiveIndex(control->address, (PROTOCOL)control->protocol, &locomotive_index)){
-        locomotive_status[locomotive_index].direction = control->direction;
+        //Serial.printf("Found\n");
+        switch(active_locomotives[locomotive_index].protocol){
+          case DCC:
+            Serial.printf("Protocol DCC\n");         
+            switch(active_locomotives[locomotive_index].speed_steps){
+              case SS_128:
+                DccPacketScheduler.setSpeed128(control->address, DCC_SHORT_ADDRESS, 0); //This should be in the call backs of the ROS subscribers
+                break;
+              case SS_28:
+                DccPacketScheduler.setSpeed28(control->address, DCC_SHORT_ADDRESS, 0); //This should be in the call backs of the ROS subscribers
+                break;
+              case SS_14:
+                DccPacketScheduler.setSpeed14(control->address, DCC_SHORT_ADDRESS, 0); //This should be in the call backs of the ROS subscribers
+                break;
+              default:
+                break;
+            }
+            locomotive_status[locomotive_index].direction = control->direction;
+            locomotive_status[locomotive_index].speed = 0;
+            break;
+          case MM1:
+          case MM2:
+            Serial.printf("Protocol MM\n"); 
+            break;
+          default:
+            Serial.printf("Unknomwn protocol\n"); 
+            break;
+        }
       }
       direction_txt = getDirectionTxt(control->direction);
       lookupLocomotiveProtocol((PROTOCOL)control->protocol, protocol_txt);
       tft_printf(ST77XX_GREEN, "ROS msg\nLocomotive\nAddress(%s): %i\nSet dir: %s\n",
-            protocol_txt, address, direction_txt);      
+            protocol_txt, control->address, direction_txt);      
       break;
     case railway_interfaces__msg__LocomotiveControl__SET_FUNCTION:
+          if(lookupLocomotiveIndex(control->address, (PROTOCOL)control->protocol, &locomotive_index)){
+        //Serial.printf("Found\n");
+        switch(active_locomotives[locomotive_index].protocol){
+          case DCC:
+            Serial.printf("Protocol DCC\n"); 
+            if(control->function_index > MAX_NUMBER_OF_FUNCTIONS){
+              Serial.printf("Invalid function\n");
+              return;
+            }
+            locomotive_status[locomotive_index].function_state.data[control->function_index] = control->function_state;
+
+            for(int i = 0; i <= MAX_NUMBER_OF_FUNCTIONS; i++){
+                functions = functions << 1;
+                functions |= locomotive_status[locomotive_index].function_state.data[MAX_NUMBER_OF_FUNCTIONS - i] ? 0x01 : 0x00;
+
+            }
+            Serial.print(functions, BIN);
+            DccPacketScheduler.setFunctions(control->address, DCC_SHORT_ADDRESS, functions);
+            break;
+          case MM1:
+          case MM2:
+            Serial.printf("Protocol MM\n"); 
+            break;
+          default:
+            Serial.printf("Unknomwn protocol\n"); 
+            break;
+        }
+      }
+      lookupLocomotiveProtocol((PROTOCOL)control->protocol, protocol_txt);
+      tft_printf(ST77XX_GREEN, "ROS msg\nLocomotive\nAddress(%s): %i\nSet Func. %i: %s\n",
+            protocol_txt, control->address, control->function_index, control->function_state ? "True" : "False");
+      break;
+      break;
+#if 0
       //address = getCANAdress((PROTOCOL)control->protocol, control->address);
       if(lookupLocomotiveIndex(address, (PROTOCOL)control->protocol, &locomotive_index)){
         locomotive_status[locomotive_index].function_state.data[control->function_index] = control->function_state;
@@ -327,8 +387,10 @@ void locomotive_control_callback(const void * msgin)
       tft_printf(ST77XX_GREEN, "ROS msg\nLocomotive\nAddress(%s): %i\nSet Func. %i: %s\n",
             protocol_txt, address, control->function_index, control->function_state ? "True" : "False");
       break;
+#endif
     default:
       Serial.println("Invalid command");
+      break;
   }
 }
 
@@ -498,9 +560,9 @@ void setup() {
     RCL_MS_TO_NS((int)timer_timeout),
     power_state_publisher_timer_callback));
 
-  //DccPacketScheduler = new DCCPacketScheduler(); 
+  Serial.printf("1\n");
   if(!DccPacketScheduler.setup())error_loop();
-
+  Serial.printf("2\n");
   // create executor
   int number_of_executors = 6;
   
@@ -525,12 +587,7 @@ void setup() {
 void loop() {
 
   //Serial.print("*");
-  char speed_byte = 1;
-//  if(!once){
-    //DccPacketScheduler.setSpeed128(3,DCC_SHORT_ADDRESS,10); //This should be in the call backs of the ROS subscribers
-    //DccPacketScheduler.setSpeed128(60,DCC_SHORT_ADDRESS,20); //This should be in the call backs of the ROS subscribers
-//    once++;
-//  }
+
   vTaskDelay(20);
   //delay(20);
 
