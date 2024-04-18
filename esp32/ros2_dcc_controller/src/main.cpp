@@ -1,20 +1,7 @@
 #include <Arduino.h>
 #include <EEPROM.h>
 
-#include <micro_ros_platformio.h>
-
-#include <stdio.h>
-#include <rcl/rcl.h>
-#include <rcl/error_handling.h>
-#include <rclc/rclc.h>
-#include <rclc/executor.h>
-
-#include <railway_interfaces/msg/turnout_control.h>
-#include <railway_interfaces/msg/turnout_state.h>
-#include <railway_interfaces/msg/locomotive_control.h>
-#include <railway_interfaces/msg/locomotive_state.h>
-#include <railway_interfaces/msg/power_control.h>
-#include <railway_interfaces/msg/power_state.h>
+#include "micro_ros_includes.h"
 
 #include <Adafruit_GFX.h> // Core graphics library
 #include <Fonts/FreeSansBold9pt7b.h>
@@ -32,14 +19,20 @@
 #include "DCCPacketQueueList.h"
 #include <DCCPacketScheduler.h>
 
-#define SPEED_STEP_RESOLUTION_128     ((int)(1000/128))
-#define SPEED_STEP_RESOLUTION_28      ((int)(1000/28))
-#define SPEED_STEP_RESOLUTION_14      ((int)(1000/14))
+#include "defines.h"
+#include "track_config.h"
+#include "support.h"
+
+#include "power.h"
+#include "locomotives.h"
+#include "turnouts.h"
+
+int number_of_active_mm_turnouts = NUMBER_OF_ACTIVE_TURNOUTS_MM;
+int number_of_active_turnouts_ros = NUMBER_OF_ACTIVE_TURNOUTS_ROS;
+int number_of_active_locomotives = NUMBER_OF_ACTIVE_LOCOMOTIVES;
+
 
 const bool DEBUG = true;
-
-#define RCCHECK(fn) { rcl_ret_t temp_rc = fn; if((temp_rc != RCL_RET_OK)){error_loop();}}
-#define RCSOFTCHECK(fn) { rcl_ret_t temp_rc = fn; if((temp_rc != RCL_RET_OK)){}}
 
 rcl_publisher_t turnout_status_publisher;
 rcl_publisher_t turnout_control_publisher;
@@ -57,31 +50,7 @@ railway_interfaces__msg__TurnoutControl turnout_control;
 railway_interfaces__msg__LocomotiveControl locomotive_control;
 railway_interfaces__msg__PowerControl power_control;
 
-// int8_t cs, int8_t dc, int8_t rst
-#define CS_PIN  16
-#define DC_PIN  17
-#define RST_PIN 21
 Adafruit_ST7735 *tft;
-
-typedef enum{
-    ROS = railway_interfaces__msg__LocomotiveControl__PROTOCOL_ROS, 
-    MM1 = railway_interfaces__msg__LocomotiveControl__PROTOCOL_MM1, 
-    MM2 = railway_interfaces__msg__LocomotiveControl__PROTOCOL_MM2, 
-    DCC = railway_interfaces__msg__LocomotiveControl__PROTOCOL_DCC, 
-    MFX = railway_interfaces__msg__LocomotiveControl__PROTOCOL_MFX
-}PROTOCOL;
-
-typedef enum{
-    SS_128, SS_28, SS_14, SS_INVALID, SS_NOT_USED
-}DCC_SPEED_STEPS;
-
-typedef struct{
-    unsigned int address;
-    PROTOCOL protocol;
-    DCC_SPEED_STEPS speed_steps;
-}LOCOMOTIVE;
-
-#include "track_config.h"
 
 IPAddress agent_ip(ip_address[0], ip_address[1], ip_address[2], ip_address[3]);
 
@@ -109,299 +78,8 @@ rcl_timer_t turnout_state_publisher_timer;
 rcl_timer_t locomotive_state_publisher_timer;
 rcl_timer_t power_state_publisher_timer;
 
-
-
-#define LED_RED     0
-#define LED_GREEN   2
-#define LED_BLUE    4
-
-#ifndef LED_BUILTIN
-#define LED_BUILTIN LED_RED
-#endif
-
 DCCPacketScheduler DccPacketScheduler;
 
-void error_loop(){
-  Serial.println("Error: System halted");
-  tft_printf(ST77XX_BLUE, "CANBUS\ncontroller\nError\nSystem halted");
-
-  while(1){
-    digitalWrite(LED_BUILTIN, !digitalRead(LED_BUILTIN));
-    delay(100);
-  }
-}
-void lookupLocomotiveProtocol(PROTOCOL protocol, char *protocol_txt){
-  switch(protocol){
-    case ROS:
-      strcpy(protocol_txt, "ROS");
-      break;
-    case MM1:
-      strcpy(protocol_txt, "MM1");
-      break;    
-    case MM2:
-      strcpy(protocol_txt, "MM2");
-      break;    
-    case DCC:
-      strcpy(protocol_txt, "DCC");
-      break;
-    case MFX:
-      strcpy(protocol_txt, "MFX");
-      break;
-    default:
-      strcpy(protocol_txt, "Invalid");
-  }
-}
-
-char* getDirectionTxt(int direction){
-  switch(direction){
-    case railway_interfaces__msg__LocomotiveState__DIRECTION_FORWARD:
-      return "Forward";
-      break;
-    case railway_interfaces__msg__LocomotiveState__DIRECTION_REVERSE:
-      return "Reverse";
-      break;
-    default:
-      return "Invalid Code";
-      break;
-  }
-}
-
-bool lookupTurnoutIndex(int turnout_number, int *turnout_index){
-  int i;
-  for(i = 0; i < NUMBER_OF_ACTIVE_TURNOUTS_MM; i++){
-    if(active_turnouts_mm[i] == turnout_number) break;
-  }
-  if(i >= NUMBER_OF_ACTIVE_TURNOUTS_MM) return false;
-  *turnout_index = i;
-  return true;
-}
-
-bool lookupLocomotiveIndex(int locomotive_address, PROTOCOL protocol, int *locomotive_index){
-  int i;
-  for(i = 0; i < NUMBER_OF_ACTIVE_LOCOMOTIVES; i++){
-    if((locomotive_status[i].address == locomotive_address) 
-      && (locomotive_status[i].protocol == protocol)) break;
-  }
-  if(i >= NUMBER_OF_ACTIVE_LOCOMOTIVES) return false;
-  *locomotive_index = i;
-  return true;
-}
-
-int turnout_state_index = 0;
-
-void turnout_state_publisher_timer_callback(rcl_timer_t * timer, int64_t last_call_time) {
-  RCLC_UNUSED(last_call_time);
-  if (timer != NULL && NUMBER_OF_ACTIVE_TURNOUTS_MM) {
-    RCSOFTCHECK(rcl_publish(&turnout_status_publisher, &turnout_status[turnout_state_index], NULL));
-    turnout_state_index++;
-    if(turnout_state_index == NUMBER_OF_ACTIVE_TURNOUTS_MM) turnout_state_index = 0;
-  }
-}
-
-
-int locomotive_state_index = 0;
-
-void locomotive_state_publisher_timer_callback(rcl_timer_t * timer, int64_t last_call_time) {
-  RCLC_UNUSED(last_call_time);
-  if (timer != NULL && NUMBER_OF_ACTIVE_LOCOMOTIVES) {
-    RCSOFTCHECK(rcl_publish(&locomoitive_status_publisher, &locomotive_status[locomotive_state_index], NULL));
-    locomotive_state_index++;
-    if(locomotive_state_index == NUMBER_OF_ACTIVE_LOCOMOTIVES) locomotive_state_index = 0;
-  }
-}
-
-void power_state_publisher_timer_callback(rcl_timer_t * timer, int64_t last_call_time) {
-  RCLC_UNUSED(last_call_time);
-  if (timer != NULL) {
-    power_status.current = 0;//ctrlgetCurrent();
-    power_status.voltage = 0;//ctrlgetVoltage();
-    power_status.temperature = 0;//ctrlgetTemperature();
-    //Serial.printf("current = %f A\n", power_status.current);
-    RCSOFTCHECK(rcl_publish(&power_status_publisher, &power_status, NULL));
-    power_status.current_overload = false;
-    power_status.voltage_overload = false;
-    power_status.temperature_overload = false;
-    char text[100];
-    sprintf(text, "U= %0.1fV\nI= %0.1fA\nT= %0.1f°C", 
-      power_status.voltage,
-      power_status.current,
-      power_status.temperature);
-    //tft_printf(ST77XX_GREEN, text);
-  }
-
-}
-
-void turnout_control_callback(const void * msgin)
-{  
-  const railway_interfaces__msg__TurnoutControl * control = (const railway_interfaces__msg__TurnoutControl *)msgin;
-  int index;
-  boolean straight = control->state ? true : false;
-  // update controller always !!!
-  if(power_status.state){
-    //ctrlsetTurnout(TURNOUT_BASE_ADDRESS + control->number - 1, straight);
-    if(lookupTurnoutIndex(control->number, &index)){
-      EEPROM.writeBool(index, straight);
-      EEPROM.commit();
-      turnout_status[index].state = straight;
-    }
-    tft_printf(ST77XX_GREEN, "ROS msg\nTurnout\nNumber: %i\nSet: %s\n",
-            control->number, straight ? "Green" : "Red");
-  }
-
-}
-
-#define MAX_NUMBER_OF_FUNCTIONS   14
-void locomotive_control_callback(const void * msgin)
-{  
-  const railway_interfaces__msg__LocomotiveControl * control = (const railway_interfaces__msg__LocomotiveControl *)msgin;
-
-  int locomotive_index;
-  char* direction_txt;
-  char protocol_txt[10];
-  //uint address;
-  uint16_t functions = 0; 
-  switch(control->command){
-    case railway_interfaces__msg__LocomotiveControl__SET_SPEED:
-      if(lookupLocomotiveIndex(control->address, (PROTOCOL)control->protocol, &locomotive_index)){
-        //Serial.printf("Found\n");
-        int8_t speed;
-        switch(active_locomotives[locomotive_index].protocol){
-          case DCC:
-            Serial.printf("Protocol DCC\n");         
-            switch(active_locomotives[locomotive_index].speed_steps){
-              case SS_128:
-                speed = (uint8_t)(control->speed / SPEED_STEP_RESOLUTION_128);
-                if(locomotive_status[locomotive_index].direction ==
-                  railway_interfaces__msg__LocomotiveControl__DIRECTION_REVERSE)
-                    speed = speed * -1;
-                Serial.printf("Set Speed 128: %i\n", speed);
-                DccPacketScheduler.setSpeed128(control->address, DCC_SHORT_ADDRESS, speed); //This should be in the call backs of the ROS subscribers
-                break;
-              case SS_28:
-                speed = (uint8_t)(control->speed / SPEED_STEP_RESOLUTION_28);
-                speed = locomotive_status[locomotive_index].direction ? speed * -1 : speed;
-                Serial.printf("Speed dcc 28: %i\n", speed);
-                DccPacketScheduler.setSpeed28(control->address, DCC_SHORT_ADDRESS,speed); //This should be in the call backs of the ROS subscribers
-                break;
-              case SS_14:
-                speed = (uint8_t)(control->speed / SPEED_STEP_RESOLUTION_14);
-                speed = locomotive_status[locomotive_index].direction ? speed * -1 : speed;
-                Serial.printf("Speed dcc 14: %i\n", speed);
-                DccPacketScheduler.setSpeed14(control->address, DCC_SHORT_ADDRESS,speed); //This should be in the call backs of the ROS subscribers
-                break;
-              default:
-                break;
-            }
-            break;
-          case MM1:
-          case MM2:
-            Serial.printf("Protocol MM\n"); 
-            break;
-          default:
-            Serial.printf("Unknomwn protocol\n"); 
-            break;
-        }
-        locomotive_status[locomotive_index].speed = control->speed;
-      }
-      lookupLocomotiveProtocol((PROTOCOL)control->protocol, protocol_txt);
-      tft_printf(ST77XX_GREEN, "ROS msg\nLocomotive\nAddress(%s): %i\nSet speed: %i\n",
-            protocol_txt, control->address, control->speed);
-      break;
-    case railway_interfaces__msg__LocomotiveControl__SET_DIRECTION:
-
-      if(lookupLocomotiveIndex(control->address, (PROTOCOL)control->protocol, &locomotive_index)){
-        //Serial.printf("Found\n");
-        switch(active_locomotives[locomotive_index].protocol){
-          case DCC:
-            Serial.printf("Protocol DCC\n");         
-            switch(active_locomotives[locomotive_index].speed_steps){
-              case SS_128:
-                DccPacketScheduler.setSpeed128(control->address, DCC_SHORT_ADDRESS, 0); //This should be in the call backs of the ROS subscribers
-                break;
-              case SS_28:
-                DccPacketScheduler.setSpeed28(control->address, DCC_SHORT_ADDRESS, 0); //This should be in the call backs of the ROS subscribers
-                break;
-              case SS_14:
-                DccPacketScheduler.setSpeed14(control->address, DCC_SHORT_ADDRESS, 0); //This should be in the call backs of the ROS subscribers
-                break;
-              default:
-                break;
-            }
-            locomotive_status[locomotive_index].direction = control->direction;
-            locomotive_status[locomotive_index].speed = 0;
-            break;
-          case MM1:
-          case MM2:
-            Serial.printf("Protocol MM\n"); 
-            break;
-          default:
-            Serial.printf("Unknomwn protocol\n"); 
-            break;
-        }
-      }
-      direction_txt = getDirectionTxt(control->direction);
-      lookupLocomotiveProtocol((PROTOCOL)control->protocol, protocol_txt);
-      tft_printf(ST77XX_GREEN, "ROS msg\nLocomotive\nAddress(%s): %i\nSet dir: %s\n",
-            protocol_txt, control->address, direction_txt);      
-      break;
-    case railway_interfaces__msg__LocomotiveControl__SET_FUNCTION:
-          if(lookupLocomotiveIndex(control->address, (PROTOCOL)control->protocol, &locomotive_index)){
-        //Serial.printf("Found\n");
-        switch(active_locomotives[locomotive_index].protocol){
-          case DCC:
-            Serial.printf("Protocol DCC\n"); 
-            if(control->function_index > MAX_NUMBER_OF_FUNCTIONS){
-              Serial.printf("Invalid function\n");
-              return;
-            }
-            locomotive_status[locomotive_index].function_state.data[control->function_index] = control->function_state;
-
-            for(int i = 0; i <= MAX_NUMBER_OF_FUNCTIONS; i++){
-                functions = functions << 1;
-                functions |= locomotive_status[locomotive_index].function_state.data[MAX_NUMBER_OF_FUNCTIONS - i] ? 0x01 : 0x00;
-
-            }
-            Serial.print(functions, BIN);
-            DccPacketScheduler.setFunctions(control->address, DCC_SHORT_ADDRESS, functions);
-            break;
-          case MM1:
-          case MM2:
-            Serial.printf("Protocol MM\n"); 
-            break;
-          default:
-            Serial.printf("Unknomwn protocol\n"); 
-            break;
-        }
-      }
-      lookupLocomotiveProtocol((PROTOCOL)control->protocol, protocol_txt);
-      tft_printf(ST77XX_GREEN, "ROS msg\nLocomotive\nAddress(%s): %i\nSet Func. %i: %s\n",
-            protocol_txt, control->address, control->function_index, control->function_state ? "True" : "False");
-      break;
-      break;
-#if 0
-      //address = getCANAdress((PROTOCOL)control->protocol, control->address);
-      if(lookupLocomotiveIndex(address, (PROTOCOL)control->protocol, &locomotive_index)){
-        locomotive_status[locomotive_index].function_state.data[control->function_index] = control->function_state;
-      }
-      lookupLocomotiveProtocol((PROTOCOL)control->protocol, protocol_txt);
-      tft_printf(ST77XX_GREEN, "ROS msg\nLocomotive\nAddress(%s): %i\nSet Func. %i: %s\n",
-            protocol_txt, address, control->function_index, control->function_state ? "True" : "False");
-      break;
-#endif
-    default:
-      Serial.println("Invalid command");
-      break;
-  }
-}
-
-void power_control_callback(const void * msgin)
-{  
-  const railway_interfaces__msg__PowerControl * control = (const railway_interfaces__msg__PowerControl *)msgin;
-  DccPacketScheduler.trackPower(control->enable);
-  power_status.state = control->enable;
-  tft_printf(ST77XX_GREEN, "ROS msg\nSystem: %s", power_status.state ? "Go" : "Stop");
-
-}
 
 
 void setup() {
@@ -435,6 +113,8 @@ void setup() {
 
   power_status.state = false;
   power_status.current = 0;
+  power_status.operating_mode = railway_interfaces__msg__PowerControl__OPERTING_MODE_NORMAL;
+  power_status.controller_type = railway_interfaces__msg__PowerState__CONTROLLER_DCC_MM;
 
   for(int i = 0; i < NUMBER_OF_ACTIVE_TURNOUTS_MM; i++){
     turnout_status[i].number = active_turnouts_mm[i];

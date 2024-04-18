@@ -34,6 +34,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/TurnoutState.msg"
   "msg/PowerControl.msg"
   "msg/PowerState.msg"
+  "msg/DccCvWrite.msg"
   DEPENDENCIES std_msgs
  )
 

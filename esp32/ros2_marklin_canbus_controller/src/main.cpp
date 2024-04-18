@@ -368,6 +368,8 @@ void setup() {
 
   power_status.state = false;
   power_status.current = 0;
+  power_status.operating_mode = railway_interfaces__msg__PowerControl__OPERTING_MODE_NORMAL;
+  power_status.controller_type = railway_interfaces__msg__PowerState__CONTROLLER_CAN;
 
   for(int i = 0; i < NUMBER_OF_ACTIVE_TURNOUTS_MM; i++){
     turnout_status[i].number = active_turnouts_mm[i];
