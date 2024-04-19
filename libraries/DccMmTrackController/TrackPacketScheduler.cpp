@@ -116,8 +116,9 @@ bool TrackPacketScheduler::setup(void) //for any post-constructor initialization
   p.setPriority(HIGH_PRIORIY);
 
   packet_buffer.insertPacket(p); //e_stop_queue will be empty, so no need to check if insertion was OK.
-
+#ifdef DEBUG
   packet_buffer.printQueue();
+#endif
 
 #if THREAD_SAFE_QUEUE
   int app_cpu = xPortGetCoreID();
@@ -260,7 +261,9 @@ bool TrackPacketScheduler::dccSetSpeed128(uint16_t address, uint8_t address_kind
   //speed packets get refreshed indefinitely, and so the repeat doesn't need to be set.
   //speed packets go to the high proirity queue
   bool result = packet_buffer.insertPacket(p);
-        packet_buffer.printQueue();
+#ifdef DEBUG
+  packet_buffer.printQueue();
+#endif
   return result;
 }
 
@@ -401,9 +404,13 @@ bool TrackPacketScheduler::dcc_eStop(uint16_t address, uint8_t address_kind)
   e_stop_packet.setPriority(HIGH_PRIORIY);
   
   packet_buffer.forget(address, address_kind);
+#ifdef DEBUG
   packet_buffer.printQueue();
+#endif
   bool result =  packet_buffer.insertPacket(e_stop_packet);
+#ifdef DEBUG
   packet_buffer.printQueue();
+#endif
   return result;
 }
 

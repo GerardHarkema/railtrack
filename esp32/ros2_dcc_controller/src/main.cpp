@@ -39,6 +39,7 @@
 #include "power.h"
 #include "locomotives.h"
 #include "turnouts.h"
+#include "measurements.h"
 
 int number_of_active_mm_turnouts = NUMBER_OF_ACTIVE_TURNOUTS_MM;
 int number_of_active_turnouts_ros = NUMBER_OF_ACTIVE_TURNOUTS_ROS;
@@ -90,6 +91,11 @@ rcl_timer_t locomotive_state_publisher_timer;
 rcl_timer_t power_state_publisher_timer;
 
 TrackPacketScheduler trackScheduler;
+
+Measurements measurements;
+
+#define MEASUREMENT_SWITCH_PIN    27
+bool display_measurents = false;
 
 void setup() {
   Serial.begin(115200);
@@ -271,16 +277,31 @@ void setup() {
   RCCHECK(rclc_executor_add_timer(&executor, &power_state_publisher_timer));
   RCCHECK(rclc_executor_add_subscription(&executor, &power_control_subscriber, &power_control, &power_control_callback, ON_NEW_DATA));
 
+  pinMode(MEASUREMENT_SWITCH_PIN, INPUT_PULLUP);
+
+  measurements.begin();
+
   Serial.printf("!!! Ready for operating !!!\n");
   tft_printf(ST77XX_MAGENTA, "DCC/MM\ncontroller\nReady\n");
 }
 
+int old_display_measurents_switch = HIGH;
 
 void loop() {
 
-  //Serial.print("*");
+#if 1
+  int new_display_measurents_switch = digitalRead(MEASUREMENT_SWITCH_PIN);
+  if((old_display_measurents_switch != new_display_measurents_switch) && (new_display_measurents_switch == LOW)){
+    display_measurents = display_measurents ? false : true;
+    //Serial.println("Toggle");
+    //Serial.println(display_measurents);
+    tft_printf(ST77XX_GREEN,"");
+  }
+  old_display_measurents_switch = new_display_measurents_switch;
+#endif
 
   vTaskDelay(20);
+
   //delay(20);
 
   // Measure current

@@ -272,6 +272,8 @@ void setup() {
 
   pinMode(STATUS_LED, OUTPUT);
   digitalWrite(STATUS_LED, HIGH);
+  tft_printf(ST77XX_MAGENTA, "Turnout Control\nWiFi\nConnected\n");
+  Serial.printf("Turnout Control WiFi Connected\n");
 
   tft->fillRect(0, 33, tft->width()-1, tft->height() - 33, ST77XX_BLACK);
   for(int i=0; i < NUMBER_OF_TURNOUTS; i++){

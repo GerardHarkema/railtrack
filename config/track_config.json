@@ -1,5 +1,6 @@
 {
   "railtrack_layout_image" : "railtrack_layout.jpg",
+  "display_maintenance_tab" : true,
   "Locomotives": [
     {
       "name": "DB 74 854",

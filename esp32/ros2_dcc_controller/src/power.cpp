@@ -1,5 +1,6 @@
 #include <Arduino.h>
 #include "power.h"
+#include "measurements.h"
 
 //#define DEBUG
 
@@ -21,10 +22,13 @@ extern TrackPacketScheduler trackScheduler;
 extern railway_interfaces__msg__LocomotiveState locomotive_status[];
 extern int number_of_active_locomotives;
 
+extern Measurements measurements;
+extern bool display_measurents;
+
 void power_state_publisher_timer_callback(rcl_timer_t * timer, int64_t last_call_time) {
   RCLC_UNUSED(last_call_time);
   if (timer != NULL) {
-    power_status.current = 0;//ctrlgetCurrent();
+    power_status.current = measurements.getCurrent();
     power_status.voltage = 0;//ctrlgetVoltage();
     power_status.temperature = 0;//ctrlgetTemperature();
     //DEBUG_PRINT("current = %f A\n", power_status.current);
@@ -37,7 +41,7 @@ void power_state_publisher_timer_callback(rcl_timer_t * timer, int64_t last_call
       power_status.voltage,
       power_status.current,
       power_status.temperature);
-    //tft_printf(ST77XX_GREEN, text);
+    if(display_measurents) tft_printf(ST77XX_GREEN, text);
   }
 
 }

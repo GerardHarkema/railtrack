@@ -26,6 +26,7 @@ from railway_interfaces.msg import PowerState
 from turnout_control import turnout_control
 from locomotive_control import locomotive_control
 from railtracklayout_control import railtracklayout_control
+from maintenance_control import maintenance_control
 
 class RailTrackNode(Node):
 
@@ -96,6 +97,14 @@ class RailTrackNode(Node):
                     self.tracklayouts_tab = ui.tab('Track Layout')
                 except KeyError:
                     pass
+
+                try:
+                    tmp = self.track_config["display_maintenance_tab"]
+                    if tmp:
+                        self.maintenance_tab = ui.tab('Maintenance')
+                except KeyError:
+                    pass
+
             with ui.tab_panels(tabs, value=first_tab).classes('w-full'):
                 try:
                     tmp = self.track_config["Turnouts"]
@@ -133,6 +142,9 @@ class RailTrackNode(Node):
                         pass
                 except KeyError:
                     pass
+
+                with ui.tab_panel(self.maintenance_tab):
+                    self.maintenance_control = maintenance_control()
             with ui.grid(columns=3):
                 with ui.card():
                     ui.label("Control")
