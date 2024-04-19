@@ -62,6 +62,13 @@ class TrackPacketScheduler
     static void scheduler_task(void *pvParameters);
 #endif
 
+
+    bool mm1SetSpeed(uint16_t address, int8_t new_speed); //new_speed: [-28,28]
+    bool mm2SetSpeed(uint16_t address, int8_t new_speed); //new_speed: [-127,127]
+    bool mmSetBasicAccessory(uint16_t address, uint8_t function);
+    bool mmUnsetBasicAccessory(uint16_t address, uint8_t function);
+    bool mmSetFunctions(uint16_t address, uint8_t function);
+
     //to be called periodically within loop()
     void update(void); //checks queues, puts whatever's pending on the rails via global current_packet. easy-peasy
 

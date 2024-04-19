@@ -89,7 +89,7 @@ rcl_timer_t turnout_state_publisher_timer;
 rcl_timer_t locomotive_state_publisher_timer;
 rcl_timer_t power_state_publisher_timer;
 
-TrackPacketScheduler TrackPacketScheduler;
+TrackPacketScheduler trackScheduler;
 
 void setup() {
   Serial.begin(115200);
@@ -158,6 +158,8 @@ void setup() {
 
   pinMode(LED_BUILTIN, OUTPUT);
   digitalWrite(LED_BUILTIN, HIGH);
+  tft_printf(ST77XX_MAGENTA, "DCC/MM\nWiFi\nConnected\n");
+  Serial.printf("DCC/MM WiFi Connected\n");
 
   delay(2000);
 
@@ -250,7 +252,7 @@ void setup() {
     RCL_MS_TO_NS((int)timer_timeout),
     power_state_publisher_timer_callback));
 
-  if(!TrackPacketScheduler.setup())error_loop();
+  if(!trackScheduler.setup())error_loop();
 
   // create executor
 
@@ -286,7 +288,7 @@ void loop() {
   // Measure Temperature
 
 #ifndef THREAD_SAFE_QUEUE
-  TrackPacketScheduler.update();
+  trackScheduler.update();
 #endif
 
   RCSOFTCHECK(rclc_executor_spin_some(&executor, RCL_MS_TO_NS(100)));

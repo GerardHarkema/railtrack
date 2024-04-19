@@ -21,7 +21,7 @@ extern int number_of_active_locomotives;
 extern LOCOMOTIVE active_locomotives[];
 extern railway_interfaces__msg__LocomotiveState locomotive_status[];
 
-extern TrackPacketScheduler TrackPacketScheduler;
+extern TrackPacketScheduler trackScheduler;
 
 int locomotive_state_index = 0;
 
@@ -35,7 +35,8 @@ void locomotive_state_publisher_timer_callback(rcl_timer_t * timer, int64_t last
 }
 
 
-#define MAX_NUMBER_OF_FUNCTIONS   14
+#define MAX_NUMBER_OF_DCC_FUNCTIONS   14
+#define MAX_NUMBER_OF_MM_FUNCTIONS   14
 void locomotive_control_callback(const void * msgin)
 {  
 
@@ -50,7 +51,7 @@ void locomotive_control_callback(const void * msgin)
   switch(control->command){
     case railway_interfaces__msg__LocomotiveControl__SET_SPEED:
       if(lookupLocomotiveIndex(control->address, (PROTOCOL)control->protocol, &locomotive_index)){
-        //DEBUG_PRINT("Found\n");
+        DEBUG_PRINT("Found locomotive for setting speed\n");
         int8_t speed;
         switch(active_locomotives[locomotive_index].protocol){
           case DCC:
@@ -61,28 +62,39 @@ void locomotive_control_callback(const void * msgin)
                 if(locomotive_status[locomotive_index].direction ==
                   railway_interfaces__msg__LocomotiveControl__DIRECTION_REVERSE)
                     speed = speed * -1;
-                DEBUG_PRINT("Set Speed 128: %i\n", speed);
-                TrackPacketScheduler.dccSetSpeed128(control->address, DCC_SHORT_ADDRESS, speed); //This should be in the call backs of the ROS subscribers
+                DEBUG_PRINT("DCC: Set Speed 128: %i\n", speed);
+                trackScheduler.dccSetSpeed128(control->address, DCC_SHORT_ADDRESS, speed); //This should be in the call backs of the ROS subscribers
                 break;
               case SS_28:
                 speed = (uint8_t)(control->speed / SPEED_STEP_RESOLUTION_28);
                 speed = locomotive_status[locomotive_index].direction ? speed * -1 : speed;
-                DEBUG_PRINT("Speed dcc 28: %i\n", speed);
-                TrackPacketScheduler.dccSetSpeed28(control->address, DCC_SHORT_ADDRESS,speed); //This should be in the call backs of the ROS subscribers
+                DEBUG_PRINT("DCC: Set Speed 28: %i\n", speed);
+                trackScheduler.dccSetSpeed28(control->address, DCC_SHORT_ADDRESS,speed); //This should be in the call backs of the ROS subscribers
                 break;
               case SS_14:
                 speed = (uint8_t)(control->speed / SPEED_STEP_RESOLUTION_14);
                 speed = locomotive_status[locomotive_index].direction ? speed * -1 : speed;
-                DEBUG_PRINT("Speed dcc 14: %i\n", speed);
-                TrackPacketScheduler.dccSetSpeed14(control->address, DCC_SHORT_ADDRESS,speed); //This should be in the call backs of the ROS subscribers
+                DEBUG_PRINT("DCC: Set Speed 14: %i\n", speed);
+                trackScheduler.dccSetSpeed14(control->address, DCC_SHORT_ADDRESS,speed); //This should be in the call backs of the ROS subscribers
                 break;
               default:
                 break;
             }
             break;
           case MM1:
+            speed = (uint8_t)(control->speed / SPEED_STEP_RESOLUTION_14);
+            if(locomotive_status[locomotive_index].direction ==
+              railway_interfaces__msg__LocomotiveControl__DIRECTION_REVERSE)
+                speed = speed * -1;
+            DEBUG_PRINT("MM1: Set Speed: %i\n", speed);
+            trackScheduler.mm1SetSpeed(control->address, speed); //This should be in the call backs of the ROS subscribers
           case MM2:
-            DEBUG_PRINT("Protocol MM\n"); 
+            speed = (uint8_t)(control->speed / SPEED_STEP_RESOLUTION_128);
+            if(locomotive_status[locomotive_index].direction ==
+              railway_interfaces__msg__LocomotiveControl__DIRECTION_REVERSE)
+                speed = speed * -1;
+            DEBUG_PRINT("MM2: Set Speed: %i\n", speed);
+            trackScheduler.mm2SetSpeed(control->address, speed); //This should be in the call backs of the ROS subscribers
             break;
           default:
             DEBUG_PRINT("Unknomwn protocol\n"); 
@@ -97,34 +109,36 @@ void locomotive_control_callback(const void * msgin)
     case railway_interfaces__msg__LocomotiveControl__SET_DIRECTION:
 
       if(lookupLocomotiveIndex(control->address, (PROTOCOL)control->protocol, &locomotive_index)){
-        //DEBUG_PRINT("Found\n");
+        DEBUG_PRINT("Found locomotive for setting direction\n");
         switch(active_locomotives[locomotive_index].protocol){
           case DCC:
             DEBUG_PRINT("Protocol DCC\n");         
             switch(active_locomotives[locomotive_index].speed_steps){
               case SS_128:
-                TrackPacketScheduler.dccSetSpeed128(control->address, DCC_SHORT_ADDRESS, 0); //This should be in the call backs of the ROS subscribers
+                trackScheduler.dccSetSpeed128(control->address, DCC_SHORT_ADDRESS, 0); //This should be in the call backs of the ROS subscribers
                 break;
               case SS_28:
-                TrackPacketScheduler.dccSetSpeed28(control->address, DCC_SHORT_ADDRESS, 0); //This should be in the call backs of the ROS subscribers
+                trackScheduler.dccSetSpeed28(control->address, DCC_SHORT_ADDRESS, 0); //This should be in the call backs of the ROS subscribers
                 break;
               case SS_14:
-                TrackPacketScheduler.dccSetSpeed14(control->address, DCC_SHORT_ADDRESS, 0); //This should be in the call backs of the ROS subscribers
+                trackScheduler.dccSetSpeed14(control->address, DCC_SHORT_ADDRESS, 0); //This should be in the call backs of the ROS subscribers
                 break;
               default:
                 break;
             }
-            locomotive_status[locomotive_index].direction = control->direction;
-            locomotive_status[locomotive_index].speed = 0;
             break;
           case MM1:
+            trackScheduler.mm1SetSpeed(control->address, 0); //This should be in the call backs of the ROS subscribers
+            break;
           case MM2:
-            DEBUG_PRINT("Protocol MM\n"); 
+            trackScheduler.mm2SetSpeed(control->address, 0); //This should be in the call backs of the ROS subscribers
             break;
           default:
             DEBUG_PRINT("Unknomwn protocol\n"); 
             break;
         }
+        locomotive_status[locomotive_index].direction = control->direction;
+        locomotive_status[locomotive_index].speed = 0;
       }
       direction_txt = getDirectionTxt(control->direction);
       lookupLocomotiveProtocol((PROTOCOL)control->protocol, protocol_txt);
@@ -132,27 +146,36 @@ void locomotive_control_callback(const void * msgin)
             protocol_txt, control->address, direction_txt);      
       break;
     case railway_interfaces__msg__LocomotiveControl__SET_FUNCTION:
-          if(lookupLocomotiveIndex(control->address, (PROTOCOL)control->protocol, &locomotive_index)){
-        //DEBUG_PRINT("Found\n");
+      if(lookupLocomotiveIndex(control->address, (PROTOCOL)control->protocol, &locomotive_index)){
+        DEBUG_PRINT("Found locomotive for setting function\n");
         switch(active_locomotives[locomotive_index].protocol){
           case DCC:
-            //DEBUG_PRINT("Protocol DCC\n"); 
-            if(control->function_index > MAX_NUMBER_OF_FUNCTIONS){
+            DEBUG_PRINT("Protocol DCC: Function switch\n"); 
+            if(control->function_index > MAX_NUMBER_OF_DCC_FUNCTIONS){
+              DEBUG_PRINT("Invalid function\n");
+              return;
+            }
+            locomotive_status[locomotive_index].function_state.data[control->function_index] = control->function_state;
+            for(int i = 0; i <= MAX_NUMBER_OF_DCC_FUNCTIONS; i++){
+                functions = functions << 1;
+                functions |= locomotive_status[locomotive_index].function_state.data[MAX_NUMBER_OF_DCC_FUNCTIONS - i] ? 0x01 : 0x00;
+            }
+            trackScheduler.dccSetFunctions(control->address, DCC_SHORT_ADDRESS, functions);
+            break;
+          case MM1:
+          case MM2:
+            DEBUG_PRINT("Protocol MM: Function switch\n"); 
+            if(control->function_index > MAX_NUMBER_OF_MM_FUNCTIONS){
               DEBUG_PRINT("Invalid function\n");
               return;
             }
             locomotive_status[locomotive_index].function_state.data[control->function_index] = control->function_state;
 
-            for(int i = 0; i <= MAX_NUMBER_OF_FUNCTIONS; i++){
+            for(int i = 0; i <= MAX_NUMBER_OF_MM_FUNCTIONS; i++){
                 functions = functions << 1;
-                functions |= locomotive_status[locomotive_index].function_state.data[MAX_NUMBER_OF_FUNCTIONS - i] ? 0x01 : 0x00;
-
+                functions |= locomotive_status[locomotive_index].function_state.data[MAX_NUMBER_OF_MM_FUNCTIONS - i] ? 0x01 : 0x00;
             }
-            //Serial.print(functions, BIN);
-            TrackPacketScheduler.dccSetFunctions(control->address, DCC_SHORT_ADDRESS, functions);
-            break;
-          case MM1:
-          case MM2:
+            trackScheduler.mmSetFunctions(control->address, functions);
             DEBUG_PRINT("Protocol MM\n"); 
             break;
           default:
@@ -164,19 +187,8 @@ void locomotive_control_callback(const void * msgin)
       tft_printf(ST77XX_GREEN, "ROS msg\nLocomotive\nAddress(%s): %i\nSet Func. %i: %s\n",
             protocol_txt, control->address, control->function_index, control->function_state ? "True" : "False");
       break;
-      break;
-#if 0
-      //address = getCANAdress((PROTOCOL)control->protocol, control->address);
-      if(lookupLocomotiveIndex(address, (PROTOCOL)control->protocol, &locomotive_index)){
-        locomotive_status[locomotive_index].function_state.data[control->function_index] = control->function_state;
-      }
-      lookupLocomotiveProtocol((PROTOCOL)control->protocol, protocol_txt);
-      tft_printf(ST77XX_GREEN, "ROS msg\nLocomotive\nAddress(%s): %i\nSet Func. %i: %s\n",
-            protocol_txt, address, control->function_index, control->function_state ? "True" : "False");
-      break;
-#endif
     default:
-      Serial.println("Invalid command");
+      DEBUG_PRINT("Invalid command");
       break;
   }
 

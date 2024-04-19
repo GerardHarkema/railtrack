@@ -1,3 +1,4 @@
+#include <Arduino.h>
 #include "TrackPacketQueueList.h"
 #include <stdexcept>
 
@@ -24,7 +25,7 @@ bool TrackPacketQueue::setup()
 #ifdef THREAD_SAFE_QUEUE
   semaphore = xSemaphoreCreateMutex();
   if(!semaphore){
-    Serial.println("Error creating Semaphore"); 
+    DEBUG_PRINT("Error creating Semaphore"); 
     return false;   
   }
 #endif
@@ -37,7 +38,7 @@ bool TrackPacketQueue::insertPacket(TrackPacket &packet)
   bool result = true;
 #ifdef THREAD_SAFE_QUEUE
   if(xSemaphoreTake(semaphore, portMAX_DELAY) != pdTRUE){
-    Serial.println("Error taking Semaphore");
+    DEBUG_PRINT("Error taking Semaphore");
     return false;
   };
 #endif
@@ -63,7 +64,7 @@ bool TrackPacketQueue::insertPacket(TrackPacket &packet)
 #endif
   return result;
 #if 0
-//  Serial.println("Queue is full!");
+//  DEBUG_PRINT("Queue is full!");
   return false;
 #endif
 }
@@ -72,33 +73,33 @@ void TrackPacketQueue::printQueue(void)
 {
 #ifdef THREAD_SAFE_QUEUE
   if(xSemaphoreTake(semaphore, portMAX_DELAY) != pdTRUE){
-    Serial.println("Error taking Semaphore");
+    DEBUG_PRINT("Error taking Semaphore");
   };  
 #endif
   int i = 0;
   std::list<TrackPacket>::iterator queue_packet;
-#if 1
+
   if(queue.size()){
     for (queue_packet = queue.begin(); queue_packet != queue.end(); ++queue_packet){
-      DEBUG_PRINT("%i: Address = 0x%04x, Kind = %i, Repeatcount = %i", i,
+      Serial.printf("%i: Address = 0x%04x, Kind = %i, Repeatcount = %i", i,
         queue_packet->getAddress(), 
         queue_packet->getKind(), 
         queue_packet->getRepeatCount());
       u_int8_t data_size = queue_packet->getSize();
-      DEBUG_PRINT(", Size = %i", data_size);
+      Serial.printf(", Size = %i", data_size);
       if(data_size){
-        DEBUG_PRINT(", Data =");
+        Serial.printf(", Data =");
         for(int j = 0; j < data_size; j++)
-          DEBUG_PRINT(" 0x%02x", queue_packet->getData(j));
+          Serial.printf(" 0x%02x", queue_packet->getData(j));
       }
-      DEBUG_PRINT("\n");
+      Serial.printf("\n");
       i++;
     }
   }
   else{
     DEBUG_PRINT("Queue Empty\n");    
   }
-#endif
+
 #ifdef THREAD_SAFE_QUEUE
   xSemaphoreGive(semaphore);
 #endif
@@ -109,7 +110,7 @@ bool TrackPacketQueue::readPacket(TrackPacket &packet)
   bool result = false;
 #ifdef THREAD_SAFE_QUEUE
   if(xSemaphoreTake(semaphore, portMAX_DELAY) != pdTRUE){
-    Serial.println("Error taking Semaphore");
+    DEBUG_PRINT("Error taking Semaphore");
     return false;
   };  
 #endif
@@ -127,12 +128,6 @@ bool TrackPacketQueue::readPacket(TrackPacket &packet)
       }
     }
   }
-#if 0
-    }
-   queue_full = false;
-    result = true;
-  }
-#endif
 #ifdef THREAD_SAFE_QUEUE
   xSemaphoreGive(semaphore);
 #endif
@@ -143,7 +138,7 @@ bool TrackPacketQueue::forget(uint16_t address, uint8_t address_kind)
 {
 #ifdef THREAD_SAFE_QUEUE
   if(xSemaphoreTake(semaphore, portMAX_DELAY) != pdTRUE){
-    Serial.println("Error taking Semaphore");
+    DEBUG_PRINT("Error taking Semaphore");
     return false;
   };
 #endif
@@ -170,7 +165,7 @@ void TrackPacketQueue::clear(void)
 {
 #ifdef THREAD_SAFE_QUEUE
   if(xSemaphoreTake(semaphore, portMAX_DELAY) != pdTRUE){
-    Serial.println("Error taking Semaphore");
+    DEBUG_PRINT("Error taking Semaphore");
   };
 #endif
   queue.clear();

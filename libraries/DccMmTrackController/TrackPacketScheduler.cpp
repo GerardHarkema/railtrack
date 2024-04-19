@@ -1,6 +1,7 @@
 #include "TrackPacketScheduler.h"
 #include "TrackManager.h"
 
+//#define DEBUG_QUEUE
 //#define DEBUG
 #ifdef DEBUG
 #define DEBUG_PRINT(fmt, ...) \
@@ -42,21 +43,6 @@
  */
 
 
-
-//#define DEBUG     
-#ifdef DEBUG
-  #define DEBUG_PRINT(x)      Serial.print(x)
-  #define DEBUG_PRINT2(x, y)  Serial.print(x, y)
-  #define DEBUG_PRINTLN(x)    Serial.println(x)
-  #define DEBUG_PRINTLN2(x, y)    Serial.println(x, y)
-#else
-  #define DEBUG_PRINT(x)      
-  #define DEBUG_PRINT2(x, y)
-  #define DEBUG_PRINTLN(x)
-  #define DEBUG_PRINTLN2(x, y) 
-#endif
-
-
 TrackManager track;
 
 ///////////////////////////////////////////////
@@ -67,7 +53,7 @@ TrackManager track;
 TrackPacketScheduler::TrackPacketScheduler(void) : default_speed_steps(128), last_packet_address(255), packet_counter(1)
 {
 
-  //packet_buffer = new TrackPacketQueue();
+
   packet_buffer.setup();
 
 }
@@ -91,6 +77,7 @@ void TrackPacketScheduler::scheduler_task(void *pvParameters)
 	}
 }
 #endif
+
 bool TrackPacketScheduler::setup(void) //for any post-constructor initialization
 {
   
@@ -99,7 +86,7 @@ bool TrackPacketScheduler::setup(void) //for any post-constructor initialization
 
   //if(!packet_buffer) return false;
   if(!packet_buffer.setup()){
-    Serial.printf("Unable to create packet_buffer\n");
+    DEBUG_PRINT("Unable to create packet_buffer\n");
     return false;
   }
   //if(!setup_DCC_waveform_generator()) return false;
@@ -142,7 +129,7 @@ bool TrackPacketScheduler::setup(void) //for any post-constructor initialization
                         &scheduler_task_h,
                         app_cpu);
   if(!scheduler_task_h){
-    Serial.printf("Unable to start task\n");
+    DEBUG_PRINT("Unable to start task\n");
     return false;
   }
 #endif  
@@ -158,31 +145,6 @@ bool TrackPacketScheduler::trackPower(bool enable){
 //for enqueueing packets
 
 //setSpeed* functions:
-//new_speed contains the speed and direction.
-// a value of 0 = dcc_eStop
-// a value of 1/-1 = stop
-// a value >1 (or <-1) means go.
-#if 0
-// valid non-dcc_eStop speeds are in the range [1,127] / [-127,-1] with 1 = stop
-bool TrackPacketScheduler::dccSetSpeed(uint16_t address, uint8_t address_kind, int8_t new_speed, uint8_t steps)
-{
-  uint8_t num_steps = steps;
-  //steps = 0 means use the default; otherwise use the number of steps specified
-  if(!steps)
-    num_steps = default_speed_steps;
-        
-  switch(num_steps)
-  {
-    case 14:
-      return(dccSetSpeed14(address, address_kind, new_speed));
-    case 28:
-      return(dccSetSpeed28(address, address_kind, new_speed));
-    case 128:
-      return(dccSetSpeed128(address, address_kind, new_speed));
-  }
-  return false; //invalid number of steps specified.
-}
-#endif
 bool TrackPacketScheduler::dccSetSpeed14(uint16_t address, uint8_t address_kind, int8_t new_speed, bool F0)
 {
   TrackPacket p(address, address_kind);
@@ -204,7 +166,7 @@ bool TrackPacketScheduler::dccSetSpeed14(uint16_t address, uint8_t address_kind,
   else //movement
     speed_data_uint8_ts[0] |= abs_speed;
   speed_data_uint8_ts[0] |= (0x20*dir); //flip bit 3 to indicate direction;
-  DEBUG_PRINTLN2(speed_data_uint8_ts[0],BIN);
+  //DEBUG_PRINTLN2(speed_data_uint8_ts[0],BIN);
   p.addData(speed_data_uint8_ts,1);
 
   p.setRepeatCount(REPEAT_COUNT_CONTINOUS);
@@ -287,9 +249,9 @@ bool TrackPacketScheduler::dccSetSpeed128(uint16_t address, uint8_t address_kind
 
   speed_data_uint8_ts[1] |= (0x80*dir); //flip bit 7 to indicate direction;
   p.addData(speed_data_uint8_ts,2);
-  DEBUG_PRINT2(speed_data_uint8_ts[0],BIN);
-  DEBUG_PRINT(" ");
-  DEBUG_PRINTLN2(speed_data_uint8_ts[1],BIN);
+  //DEBUG_PRINT2(speed_data_uint8_ts[0],BIN);
+  //DEBUG_PRINT(" ");
+  //DEBUG_PRINTLN2(speed_data_uint8_ts[1],BIN);
   
   p.setRepeatCount(REPEAT_COUNT_CONTINOUS);
   
@@ -433,7 +395,6 @@ bool TrackPacketScheduler::dcc_eStop(uint16_t address, uint8_t address_kind)
   TrackPacket e_stop_packet(address, address_kind);
   uint8_t data[] = {0x41}; //01000001
 
-
   e_stop_packet.addData(data,1);
   e_stop_packet.setKind(e_stop_packet_kind);
   e_stop_packet.setRepeatCount(10);
@@ -470,6 +431,23 @@ bool TrackPacketScheduler::dccUnsetBasicAccessory(uint16_t address, uint8_t func
   return packet_buffer.insertPacket(p);
 }
 
+
+bool TrackPacketScheduler::mm1SetSpeed(uint16_t address, int8_t new_speed){
+  return false; 
+}
+bool TrackPacketScheduler::mm2SetSpeed(uint16_t address, int8_t new_speed){
+  return false;   
+}
+bool TrackPacketScheduler::mmSetBasicAccessory(uint16_t address, uint8_t function){
+  return false; 
+}
+bool TrackPacketScheduler::mmUnsetBasicAccessory(uint16_t address, uint8_t function){
+  return false; 
+}
+bool TrackPacketScheduler::mmSetFunctions(uint16_t address, uint8_t function){
+  return false; 
+}
+
 //to be called periodically within loop()
 void TrackPacketScheduler::update() //checks queues, puts whatever's pending on the rails via global current_packet. easy-peasy
 {
@@ -480,11 +458,13 @@ void TrackPacketScheduler::update() //checks queues, puts whatever's pending on 
     uint8_t current_packet[6];
 
     if(packet_buffer.isEmpty()) return;
-    //packet_buffer.printQueue();
+#ifdef DEBUG_QUEUE
+    packet_buffer.printQueue();
+#endif
     packet_buffer.readPacket(p);
 
     data_size = p.getBitstream(current_packet);
-    //Serial.printf("data_size = %i\n", data_size);
+    //DEBUG_PRINT("data_size = %i\n", data_size);
     track.RMTfillData(current_packet, data_size);
   }
 }

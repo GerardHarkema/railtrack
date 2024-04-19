@@ -37,12 +37,12 @@
 #define LED_GREEN   2
 #define LED_BLUE    4
 
-#ifdef DEBUG
+#ifdef HW_DEBUG
 #define TRACK_PULSE_PIN         LED_BLUE
 #define TRACK_POWER_ENABLE_PIN  LED_GREEN
 #else
-#define TRACK_PULSE_PIN         (gpio_num_t)2
-#define TRACK_POWER_ENABLE_PIN  (gpio_num_t)0
+#define TRACK_PULSE_PIN         (gpio_num_t)32
+#define TRACK_POWER_ENABLE_PIN  (gpio_num_t)25
 #endif
 
 #define TRACK_POWER_ON    HIGH
@@ -196,14 +196,14 @@ void TrackManager::begin(){
 
 
 bool TrackManager::enableTrackPower(){
-  Serial.println("Track power enable");
+  DEBUG_PRINT("Track power enable");
   digitalWrite(TRACK_POWER_ENABLE_PIN, TRACK_POWER_ON);
   track_power_enable = true;
   return true;
 }
 
 bool TrackManager::disableTrackPower(){
-  Serial.println("Track power disable");
+  DEBUG_PRINT("Track power disable");
   digitalWrite(TRACK_POWER_ENABLE_PIN, TRACK_POWER_OFF);
   track_power_enable = false;
   return true;

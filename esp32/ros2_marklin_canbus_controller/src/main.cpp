@@ -406,6 +406,8 @@ void setup() {
   pinMode(LED_BUILTIN, OUTPUT);
   digitalWrite(LED_BUILTIN, HIGH);
 
+  tft_printf(ST77XX_MAGENTA, "Marklin\ncanbus\nWiFi\nConnected\n");
+  Serial.printf("Marklin canbus WiFi Connected\n");
   delay(2000);
 
   allocator = rcl_get_default_allocator();

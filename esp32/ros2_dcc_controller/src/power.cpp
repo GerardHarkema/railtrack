@@ -16,7 +16,7 @@
 
 extern railway_interfaces__msg__PowerState power_status;
 extern rcl_publisher_t power_status_publisher;
-extern TrackPacketScheduler TrackPacketScheduler;
+extern TrackPacketScheduler trackScheduler;
 
 extern railway_interfaces__msg__LocomotiveState locomotive_status[];
 extern int number_of_active_locomotives;
@@ -46,7 +46,7 @@ void power_state_publisher_timer_callback(rcl_timer_t * timer, int64_t last_call
 void power_control_callback(const void * msgin)
 {  
   const railway_interfaces__msg__PowerControl * control = (const railway_interfaces__msg__PowerControl *)msgin;
-  TrackPacketScheduler.trackPower(control->enable);
+  trackScheduler.trackPower(control->enable);
   power_status.state = control->enable;
   if(!power_status.state){
     for(int i = 0 ; i < number_of_active_locomotives; i++){

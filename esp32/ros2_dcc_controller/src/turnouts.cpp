@@ -20,7 +20,7 @@ extern rcl_publisher_t turnout_status_publisher;
 extern int number_of_active_mm_turnouts;
 extern railway_interfaces__msg__TurnoutState turnout_status[];
 extern railway_interfaces__msg__PowerState power_status;
-extern TrackPacketScheduler TrackPacketScheduler;
+extern TrackPacketScheduler trackScheduler;
 
 int turnout_state_index = 0;
 
