@@ -3,11 +3,24 @@
 #include "support.h"
 #include "turnouts.h"
 
+//#define DEBUG
+
+#ifdef DEBUG
+#define DEBUG_PRINT(fmt, ...) \
+    do { \
+        Serial.printf("DEBUG: %s:%d:%s(): " fmt, \
+                __FILE__, __LINE__, __func__, ##__VA_ARGS__); \
+    } while (0)
+#else
+#define DEBUG_PRINT(fmt, ...) \
+    do {} while (0)
+#endif
+
 extern rcl_publisher_t turnout_status_publisher;
 extern int number_of_active_mm_turnouts;
 extern railway_interfaces__msg__TurnoutState turnout_status[];
 extern railway_interfaces__msg__PowerState power_status;
-extern DCCPacketScheduler DccPacketScheduler;
+extern TrackPacketScheduler TrackPacketScheduler;
 
 int turnout_state_index = 0;
 

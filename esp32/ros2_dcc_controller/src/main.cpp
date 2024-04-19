@@ -1,5 +1,22 @@
 #include <Arduino.h>
 #include <EEPROM.h>
+#include <stdio.h>
+
+//#define DEBUG
+#ifdef DEBUG
+#define DEBUG_PRINT(fmt, ...) \
+    do { \
+        Serial.printf("DEBUG: %s:%d:%s(): " fmt, \
+                __FILE__, __LINE__, __func__, ##__VA_ARGS__); \
+    } while (0)
+#else
+#define DEBUG_PRINT(fmt, ...) \
+    do {} while (0)
+#endif
+
+#if !defined(ESP32)
+#error This application is only avaible for ESP32 Dev module
+#endif
 
 #include "micro_ros_includes.h"
 
@@ -11,13 +28,9 @@
 
 #include "tft_printf.h"
 
-#if !defined(ESP32) && !defined(TARGET_PORTENTA_H7_M7) && !defined(ARDUINO_NANO_RP2040_CONNECT) && !defined(ARDUINO_WIO_TERMINAL)
-#error This application is only avaible for Arduino Portenta, Arduino Nano RP2040 Connect, ESP32 Dev module and Wio Terminal
-#endif
-
-#include <DCCPacket.h>
-#include "DCCPacketQueueList.h"
-#include <DCCPacketScheduler.h>
+#include <TrackPacket.h>
+#include <TrackPacketQueueList.h>
+#include <TrackPacketScheduler.h>
 
 #include "defines.h"
 #include "track_config.h"
@@ -31,8 +44,6 @@ int number_of_active_mm_turnouts = NUMBER_OF_ACTIVE_TURNOUTS_MM;
 int number_of_active_turnouts_ros = NUMBER_OF_ACTIVE_TURNOUTS_ROS;
 int number_of_active_locomotives = NUMBER_OF_ACTIVE_LOCOMOTIVES;
 
-
-const bool DEBUG = true;
 
 rcl_publisher_t turnout_status_publisher;
 rcl_publisher_t turnout_control_publisher;
@@ -78,7 +89,7 @@ rcl_timer_t turnout_state_publisher_timer;
 rcl_timer_t locomotive_state_publisher_timer;
 rcl_timer_t power_state_publisher_timer;
 
-DCCPacketScheduler DccPacketScheduler;
+TrackPacketScheduler TrackPacketScheduler;
 
 void setup() {
   Serial.begin(115200);
@@ -239,7 +250,7 @@ void setup() {
     RCL_MS_TO_NS((int)timer_timeout),
     power_state_publisher_timer_callback));
 
-  if(!DccPacketScheduler.setup())error_loop();
+  if(!TrackPacketScheduler.setup())error_loop();
 
   // create executor
 
@@ -248,7 +259,7 @@ void setup() {
   RCCHECK(rclc_executor_init(&executor, &support.context, number_of_executors, &allocator));
 
   RCCHECK(rclc_executor_add_timer(&executor, &turnout_state_publisher_timer));
-#if 1
+
   RCCHECK(rclc_executor_add_subscription(&executor, &turnout_control_subscriber, &turnout_control, &turnout_control_callback, ON_NEW_DATA));
 
   RCCHECK(rclc_executor_add_timer(&executor, &locomotive_state_publisher_timer));
@@ -257,11 +268,9 @@ void setup() {
 
   RCCHECK(rclc_executor_add_timer(&executor, &power_state_publisher_timer));
   RCCHECK(rclc_executor_add_subscription(&executor, &power_control_subscriber, &power_control, &power_control_callback, ON_NEW_DATA));
-#endif
+
   Serial.printf("!!! Ready for operating !!!\n");
   tft_printf(ST77XX_MAGENTA, "DCC/MM\ncontroller\nReady\n");
-
-
 }
 
 
@@ -277,7 +286,7 @@ void loop() {
   // Measure Temperature
 
 #ifndef THREAD_SAFE_QUEUE
-  DccPacketScheduler.update();
+  TrackPacketScheduler.update();
 #endif
 
   RCSOFTCHECK(rclc_executor_spin_some(&executor, RCL_MS_TO_NS(100)));

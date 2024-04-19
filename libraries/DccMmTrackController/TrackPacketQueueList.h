@@ -3,30 +3,24 @@
 
 #include "Arduino.h"
 
-/**
- * A FIFO queue for holding DCC packets, implemented as a circular buffer.
- * Copyright 2010 D.E. Goodman-Wilson
- * TODO
-**/
-
-#include "DCCPacket.h"
+#include "TrackPacket.h"
 #include <list>
 
-class DCCPacketQueue
+class TrackPacketQueue
 {
   public: //protected:
 
-    std::list<DCCPacket> queue;
+    std::list<TrackPacket> queue;
 
     bool queue_full = false; 
     SemaphoreHandle_t semaphore = NULL;
 
   public:
-    DCCPacketQueue(void);
+    TrackPacketQueue(void);
     
     bool setup();
  
-    ~DCCPacketQueue(void)
+    ~TrackPacketQueue(void)
     {
 
     }
@@ -55,8 +49,8 @@ class DCCPacketQueue
     
     //void printQueue(void);
     
-    bool insertPacket(DCCPacket &packet); //makes a local copy, does not take over memory management!
-    bool readPacket(DCCPacket &packet); //does not hand off memory management of packet. used immediately.
+    bool insertPacket(TrackPacket &packet); //makes a local copy, does not take over memory management!
+    bool readPacket(TrackPacket &packet); //does not hand off memory management of packet. used immediately.
     void printQueue(void);   
     bool forget(uint16_t address, uint8_t address_kind);
     void clear(void);

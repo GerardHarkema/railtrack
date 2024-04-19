@@ -1,13 +1,25 @@
 
-#include "DCCPacketQueueList.h"
+#include "TrackPacketQueueList.h"
 #include <stdexcept>
 
-DCCPacketQueue::DCCPacketQueue(void)
+//#define DEBUG
+#ifdef DEBUG
+#define DEBUG_PRINT(fmt, ...) \
+    do { \
+        Serial.printf("DEBUG: %s:%d:%s(): " fmt, \
+                __FILE__, __LINE__, __func__, ##__VA_ARGS__); \
+    } while (0)
+#else
+#define DEBUG_PRINT(fmt, ...) \
+    do {} while (0)
+#endif
+
+TrackPacketQueue::TrackPacketQueue(void)
 {
   return;
 }
 
-bool DCCPacketQueue::setup()
+bool TrackPacketQueue::setup()
 {
 
 #ifdef THREAD_SAFE_QUEUE
@@ -20,7 +32,7 @@ bool DCCPacketQueue::setup()
   return true;
 }
 
-bool DCCPacketQueue::insertPacket(DCCPacket &packet)
+bool TrackPacketQueue::insertPacket(TrackPacket &packet)
 {
 
   bool result = true;
@@ -30,7 +42,7 @@ bool DCCPacketQueue::insertPacket(DCCPacket &packet)
     return false;
   };
 #endif
-  std::list<DCCPacket>::iterator queue_packet;
+  std::list<TrackPacket>::iterator queue_packet;
   for (queue_packet = queue.begin(); queue_packet != queue.end(); ++queue_packet){
     if(queue_packet->getAddress() == packet.getAddress() && queue_packet->getKind() == packet.getKind() ){
       queue.erase(queue_packet);
@@ -57,7 +69,7 @@ bool DCCPacketQueue::insertPacket(DCCPacket &packet)
 #endif
 }
 
-void DCCPacketQueue::printQueue(void)
+void TrackPacketQueue::printQueue(void)
 {
 #ifdef THREAD_SAFE_QUEUE
   if(xSemaphoreTake(semaphore, portMAX_DELAY) != pdTRUE){
@@ -65,27 +77,27 @@ void DCCPacketQueue::printQueue(void)
   };  
 #endif
   int i = 0;
-  std::list<DCCPacket>::iterator queue_packet;
+  std::list<TrackPacket>::iterator queue_packet;
 #if 1
   if(queue.size()){
     for (queue_packet = queue.begin(); queue_packet != queue.end(); ++queue_packet){
-      Serial.printf("%i: Address = 0x%04x, Kind = %i, Repeatcount = %i", i,
+      DEBUG_PRINT("%i: Address = 0x%04x, Kind = %i, Repeatcount = %i", i,
         queue_packet->getAddress(), 
         queue_packet->getKind(), 
         queue_packet->getRepeatCount());
       u_int8_t data_size = queue_packet->getSize();
-      Serial.printf(", Size = %i", data_size);
+      DEBUG_PRINT(", Size = %i", data_size);
       if(data_size){
-        Serial.printf(", Data =");
+        DEBUG_PRINT(", Data =");
         for(int j = 0; j < data_size; j++)
-          Serial.printf(" 0x%02x", queue_packet->getData(j));
+          DEBUG_PRINT(" 0x%02x", queue_packet->getData(j));
       }
-      Serial.printf("\n");
+      DEBUG_PRINT("\n");
       i++;
     }
   }
   else{
-    Serial.printf("Queue Empty\n");    
+    DEBUG_PRINT("Queue Empty\n");    
   }
 #endif
 #ifdef THREAD_SAFE_QUEUE
@@ -93,7 +105,7 @@ void DCCPacketQueue::printQueue(void)
 #endif
 }
 
-bool DCCPacketQueue::readPacket(DCCPacket &packet)
+bool TrackPacketQueue::readPacket(TrackPacket &packet)
 {
   bool result = false;
 #ifdef THREAD_SAFE_QUEUE
@@ -128,7 +140,7 @@ bool DCCPacketQueue::readPacket(DCCPacket &packet)
   return result;
 }
 
-bool DCCPacketQueue::forget(uint16_t address, uint8_t address_kind)
+bool TrackPacketQueue::forget(uint16_t address, uint8_t address_kind)
 {
 #ifdef THREAD_SAFE_QUEUE
   if(xSemaphoreTake(semaphore, portMAX_DELAY) != pdTRUE){
@@ -137,12 +149,12 @@ bool DCCPacketQueue::forget(uint16_t address, uint8_t address_kind)
   };
 #endif
   bool found = false;
-  std::list<DCCPacket>::iterator queue_packet;
+  std::list<TrackPacket>::iterator queue_packet;
   for (queue_packet = queue.begin(); queue_packet != queue.end(); ++queue_packet){
-    Serial.printf("Packet address = %04x, kind = %i\n", queue_packet->getAddress(), queue_packet->getKind());
-    Serial.printf("Request address = %04x, kind = %i\n", address, address_kind);
+    DEBUG_PRINT("Packet address = %04x, kind = %i\n", queue_packet->getAddress(), queue_packet->getKind());
+    DEBUG_PRINT("Request address = %04x, kind = %i\n", address, address_kind);
     if((queue_packet->getAddress() == address) && (queue_packet->getKind() == address_kind)){
-      Serial.printf("Erase packet\n");
+      DEBUG_PRINT("Erase packet\n");
       queue.erase(queue_packet);
       queue_full = false;
       found = true;
@@ -155,7 +167,7 @@ bool DCCPacketQueue::forget(uint16_t address, uint8_t address_kind)
   return found;
 }
 
-void DCCPacketQueue::clear(void)
+void TrackPacketQueue::clear(void)
 {
 #ifdef THREAD_SAFE_QUEUE
   if(xSemaphoreTake(semaphore, portMAX_DELAY) != pdTRUE){

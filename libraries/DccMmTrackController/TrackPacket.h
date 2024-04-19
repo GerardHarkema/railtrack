@@ -63,7 +63,7 @@ typedef enum{
 #define LOW_PRIORIY     false
 #define REPEAT_COUNT_CONTINOUS  -1
 
-class DCCPacket
+class TrackPacket
 {
   private:
    //A DCC packet is at most 6 uint8_ts: 2 of address, three of data, one of XOR
@@ -76,7 +76,7 @@ class DCCPacket
     bool priority;
     
   public:
-    DCCPacket(uint16_t decoder_address=0xFF, uint8_t decoder_address_kind=0x00);
+    TrackPacket(uint16_t decoder_address=0xFF, uint8_t decoder_address_kind=0x00);
     
     uint8_t getBitstream(uint8_t rawuint8_ts[]); //returns size of array.
     //uint8_t getSize(void);

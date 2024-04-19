@@ -11,9 +11,9 @@
 #include <EEPROM.h>
 
 #include <stdio.h>
-#include <DCCPacket.h>
-#include "DCCPacketQueueList.h"
-#include <DCCPacketScheduler.h>
+#include <TrackPacket.h>
+#include "TrackPacketQueueList.h"
+#include <TrackPacketScheduler.h>
 
 #if !defined(ESP32) && !defined(TARGET_PORTENTA_H7_M7) && !defined(ARDUINO_NANO_RP2040_CONNECT) && !defined(ARDUINO_WIO_TERMINAL)
 #error This application is only avaible for Arduino Portenta, Arduino Nano RP2040 Connect, ESP32 Dev module and Wio Terminal
@@ -33,7 +33,7 @@
 #define LED_BUILTIN LED_RED
 #endif
 
-DCCPacketScheduler DccPacketScheduler;
+TrackPacketScheduler TrackPacketScheduler;
 
 void error_loop(){
   Serial.println("Error: System halted");
@@ -54,8 +54,8 @@ void setup() {
   delay(2000);
   Serial.println("DCC controller started");
 
-  //DccPacketScheduler = new DCCPacketScheduler(); 
-  if(!DccPacketScheduler.setup())error_loop();
+  //TrackPacketScheduler = new TrackPacketScheduler(); 
+  if(!TrackPacketScheduler.setup())error_loop();
 
 #if 0
   Serial.print("MOSI: ");Serial.println(MOSI);
@@ -63,7 +63,7 @@ void setup() {
   Serial.print("SCK: ");Serial.println(SCK);
   Serial.print("SS: ");Serial.println(SS);  
 #endif
-  DccPacketScheduler.EnableWaveformGeneration();
+  TrackPacketScheduler.EnableWaveformGeneration();
 
   Serial.println("Controller Started");
 
@@ -81,13 +81,13 @@ void loop() {
   //delay(20);
 
 #ifndef THREAD_SAFE_QUEUE
-  DccPacketScheduler.update();
+  TrackPacketScheduler.update();
 #endif
 
   char speed_byte = 1;
   if(!once){
-    DccPacketScheduler.setSpeed128(3,DCC_SHORT_ADDRESS,10); //This should be in the call backs of the ROS subscribers
-    DccPacketScheduler.setSpeed128(60,DCC_SHORT_ADDRESS,20); //This should be in the call backs of the ROS subscribers
+    TrackPacketScheduler.dccSetSpeed128(3,DCC_SHORT_ADDRESS,10); //This should be in the call backs of the ROS subscribers
+    TrackPacketScheduler.dccSetSpeed128(60,DCC_SHORT_ADDRESS,20); //This should be in the call backs of the ROS subscribers
     once++;
   }
 

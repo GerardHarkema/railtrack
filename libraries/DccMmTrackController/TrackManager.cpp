@@ -17,14 +17,21 @@
  *  along with CommandStation.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#if defined(ARDUINO_ARCH_ESP32)
-//#include "defines.h"
-//#include "//DIAG.h"
+
 #include "TrackManager.h"
-//#include "DCCTimer.h"
-//#include "DCCWaveform.h" // for MAX_PACKET_SIZE
 #include "soc/gpio_sig_map.h"
 
+//#define DEBUG
+#ifdef DEBUG
+#define DEBUG_PRINT(fmt, ...) \
+    do { \
+        Serial.printf("DEBUG: %s:%d:%s(): " fmt, \
+                __FILE__, __LINE__, __func__, ##__VA_ARGS__); \
+    } while (0)
+#else
+#define DEBUG_PRINT(fmt, ...) \
+    do {} while (0)
+#endif
 
 #define LED_RED     0
 #define LED_GREEN   2
@@ -248,4 +255,4 @@ void IRAM_ATTR TrackManager::RMTinterrupt() {
       rmt_fill_tx_items(RMT_CHANNEL, idle_message, idleLen, 0);
 }
 
-#endif //ESP32
+

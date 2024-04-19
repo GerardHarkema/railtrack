@@ -1,6 +1,18 @@
-#include "DCCPacket.h"
+#include "TrackPacket.h"
 
-DCCPacket::DCCPacket(uint16_t new_address, 
+//#define DEBUG
+#ifdef DEBUG
+#define DEBUG_PRINT(fmt, ...) \
+    do { \
+        Serial.printf("DEBUG: %s:%d:%s(): " fmt, \
+                __FILE__, __LINE__, __func__, ##__VA_ARGS__); \
+    } while (0)
+#else
+#define DEBUG_PRINT(fmt, ...) \
+    do {} while (0)
+#endif
+
+TrackPacket::TrackPacket(uint16_t new_address, 
 					 uint8_t new_address_kind) : 
 					 	address(new_address), 
 						address_kind(new_address_kind), 
@@ -16,7 +28,7 @@ DCCPacket::DCCPacket(uint16_t new_address,
   data[2] = 0x00;
 }
 
-uint8_t DCCPacket::getBitstream(uint8_t rawbytes[]) //returns size of array.
+uint8_t TrackPacket::getBitstream(uint8_t rawbytes[]) //returns size of array.
 {
 	int total_size = 1; //minimum size
 
@@ -82,7 +94,7 @@ uint8_t DCCPacket::getBitstream(uint8_t rawbytes[]) //returns size of array.
 }
 
 
-void DCCPacket::addData(uint8_t *new_data, uint8_t new_size) //insert freeform data.
+void TrackPacket::addData(uint8_t *new_data, uint8_t new_size) //insert freeform data.
 {
   for(int i = 0; i < new_size; ++i)
     data[i] = new_data[i];
