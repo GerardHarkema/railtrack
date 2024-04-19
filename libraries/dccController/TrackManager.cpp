@@ -25,16 +25,6 @@
 //#include "DCCWaveform.h" // for MAX_PACKET_SIZE
 #include "soc/gpio_sig_map.h"
 
-#if 0
-rmt_item32_t *idle;
-byte idleLen;
-rmt_item32_t *idle_message;
-byte startDataIndex;
-byte dataLen;
-rmt_item32_t *data_message;
-volatile bool dataReady = false;    // do we have real data available or send idle
-volatile bool request_new_packet = false;
-#endif
 
 #define LED_RED     0
 #define LED_GREEN   2

@@ -10,10 +10,10 @@
 
 #include "tft_printf.h"
 
-extern railway_interfaces__msg__LocomotiveState *locomotive_status;
-extern LOCOMOTIVE *active_locomotives;
-extern unsigned short int *active_turnouts_mm;
-extern unsigned short int *active_turnouts_ros;
+extern railway_interfaces__msg__LocomotiveState locomotive_status[];
+extern LOCOMOTIVE active_locomotives[];
+extern unsigned short int active_turnouts_mm[];
+extern unsigned short int active_turnouts_ros[];
 
 extern int number_of_active_mm_turnouts;
 extern int number_of_active_locomotives;
@@ -76,11 +76,16 @@ bool lookupTurnoutIndex(int turnout_number, int *turnout_index){
 
 bool lookupLocomotiveIndex(int locomotive_address, PROTOCOL protocol, int *locomotive_index){
   int i;
+
+  //Serial.printf("locomotive_address = %i\n", locomotive_address);
+  //Serial.printf("number_of_active_locomotives = %i\n", number_of_active_locomotives);
+
   for(i = 0; i < number_of_active_locomotives; i++){
     if((locomotive_status[i].address == locomotive_address) 
       && (locomotive_status[i].protocol == protocol)) break;
   }
   if(i >= number_of_active_locomotives) return false;
   *locomotive_index = i;
+
   return true;
 }

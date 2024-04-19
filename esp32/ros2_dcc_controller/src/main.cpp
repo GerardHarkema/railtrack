@@ -80,19 +80,18 @@ rcl_timer_t power_state_publisher_timer;
 
 DCCPacketScheduler DccPacketScheduler;
 
-
-
 void setup() {
   Serial.begin(115200);
   while (!Serial);
   delay(2000);
-  Serial.println("DCC/MM controller started");
+  Serial.printf("DCC/MM controller started\n");
 #if 0
   Serial.print("MOSI: ");Serial.println(MOSI);
   Serial.print("MISO: ");Serial.println(MISO);
   Serial.print("SCK: ");Serial.println(SCK);
   Serial.print("SS: ");Serial.println(SS);  
 #endif
+
 
   tft = new Adafruit_ST7735(CS_PIN, DC_PIN, RST_PIN);
   tft_prinft_begin(tft);
@@ -133,11 +132,11 @@ void setup() {
     locomotive_status[i].direction = direction;
 
 
-    locomotive_status[i].function_state.capacity = 32;
+    locomotive_status[i].function_state.capacity = MAX_NUMBER_OF_FUNCTION;
     locomotive_status[i].function_state.data = (bool*) malloc(locomotive_status[i].function_state.capacity * sizeof(bool));
-    locomotive_status[i].function_state.size = 32;
+    locomotive_status[i].function_state.size = MAX_NUMBER_OF_FUNCTION;
 
-    for(int j = 0; j < 32; j++){
+    for(int j = 0; j < MAX_NUMBER_OF_FUNCTION; j++){
       byte power;
       //ctrlgetLocoFunction(locomotive_status[i].address, j, &power);
       locomotive_status[i].function_state.data[j] = power ? true : false;
@@ -240,15 +239,16 @@ void setup() {
     RCL_MS_TO_NS((int)timer_timeout),
     power_state_publisher_timer_callback));
 
-  Serial.printf("1\n");
   if(!DccPacketScheduler.setup())error_loop();
-  Serial.printf("2\n");
+
   // create executor
+
   int number_of_executors = 6;
   
   RCCHECK(rclc_executor_init(&executor, &support.context, number_of_executors, &allocator));
 
   RCCHECK(rclc_executor_add_timer(&executor, &turnout_state_publisher_timer));
+#if 1
   RCCHECK(rclc_executor_add_subscription(&executor, &turnout_control_subscriber, &turnout_control, &turnout_control_callback, ON_NEW_DATA));
 
   RCCHECK(rclc_executor_add_timer(&executor, &locomotive_state_publisher_timer));
@@ -257,10 +257,11 @@ void setup() {
 
   RCCHECK(rclc_executor_add_timer(&executor, &power_state_publisher_timer));
   RCCHECK(rclc_executor_add_subscription(&executor, &power_control_subscriber, &power_control, &power_control_callback, ON_NEW_DATA));
-
-  DccPacketScheduler.EnableWaveformGeneration();
-  Serial.println("!!! Ready for operating !!!");
+#endif
+  Serial.printf("!!! Ready for operating !!!\n");
   tft_printf(ST77XX_MAGENTA, "DCC/MM\ncontroller\nReady\n");
+
+
 }
 
 

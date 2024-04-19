@@ -5,8 +5,8 @@
 //extern railway_interfaces__msg__LocomotiveState *locomotive_status;
 extern rcl_publisher_t locomoitive_status_publisher;
 extern int number_of_active_locomotives;
-extern LOCOMOTIVE *active_locomotives;
-extern railway_interfaces__msg__LocomotiveState *locomotive_status;
+extern LOCOMOTIVE active_locomotives[];
+extern railway_interfaces__msg__LocomotiveState locomotive_status[];
 
 extern DCCPacketScheduler DccPacketScheduler;
 
@@ -14,7 +14,7 @@ int locomotive_state_index = 0;
 
 void locomotive_state_publisher_timer_callback(rcl_timer_t * timer, int64_t last_call_time) {
   RCLC_UNUSED(last_call_time);
-  if (timer != NULL && number_of_active_locomotives) {
+  if ((timer != NULL) && number_of_active_locomotives) {
     RCSOFTCHECK(rcl_publish(&locomoitive_status_publisher, &locomotive_status[locomotive_state_index], NULL));
     locomotive_state_index++;
     if(locomotive_state_index == number_of_active_locomotives) locomotive_state_index = 0;
@@ -25,6 +25,7 @@ void locomotive_state_publisher_timer_callback(rcl_timer_t * timer, int64_t last
 #define MAX_NUMBER_OF_FUNCTIONS   14
 void locomotive_control_callback(const void * msgin)
 {  
+
   const railway_interfaces__msg__LocomotiveControl * control = (const railway_interfaces__msg__LocomotiveControl *)msgin;
 
   int locomotive_index;
@@ -32,6 +33,7 @@ void locomotive_control_callback(const void * msgin)
   char protocol_txt[10];
   //uint address;
   uint16_t functions = 0; 
+
   switch(control->command){
     case railway_interfaces__msg__LocomotiveControl__SET_SPEED:
       if(lookupLocomotiveIndex(control->address, (PROTOCOL)control->protocol, &locomotive_index)){
@@ -121,7 +123,7 @@ void locomotive_control_callback(const void * msgin)
         //Serial.printf("Found\n");
         switch(active_locomotives[locomotive_index].protocol){
           case DCC:
-            Serial.printf("Protocol DCC\n"); 
+            //Serial.printf("Protocol DCC\n"); 
             if(control->function_index > MAX_NUMBER_OF_FUNCTIONS){
               Serial.printf("Invalid function\n");
               return;
@@ -133,7 +135,7 @@ void locomotive_control_callback(const void * msgin)
                 functions |= locomotive_status[locomotive_index].function_state.data[MAX_NUMBER_OF_FUNCTIONS - i] ? 0x01 : 0x00;
 
             }
-            Serial.print(functions, BIN);
+            //Serial.print(functions, BIN);
             DccPacketScheduler.setFunctions(control->address, DCC_SHORT_ADDRESS, functions);
             break;
           case MM1:
@@ -164,4 +166,5 @@ void locomotive_control_callback(const void * msgin)
       Serial.println("Invalid command");
       break;
   }
+
 }

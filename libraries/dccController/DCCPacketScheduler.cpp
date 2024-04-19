@@ -44,20 +44,6 @@
   #define DEBUG_PRINTLN2(x, y) 
 #endif
 
-/// The currently queued packet to be put on the rails. Default is a reset packet.
-//extern uint8_t current_packet[6];
-/// How many data uint8_ts in the queued packet?
-//extern volatile uint8_t current_packet_size;
-/// How many uint8_ts remain to be put on the rails?
-//extern volatile uint8_t current_uint8_t_counter;
-/// How many bits remain in the current data uint8_t/preamble before changing states?
-//extern volatile uint8_t current_bit_counter; //init to 14 1's for the preamble
-/// A fixed-content packet to send when idle
-//uint8_t DCC_Idle_Packet[3] = {255,0,255};
-/// A fixed-content packet to send to reset all decoders on layout
-//uint8_t DCC_Reset_Packet[3] = {0,0,0};
-
-//waveform_generator_class waveform_generator;
 
 TrackManager track;
 

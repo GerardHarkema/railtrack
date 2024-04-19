@@ -26,6 +26,8 @@ typedef enum{
     SS_128, SS_28, SS_14, SS_INVALID, SS_NOT_USED
 }DCC_SPEED_STEPS;
 
+#define MAX_NUMBER_OF_FUNCTION      32
+
 #define LED_RED     0
 #define LED_GREEN   2
 #define LED_BLUE    4
