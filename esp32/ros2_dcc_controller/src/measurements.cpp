@@ -1,6 +1,10 @@
 #include <Arduino.h>
 #include "measurements.h"
 
+#define CURRENT_MEASUREMENT_PIN         34
+#define VOLTAGE_MEASUREMENT_PIN         34
+#define TEMPERATURE_MEASUREMENT_PIN     34
+#define CURRENT_MEASUREMENT_SHUNT_VALUE (double)10000.0 // Ohms
 
 #ifdef DEBUG
 #define DEBUG_PRINT(fmt, ...) \
@@ -42,29 +46,51 @@ void Measurements::begin(){
 
 }
 
-int adc_current_value = 0;
+
+
+
 void Measurements::loop(){
 
-    adc_last_value = analogReadMilliVolts(34);
-    adc_buffer[adc_index++] = adc_last_value;
-    if(adc_index >= INTEGRATION_SIZE)adc_index = 0;
+    adc_current_last_value = analogReadMilliVolts(CURRENT_MEASUREMENT_PIN);
+    adc_current_buffer[adc_current_index++] = adc_current_last_value;
+    if(adc_current_index >= INTEGRATION_SIZE)adc_current_index = 0;
 
-    //Serial.printf("Analog value %i mV\n", adc_current_value);
+    adc_voltage_last_value = analogReadMilliVolts(VOLTAGE_MEASUREMENT_PIN);
+    adc_voltage_buffer[adc_voltage_index++] = adc_voltage_last_value;
+    if(adc_voltage_index >= INTEGRATION_SIZE)adc_voltage_index = 0;
+
+    adc_temperature_last_value = analogReadMilliVolts(TEMPERATURE_MEASUREMENT_PIN);
+    adc_temperature_buffer[adc_temperature_index++] = adc_temperature_last_value;
+    if(adc_temperature_index >= INTEGRATION_SIZE)adc_temperature_index = 0;
+    //Serial.printf("Analog value %i mV\n", adc_current_current_value);
 }
 
 float Measurements::getCurrent(){
     int total_value = 0;
-    for(int i = 0; i < INTEGRATION_SIZE; i++) total_value += adc_buffer[i];
-    return ((float)total_value/INTEGRATION_SIZE)/1000.0;// Amps
+    for(int i = 0; i < INTEGRATION_SIZE; i++) total_value += adc_current_buffer[i];
+    return ((float)total_value/INTEGRATION_SIZE)/CURRENT_MEASUREMENT_SHUNT_VALUE;// Amps
 }
 
-float Measurements::getLastCurrentValue(){
-    return ((float)adc_last_value/INTEGRATION_SIZE)/1000.0;
+float Measurements::getLastCurrentMeasurement(){
+    return ((float)adc_current_last_value/INTEGRATION_SIZE)/CURRENT_MEASUREMENT_SHUNT_VALUE;// Amps
 }
 
 float Measurements::getVoltage(){
-
+    int total_value = 0;
+    for(int i = 0; i < INTEGRATION_SIZE; i++) total_value += adc_voltage_buffer[i];
+    return ((float)total_value/INTEGRATION_SIZE)/CURRENT_MEASUREMENT_SHUNT_VALUE;// Amps
 }
-float Measurements::getTemperature(){
 
+float Measurements::getLastVoltageMeasurement(){
+    return ((float)adc_voltage_last_value/INTEGRATION_SIZE)/CURRENT_MEASUREMENT_SHUNT_VALUE;// Amps
+}
+
+float Measurements::getTemperature(){
+    int total_value = 0;
+    for(int i = 0; i < INTEGRATION_SIZE; i++) total_value += adc_temperature_buffer[i];
+    return ((float)total_value/INTEGRATION_SIZE)/CURRENT_MEASUREMENT_SHUNT_VALUE;// milli Volts
+}
+
+float Measurements::getLastTemperatureMeasurement(){
+    return ((float)adc_temperature_last_value/INTEGRATION_SIZE)/CURRENT_MEASUREMENT_SHUNT_VALUE;// Degrees Celsius
 }
