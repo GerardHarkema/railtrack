@@ -1,4 +1,4 @@
-23188294600358176
+23217382626702824
 Audio_Module
 Reverb_BTDR-1H
 Digital Reverberation Unit, http://www.belton.co.kr/inc/downfile.php?seq=17&file=pdf (footprint from http://www.uk-electronic.de/PDF/BTDR-1.pdf)
@@ -94996,3 +94996,24 @@ TXS0108E
 0
 20
 20
+railtrack
+1.77 LCD Display 128x160
+
+
+0
+8
+8
+railtrack
+MCP2515 Module
+
+
+0
+9
+9
+railtrack
+MP1484 Module
+
+
+0
+8
+8

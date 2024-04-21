@@ -11,9 +11,6 @@
 		},
 		{
 			"path": "ros2_dcc_controller"
-		},
-		{
-			"path": "dcc_protocol_test"
 		}
 	],
 	"settings": {
