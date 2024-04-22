@@ -1,4 +1,4 @@
-23217382626702824
+23220810165378336
 Audio_Module
 Reverb_BTDR-1H
 Digital Reverberation Unit, http://www.belton.co.kr/inc/downfile.php?seq=17&file=pdf (footprint from http://www.uk-electronic.de/PDF/BTDR-1.pdf)
@@ -95003,6 +95003,20 @@ railtrack
 0
 8
 8
+railtrack
+Arduino_Shield
+https://docs.arduino.cc/hardware/uno-rev3
+
+0
+32
+32
+railtrack
+IBT_2
+
+
+0
+0
+0
 railtrack
 MCP2515 Module
 

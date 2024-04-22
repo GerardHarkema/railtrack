@@ -54,7 +54,7 @@ void lookupLocomotiveProtocol(PROTOCOL protocol, char *protocol_txt){
 
 void error_loop(){
   Serial.println("Error: System halted");
-  tft_printf(ST77XX_BLUE, "CANBUS\ncontroller\nError\nSystem halted");
+  tft_printf(ST77XX_BLUE, "Error\nSystem halted");
 
   while(1){
     digitalWrite(LED_BUILTIN, !digitalRead(LED_BUILTIN));

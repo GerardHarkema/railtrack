@@ -38,10 +38,11 @@
 #define LED_BLUE    4
 
 #ifdef HW_DEBUG
-#define TRACK_PULSE_PIN         LED_BLUE
+#define TRACK_PULSE_PIN_H         LED_BLUE
 #define TRACK_POWER_ENABLE_PIN  LED_GREEN
 #else
-#define TRACK_PULSE_PIN         (gpio_num_t)32
+#define TRACK_PULSE_PIN_H       (gpio_num_t)32
+#define TRACK_PULSE_PIN_L       (gpio_num_t)33
 #define TRACK_POWER_ENABLE_PIN  (gpio_num_t)25
 #endif
 
@@ -114,8 +115,8 @@ void TrackManager::begin(){
   pinMode(TRACK_POWER_ENABLE_PIN, OUTPUT);
   digitalWrite(TRACK_POWER_ENABLE_PIN, TRACK_POWER_OFF);
 
-  pinMode(TRACK_PULSE_PIN, OUTPUT);
-  digitalWrite(TRACK_PULSE_PIN, LOW);
+  pinMode(TRACK_PULSE_PIN_H, OUTPUT);
+  digitalWrite(TRACK_PULSE_PIN_H, LOW);
 
 
   // Create idle message
@@ -164,13 +165,17 @@ void TrackManager::begin(){
   config.rmt_mode = RMT_MODE_TX;
   config.channel = RMT_CHANNEL;
   config.clk_div = RMT_CLOCK_DIVIDER;
-  config.gpio_num = TRACK_PULSE_PIN;
+  config.gpio_num = TRACK_PULSE_PIN_H;
   config.mem_block_num = 2; // With longest DCC packet 11 inc checksum (future expansion)
                             // number of bits needed is 22preamble + start +
                             // 11*9 + extrazero + EOT = 124
                             // 2 mem block of 64 RMT items should be enough
 
   ESP_ERROR_CHECK(rmt_config(&config));
+
+  PIN_FUNC_SELECT(GPIO_PIN_MUX_REG[TRACK_PULSE_PIN_L], PIN_FUNC_GPIO);
+  gpio_set_direction(TRACK_PULSE_PIN_L, GPIO_MODE_OUTPUT);
+  gpio_matrix_out(TRACK_PULSE_PIN_L, RMT_SIG_OUT0_IDX+RMT_CHANNEL, true, 0);
 
   // NOTE: ESP_INTR_FLAG_IRAM is *NOT* included in this bitmask
   ESP_ERROR_CHECK(rmt_driver_install(RMT_CHANNEL, 0, ESP_INTR_FLAG_LOWMED|ESP_INTR_FLAG_SHARED));
