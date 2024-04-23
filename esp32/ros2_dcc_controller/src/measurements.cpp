@@ -6,6 +6,10 @@
 #define TEMPERATURE_MEASUREMENT_PIN     34
 #define CURRENT_MEASUREMENT_SHUNT_VALUE (double)10000.0 // Ohms
 
+#define IBT_2_CURRENT_SCALING           4.154
+
+#define CURRENT_SCALING                 IBT_2_CURRENT_SCALING
+
 #ifdef DEBUG
 #define DEBUG_PRINT(fmt, ...) \
     do { \
@@ -68,11 +72,11 @@ void Measurements::loop(){
 float Measurements::getCurrent(){
     int total_value = 0;
     for(int i = 0; i < INTEGRATION_SIZE; i++) total_value += adc_current_buffer[i];
-    return ((float)total_value/INTEGRATION_SIZE)/CURRENT_MEASUREMENT_SHUNT_VALUE;// Amps
+    return (((float)total_value/INTEGRATION_SIZE)/CURRENT_MEASUREMENT_SHUNT_VALUE) * CURRENT_SCALING;// Amps
 }
 
 float Measurements::getLastCurrentMeasurement(){
-    return ((float)adc_current_last_value/INTEGRATION_SIZE)/CURRENT_MEASUREMENT_SHUNT_VALUE;// Amps
+    return (((float)adc_current_last_value/INTEGRATION_SIZE)/CURRENT_MEASUREMENT_SHUNT_VALUE) * CURRENT_SCALING;// Amps
 }
 
 float Measurements::getVoltage(){

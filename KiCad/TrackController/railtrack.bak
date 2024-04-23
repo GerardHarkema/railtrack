@@ -357,7 +357,25 @@
 				)
 			)
 			(pin power_in line
-				(at -6.35 -25.4 0)
+				(at -5.08 10.16 0)
+				(length 2.54)
+				(name "AREF"
+					(effects
+						(font
+							(size 1.27 1.27)
+						)
+					)
+				)
+				(number "J1-3"
+					(effects
+						(font
+							(size 1.27 1.27)
+						)
+					)
+				)
+			)
+			(pin power_in line
+				(at -5.08 -25.4 0)
 				(length 2.54)
 				(name "GND"
 					(effects
@@ -366,7 +384,7 @@
 						)
 					)
 				)
-				(number "J1-3"
+				(number "J1-4"
 					(effects
 						(font
 							(size 1.27 1.27)
@@ -483,7 +501,7 @@
 				)
 			)
 			(pin input line
-				(at -6.35 2.54 0)
+				(at -5.08 2.54 0)
 				(length 2.54)
 				(name "IOREF"
 					(effects
@@ -519,7 +537,7 @@
 				)
 			)
 			(pin power_in line
-				(at -6.35 -17.78 0)
+				(at -5.08 -17.78 0)
 				(length 2.54)
 				(name "3V3"
 					(effects
@@ -537,7 +555,7 @@
 				)
 			)
 			(pin power_in line
-				(at -6.35 -15.24 0)
+				(at -5.08 -15.24 0)
 				(length 2.54)
 				(name "VCC"
 					(effects
@@ -555,7 +573,7 @@
 				)
 			)
 			(pin power_in line
-				(at -6.35 -20.32 0)
+				(at -5.08 -20.32 0)
 				(length 2.54)
 				(name "GND"
 					(effects
@@ -573,7 +591,7 @@
 				)
 			)
 			(pin power_in line
-				(at -6.35 -22.86 0)
+				(at -5.08 -22.86 0)
 				(length 2.54)
 				(name "GND"
 					(effects
@@ -591,7 +609,7 @@
 				)
 			)
 			(pin power_out line
-				(at -6.35 -12.7 0)
+				(at -5.08 -12.7 0)
 				(length 2.54)
 				(name "+18V"
 					(effects
@@ -1613,7 +1631,7 @@
 		(in_bom yes)
 		(on_board yes)
 		(property "Reference" "U"
-			(at 0 -11.43 0)
+			(at -7.62 8.89 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1687,6 +1705,15 @@
 					(font
 						(size 1.27 1.27)
 					)
+				)
+			)
+			(text "IBT_2"
+				(at 0 -11.43 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(justify top)
 				)
 			)
 			(pin input line

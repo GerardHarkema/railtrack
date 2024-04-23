@@ -1612,6 +1612,151 @@
 				)
 			)
 		)
+		(symbol "Jumper:Jumper_2_Open"
+			(pin_numbers hide)
+			(pin_names
+				(offset 0) hide)
+			(exclude_from_sim yes)
+			(in_bom yes)
+			(on_board yes)
+			(property "Reference" "JP"
+				(at 0 2.794 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Value" "Jumper_2_Open"
+				(at 0 -2.286 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Footprint" ""
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Datasheet" "~"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Description" "Jumper, 2-pole, open"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "ki_keywords" "Jumper SPST"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "ki_fp_filters" "Jumper* TestPoint*2Pads* TestPoint*Bridge*"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(symbol "Jumper_2_Open_0_0"
+				(circle
+					(center -2.032 0)
+					(radius 0.508)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(circle
+					(center 2.032 0)
+					(radius 0.508)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+			)
+			(symbol "Jumper_2_Open_0_1"
+				(arc
+					(start 1.524 1.27)
+					(mid 0 1.778)
+					(end -1.524 1.27)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+			)
+			(symbol "Jumper_2_Open_1_1"
+				(pin passive line
+					(at -5.08 0 0)
+					(length 2.54)
+					(name "A"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 5.08 0 180)
+					(length 2.54)
+					(name "B"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "2"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+			)
+		)
 		(symbol "Logic_LevelTranslator:TXS0108EPW"
 			(exclude_from_sim no)
 			(in_bom yes)
@@ -2528,7 +2673,7 @@
 			(exclude_from_sim no)
 			(in_bom yes)
 			(on_board yes)
-			(property "Reference" "U5"
+			(property "Reference" "U"
 				(at -2.54 25.4 0)
 				(effects
 					(font
@@ -2537,8 +2682,8 @@
 					(justify left bottom)
 				)
 			)
-			(property "Value" "~"
-				(at 5.08 26.67 0)
+			(property "Value" ""
+				(at 0 0 0)
 				(effects
 					(font
 						(size 1.27 1.27)
@@ -2546,7 +2691,7 @@
 				)
 			)
 			(property "Footprint" ""
-				(at 1.27 0 0)
+				(at 0 0 0)
 				(effects
 					(font
 						(size 1.27 1.27)
@@ -2555,7 +2700,7 @@
 				)
 			)
 			(property "Datasheet" ""
-				(at 1.27 0 0)
+				(at 0 0 0)
 				(effects
 					(font
 						(size 1.27 1.27)
@@ -2564,7 +2709,7 @@
 				)
 			)
 			(property "Description" ""
-				(at 1.27 0 0)
+				(at 0 0 0)
 				(effects
 					(font
 						(size 1.27 1.27)
@@ -2573,15 +2718,6 @@
 				)
 			)
 			(symbol "ARDUIN-MOTOR--SHIELD-REVB_1_1"
-				(text "ARDUINO-MOTOR-SHIELD-REV3"
-					(at 6.35 -27.94 0)
-					(effects
-						(font
-							(size 1.27 1.27)
-						)
-						(justify top)
-					)
-				)
 				(text_box ""
 					(at 13.97 -27.94 0)
 					(size -16.51 53.34)
@@ -2597,24 +2733,6 @@
 							(size 1.27 1.27)
 						)
 						(justify left top)
-					)
-				)
-				(pin input line
-					(at 16.51 10.16 180)
-					(length 2.54)
-					(name "BREAK-A"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "J-9"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
 					)
 				)
 				(pin input line
@@ -2672,6 +2790,24 @@
 					)
 				)
 				(pin power_in line
+					(at -5.08 10.16 0)
+					(length 2.54)
+					(name "AREF"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "J1-3"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin power_in line
 					(at -5.08 -25.4 0)
 					(length 2.54)
 					(name "GND"
@@ -2681,7 +2817,7 @@
 							)
 						)
 					)
-					(number "J1-3"
+					(number "J1-4"
 						(effects
 							(font
 								(size 1.27 1.27)
@@ -2736,6 +2872,24 @@
 						)
 					)
 					(number "J1-7"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin input line
+					(at 16.51 10.16 180)
+					(length 2.54)
+					(name "BREAK-A"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "J1-9"
 						(effects
 							(font
 								(size 1.27 1.27)
@@ -3796,13 +3950,13 @@
 		(uuid "89044f6b-73fd-46c7-80c2-c728d098954c")
 	)
 	(junction
-		(at 48.26 80.01)
+		(at 35.56 82.55)
 		(diameter 0)
 		(color 0 0 0 0)
 		(uuid "acc344d5-4fdc-4ad1-8c2e-7fe7a3d45af3")
 	)
 	(junction
-		(at 48.26 77.47)
+		(at 35.56 80.01)
 		(diameter 0)
 		(color 0 0 0 0)
 		(uuid "ea48af14-1138-4c18-973a-996dd453bf01")
@@ -3869,7 +4023,7 @@
 	)
 	(wire
 		(pts
-			(xy 41.91 80.01) (xy 48.26 80.01)
+			(xy 29.21 82.55) (xy 35.56 82.55)
 		)
 		(stroke
 			(width 0)
@@ -3879,7 +4033,7 @@
 	)
 	(wire
 		(pts
-			(xy 46.99 72.39) (xy 48.26 72.39)
+			(xy 34.29 74.93) (xy 35.56 74.93)
 		)
 		(stroke
 			(width 0)
@@ -3889,7 +4043,17 @@
 	)
 	(wire
 		(pts
-			(xy 46.99 69.85) (xy 48.26 69.85)
+			(xy 162.56 35.56) (xy 162.56 27.94)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "686a6149-90cc-4224-8245-2fb28e200147")
+	)
+	(wire
+		(pts
+			(xy 34.29 72.39) (xy 35.56 72.39)
 		)
 		(stroke
 			(width 0)
@@ -3929,7 +4093,7 @@
 	)
 	(wire
 		(pts
-			(xy 48.26 74.93) (xy 48.26 77.47)
+			(xy 35.56 77.47) (xy 35.56 80.01)
 		)
 		(stroke
 			(width 0)
@@ -3946,6 +4110,16 @@
 			(type default)
 		)
 		(uuid "b1c920fe-91fd-4f17-9283-12bc9130826c")
+	)
+	(wire
+		(pts
+			(xy 162.56 27.94) (xy 170.18 27.94)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "b470293f-7bee-4f89-bb0e-86d9c4cefa1e")
 	)
 	(wire
 		(pts
@@ -3989,7 +4163,7 @@
 	)
 	(wire
 		(pts
-			(xy 48.26 77.47) (xy 48.26 80.01)
+			(xy 35.56 80.01) (xy 35.56 82.55)
 		)
 		(stroke
 			(width 0)
@@ -4029,6 +4203,17 @@
 		)
 		(uuid "03074e05-6fcb-4c20-95dc-075c5ce1c56b")
 	)
+	(label "TRACK-PULSE-H"
+		(at 162.56 53.34 180)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify right bottom)
+		)
+		(uuid "07769772-509c-4112-a24d-d64f4ca69bda")
+	)
 	(label "18V"
 		(at 227.33 50.8 180)
 		(fields_autoplaced yes)
@@ -4041,7 +4226,7 @@
 		(uuid "07b1cf21-52cf-4d71-a153-0716a1cc86cb")
 	)
 	(label "3V3"
-		(at 46.99 72.39 180)
+		(at 34.29 74.93 180)
 		(fields_autoplaced yes)
 		(effects
 			(font
@@ -4150,6 +4335,17 @@
 		)
 		(uuid "23c36149-521c-4c34-a953-438ed952c462")
 	)
+	(label "TRACK-ENABLE-TTL"
+		(at 57.15 54.61 0)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "24273ff5-65f9-4ab7-b1f1-d53da1903ddf")
+	)
 	(label "CAN-INT-TTL*"
 		(at 90.17 116.84 180)
 		(fields_autoplaced yes)
@@ -4238,6 +4434,17 @@
 		)
 		(uuid "443233cc-868f-4c3d-906a-9db664c929c9")
 	)
+	(label "IS"
+		(at 57.15 49.53 0)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "48de1157-36f7-4609-82b5-924c7f836796")
+	)
 	(label "TRACK-POWER-ENABLE"
 		(at 227.33 40.64 180)
 		(fields_autoplaced yes)
@@ -4303,6 +4510,28 @@
 			(justify right bottom)
 		)
 		(uuid "5fde7ee6-faba-47ce-bbfc-7c0dd3e73145")
+	)
+	(label "SPARE-SWITCH"
+		(at 59.69 157.48 0)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "6181744f-541d-44e0-b97a-aa2341724fda")
+	)
+	(label "VCC-RAW"
+		(at 240.03 137.16 180)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify right bottom)
+		)
+		(uuid "6187a90f-815a-46e1-9d2c-7cefa1a26066")
 	)
 	(label "SCK-TTL"
 		(at 182.88 38.1 0)
@@ -4403,6 +4632,28 @@
 		)
 		(uuid "749cd5f3-bbfb-4305-90b9-672d5ee6ef9a")
 	)
+	(label "TRACK-ENABLE-TTL"
+		(at 182.88 50.8 0)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "752c977c-fdce-4305-9036-7e3b0e11355a")
+	)
+	(label "TRACK-ENABLE-TTL"
+		(at 57.15 41.91 0)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "7d13d4a4-1f23-470c-88ed-73ec2e99107c")
+	)
 	(label "MOSI"
 		(at 107.95 83.82 180)
 		(fields_autoplaced yes)
@@ -4437,7 +4688,7 @@
 		(uuid "83b7b813-09c9-4772-a952-affd8e9dac6f")
 	)
 	(label "18V"
-		(at 48.26 67.31 180)
+		(at 35.56 69.85 180)
 		(fields_autoplaced yes)
 		(effects
 			(font
@@ -4480,8 +4731,30 @@
 		)
 		(uuid "8f7d8477-8cbf-4351-9283-3d1418f16b54")
 	)
-	(label "iS"
-		(at 227.33 43.18 180)
+	(label "TRACK-PULSE-H-PROG-TTL"
+		(at 57.15 57.15 0)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "95ce55fc-6b5d-49f1-9031-160b82372e2c")
+	)
+	(label "TRACK-PULSE-H-PROG"
+		(at 57.15 44.45 0)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "9e352fbf-a0ab-44d4-9863-1e1471344dae")
+	)
+	(label "TRACK-PULSE-H-PROG"
+		(at 162.56 55.88 180)
 		(fields_autoplaced yes)
 		(effects
 			(font
@@ -4489,7 +4762,7 @@
 			)
 			(justify right bottom)
 		)
-		(uuid "97f080c1-cee5-4668-b221-73e664678e75")
+		(uuid "9ffcc5e2-b948-43fe-9a1c-5ee3fbafc550")
 	)
 	(label "CAN-CS*"
 		(at 107.95 38.1 180)
@@ -4501,6 +4774,17 @@
 			(justify right bottom)
 		)
 		(uuid "a0a69a75-dd4b-4f55-8215-328418019a09")
+	)
+	(label "IS"
+		(at 227.33 43.18 180)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify right bottom)
+		)
+		(uuid "a1a60423-bd2e-4971-90db-b163e2f1c9c6")
 	)
 	(label "CAN-L"
 		(at 129.54 114.3 180)
@@ -4523,6 +4807,17 @@
 			(justify right bottom)
 		)
 		(uuid "a5a83eff-754e-4649-a020-c3db2d51c42b")
+	)
+	(label "TRACK-PULSE-H-PROG-TTL"
+		(at 182.88 55.88 0)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "aac4159d-c82f-4a1a-918e-91874299ddc1")
 	)
 	(label "SCK-TTL"
 		(at 90.17 119.38 180)
@@ -4590,6 +4885,17 @@
 		)
 		(uuid "b20019d0-5a61-4ae3-94de-58d81a8574c9")
 	)
+	(label "SPARE-SWITCH"
+		(at 107.95 88.9 180)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify right bottom)
+		)
+		(uuid "b4c4bb0e-09fe-4bf3-98e1-329ba39c40d9")
+	)
 	(label "MOSI"
 		(at 41.91 123.19 180)
 		(fields_autoplaced yes)
@@ -4611,6 +4917,17 @@
 			(justify right bottom)
 		)
 		(uuid "c31ce2c7-961c-4930-9f19-3b7b9483873d")
+	)
+	(label "TRACK-POWER-ENABLE"
+		(at 162.56 50.8 180)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify right bottom)
+		)
+		(uuid "c348f90c-10af-4097-8191-961303332826")
 	)
 	(label "3V3"
 		(at 250.19 45.72 0)
@@ -4690,7 +5007,7 @@
 		(uuid "df823502-e053-461a-8edd-453a72f2e38e")
 	)
 	(label "VCC"
-		(at 46.99 69.85 180)
+		(at 34.29 72.39 180)
 		(fields_autoplaced yes)
 		(effects
 			(font
@@ -4699,6 +5016,28 @@
 			(justify right bottom)
 		)
 		(uuid "e5c701ea-38ca-44cf-8c44-f00a14f5c741")
+	)
+	(label "VCC"
+		(at 250.19 137.16 0)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "ec253b61-f973-4b13-abcf-cf95f9f65384")
+	)
+	(label "TRACK-PULSE-H-TTL"
+		(at 182.88 53.34 0)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "f92b3c48-e3a9-4507-b7a6-89e0963d6a97")
 	)
 	(symbol
 		(lib_id "power:GND")
@@ -4858,7 +5197,7 @@
 				)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "Connector_BarrelJack:BarrelJack_CUI_PJ-102AH_Horizontal"
 			(at 208.28 131.826 0)
 			(effects
 				(font
@@ -5424,16 +5763,15 @@
 	)
 	(symbol
 		(lib_id "railtrack:ARDUIN-MOTOR--SHIELD-REVB")
-		(at 53.34 54.61 0)
+		(at 40.64 57.15 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
 		(on_board yes)
 		(dnp no)
-		(fields_autoplaced yes)
 		(uuid "5a14bdf8-5b6d-4a2d-b5ae-a6f7a00c43f1")
 		(property "Reference" "U5"
-			(at 50.8 29.21 0)
+			(at 38.1 31.75 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -5442,7 +5780,7 @@
 			)
 		)
 		(property "Value" "~"
-			(at 58.42 27.94 0)
+			(at 45.72 30.48 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -5450,7 +5788,7 @@
 			)
 		)
 		(property "Footprint" "railtrack:Arduino_Shield"
-			(at 54.61 54.61 0)
+			(at 45.466 86.106 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -5458,7 +5796,7 @@
 			)
 		)
 		(property "Datasheet" ""
-			(at 54.61 54.61 0)
+			(at 41.91 57.15 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -5467,7 +5805,7 @@
 			)
 		)
 		(property "Description" ""
-			(at 54.61 54.61 0)
+			(at 41.91 57.15 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -5481,7 +5819,7 @@
 		(pin "J2-2"
 			(uuid "863cbf6e-86bb-43ed-99ef-f3c17bff0bfc")
 		)
-		(pin "J-9"
+		(pin "J1-9"
 			(uuid "e4d6892b-ceae-4aec-a074-fadaadf6b5ee")
 		)
 		(pin "J3-3"
@@ -5546,6 +5884,9 @@
 		)
 		(pin "J1-1"
 			(uuid "3e1c3665-9147-40d8-b919-cedcea03a853")
+		)
+		(pin "J1-4"
+			(uuid "71c0fc9f-01d4-4b58-aa8f-1553e0e6e615")
 		)
 		(instances
 			(project "TrackController"
@@ -6037,8 +6378,76 @@
 		)
 	)
 	(symbol
+		(lib_id "Jumper:Jumper_2_Open")
+		(at 245.11 137.16 0)
+		(unit 1)
+		(exclude_from_sim yes)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "ab89b824-9610-4e33-b55f-d4767db678fb")
+		(property "Reference" "JP1"
+			(at 245.11 130.81 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "Jumper_2_Open"
+			(at 245.11 133.35 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" "Jumper:SolderJumper-2_P1.3mm_Open_TrianglePad1.0x1.5mm"
+			(at 245.11 137.16 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "~"
+			(at 245.11 137.16 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Jumper, 2-pole, open"
+			(at 245.11 137.16 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "2c416a2d-424b-4743-a3ad-923f01170544")
+		)
+		(pin "2"
+			(uuid "934de380-e10a-4b9e-a7ad-1a4829be7eb7")
+		)
+		(instances
+			(project "TrackController"
+				(path "/a90d53d7-cb42-4b2d-aaf3-eef3bb9250bb"
+					(reference "JP1")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
 		(lib_id "power:GND")
-		(at 41.91 80.01 0)
+		(at 29.21 82.55 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -6047,7 +6456,7 @@
 		(fields_autoplaced yes)
 		(uuid "ba13268c-69c2-45ec-9947-bfb95b56f985")
 		(property "Reference" "#PWR07"
-			(at 41.91 86.36 0)
+			(at 29.21 88.9 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -6056,7 +6465,7 @@
 			)
 		)
 		(property "Value" "GND"
-			(at 41.91 85.09 0)
+			(at 29.21 87.63 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -6064,7 +6473,7 @@
 			)
 		)
 		(property "Footprint" ""
-			(at 41.91 80.01 0)
+			(at 29.21 82.55 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -6073,7 +6482,7 @@
 			)
 		)
 		(property "Datasheet" ""
-			(at 41.91 80.01 0)
+			(at 29.21 82.55 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -6082,7 +6491,7 @@
 			)
 		)
 		(property "Description" "Power symbol creates a global label with name \"GND\" , ground"
-			(at 41.91 80.01 0)
+			(at 29.21 82.55 0)
 			(effects
 				(font
 					(size 1.27 1.27)
