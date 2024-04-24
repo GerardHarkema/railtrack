@@ -3932,6 +3932,12 @@
 		(uuid "32f79f43-1250-483a-94e7-4859374c647c")
 	)
 	(junction
+		(at 252.73 80.01)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "69800a97-21bb-4910-a1e1-0f575cf7a2b4")
+	)
+	(junction
 		(at 134.62 38.1)
 		(diameter 0)
 		(color 0 0 0 0)
@@ -4093,6 +4099,16 @@
 	)
 	(wire
 		(pts
+			(xy 259.08 80.01) (xy 252.73 80.01)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "85be4cf0-9d75-40a6-9cbd-5d867d249f56")
+	)
+	(wire
+		(pts
 			(xy 35.56 77.47) (xy 35.56 80.01)
 		)
 		(stroke
@@ -4120,6 +4136,16 @@
 			(type default)
 		)
 		(uuid "b470293f-7bee-4f89-bb0e-86d9c4cefa1e")
+	)
+	(wire
+		(pts
+			(xy 248.92 72.39) (xy 252.73 72.39)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "c41563c4-3782-409b-b93d-353916869cd0")
 	)
 	(wire
 		(pts
@@ -4698,6 +4724,17 @@
 		)
 		(uuid "86f9c512-29f7-4ffd-8f02-13d3d641ffa3")
 	)
+	(label "TEMP"
+		(at 57.15 67.31 0)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "884acc30-ef4b-497b-b65a-3c581120580f")
+	)
 	(label "MEASUREMENT_TOGGLE"
 		(at 34.29 157.48 0)
 		(fields_autoplaced yes)
@@ -4907,6 +4944,17 @@
 		)
 		(uuid "bcc8fe5f-9ffc-4e28-8e05-d6e6ef4b5236")
 	)
+	(label "VOLTAGE"
+		(at 259.08 80.01 0)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "be4a845a-f90f-4630-b990-91069d64371c")
+	)
 	(label "SI-TTL"
 		(at 90.17 121.92 180)
 		(fields_autoplaced yes)
@@ -4983,6 +5031,17 @@
 			(justify left bottom)
 		)
 		(uuid "dc49d3eb-b054-4cff-a83f-fadd7b7138f5")
+	)
+	(label "18V"
+		(at 248.92 72.39 0)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "dc4adf63-0287-4448-8fe1-c09782687f9a")
 	)
 	(label "CAN-H"
 		(at 129.54 124.46 180)
@@ -5404,6 +5463,72 @@
 		)
 	)
 	(symbol
+		(lib_id "power:GND")
+		(at 252.73 87.63 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "1b60a526-9466-4f72-8dd3-6fb9bd3dcf1b")
+		(property "Reference" "#PWR014"
+			(at 252.73 93.98 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Value" "GND"
+			(at 252.73 92.71 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 252.73 87.63 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 252.73 87.63 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Power symbol creates a global label with name \"GND\" , ground"
+			(at 252.73 87.63 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "19878405-57bd-460c-b88f-dfef9a663965")
+		)
+		(instances
+			(project "TrackController"
+				(path "/a90d53d7-cb42-4b2d-aaf3-eef3bb9250bb"
+					(reference "#PWR014")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
 		(lib_id "railtrack:MCP2515_Module")
 		(at 100.33 119.38 0)
 		(unit 1)
@@ -5690,6 +5815,76 @@
 			(project "TrackController"
 				(path "/a90d53d7-cb42-4b2d-aaf3-eef3bb9250bb"
 					(reference "#PWR012")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Device:R")
+		(at 252.73 76.2 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "438f9e64-2606-4a79-bc4b-fce167baf166")
+		(property "Reference" "R2"
+			(at 255.27 74.9299 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Value" "100k"
+			(at 255.27 77.4699 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Footprint" "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal"
+			(at 250.952 76.2 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "~"
+			(at 252.73 76.2 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Resistor"
+			(at 252.73 76.2 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "0a1a3e4f-891b-4cb2-85e9-6d4ec28375bb")
+		)
+		(pin "2"
+			(uuid "9caf4b0e-6bdb-4640-9d82-cf7f474462de")
+		)
+		(instances
+			(project "TrackController"
+				(path "/a90d53d7-cb42-4b2d-aaf3-eef3bb9250bb"
+					(reference "R2")
 					(unit 1)
 				)
 			)
@@ -6306,6 +6501,76 @@
 			(project "TrackController"
 				(path "/a90d53d7-cb42-4b2d-aaf3-eef3bb9250bb"
 					(reference "SW2")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Device:R")
+		(at 252.73 83.82 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "a5121a07-640c-4171-99aa-ab754d7f9d9c")
+		(property "Reference" "R3"
+			(at 255.27 82.5499 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Value" "10k"
+			(at 255.27 85.0899 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Footprint" "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal"
+			(at 250.952 83.82 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "~"
+			(at 252.73 83.82 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Resistor"
+			(at 252.73 83.82 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "3f22ec44-e88d-4177-9df9-330f6510ec66")
+		)
+		(pin "2"
+			(uuid "71aa2eba-0698-439e-89c5-6b83881d9397")
+		)
+		(instances
+			(project "TrackController"
+				(path "/a90d53d7-cb42-4b2d-aaf3-eef3bb9250bb"
+					(reference "R3")
 					(unit 1)
 				)
 			)
