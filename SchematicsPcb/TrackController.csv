@@ -1,0 +1,17 @@
+"Id";"Designator";"Footprint";"Quantity";"Designation";"Supplier and ref";
+1;"R3,R1";"R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal";2;"10k";;;
+2;"C2,C4";"C_Disc_D5.1mm_W3.2mm_P5.00mm";2;"100nF";;;
+3;"IBT_2";"IBT_2";1;"~";;;
+4;"CAN-MODULE1";"MCP2515 Module";1;"~";;;
+5;"U3";"TO-92";1;"~";;;
+6;"MOTOR-SHIELD1";"Arduino_Shield";1;"~";;;
+7;"JP1";"PinHeader_1x02_P2.54mm_Vertical";1;"Jumper_2_Open";;;
+8;"R2";"R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal";1;"100k";;;
+9;"CP3,CP1";"CP_Radial_D8.0mm_P5.00mm";2;"100uF/25V";;;
+10;"U1";"Texas_TXS0108E_Level_Shifter_Module";1;"TXS0108EPW";;;
+11;"J3";"BarrelJack_GCT_DCJ200-10-A_Horizontal";1;"Barrel_Jack_Switch";;;
+12;"J1";"DSUB-9_Male_Horizontal_P2.77x2.84mm_EdgePinOffset4.94mm_Housed_MountingHolesOffset7.48mm";1;"DE9_Plug_MountingHoles";;;
+13;"ESP32";"ESP32_mini";1;"mini_esp32";;;
+14;"U2";"MP1484 Module";1;"~";;;
+15;"SW4,SW1,SW3,SW2";"SW_PUSH_6mm";4;"SW_Push";;;
+16;"LCD1";"1.77 LCD Display 128x160";1;"~";;;
