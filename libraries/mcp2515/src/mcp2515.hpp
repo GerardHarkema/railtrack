@@ -44,7 +44,7 @@ extern "C"
 	#define MCP1512_INT_PINn		2
 #else
 	#define MCP2512_CS_PINn			5
-	#define MCP1512_INT_PINn		22//16
+	#define MCP1512_INT_PINn		25//26//22
 #endif
 
 // ----------------------------------------------------------------------------

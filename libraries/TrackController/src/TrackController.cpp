@@ -207,13 +207,12 @@ void TrackController::begin() {
     // otherwise SPI might switch to slave
     // and we just hang. Do not delete!
  
-   	pinMode(SS, OUTPUT);
-
+   	pinMode(MCP2512_CS_PINn, OUTPUT);
    	pinMode(MCP1512_INT_PINn,  INPUT);
 
 #if defined(ESP32)
     int app_cpu = xPortGetCoreID();
-
+#if 1
     xTaskCreatePinnedToCore(enqueue_task,
                             "enqueue_task", 
                             1024,
@@ -222,7 +221,7 @@ void TrackController::begin() {
                             &enqueue_task_h,
                             app_cpu);
 
-
+#endif
 #else
 	attachInterrupt(digitalPinToInterrupt(MCP1512_INT_PINn), enqueue, FALLING);
 	interrupts();

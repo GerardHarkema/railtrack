@@ -54,8 +54,8 @@ railway_interfaces__msg__PowerControl power_control;
 
 // int8_t cs, int8_t dc, int8_t rst
 #define CS_PIN  16
-#define DC_PIN  17
-#define RST_PIN 21
+#define DC_PIN  21//17
+#define RST_PIN 17//21
 Adafruit_ST7735 *tft;
 
 typedef enum{
@@ -333,7 +333,7 @@ void setup() {
   while (!Serial);
   delay(2000);
   Serial.println("Marklin canbus controller started");
-#if 0
+#if 1
   Serial.print("MOSI: ");Serial.println(MOSI);
   Serial.print("MISO: ");Serial.println(MISO);
   Serial.print("SCK: ");Serial.println(SCK);
@@ -363,6 +363,7 @@ void setup() {
     Serial.println("--- ---- - ---- ---- ---- ---- ---- ---- ---- ---- ---- ----");
   }
   ctrl->begin();
+
 
   EEPROM.begin(NUMBER_OF_ACTIVE_TURNOUTS_MM);
 

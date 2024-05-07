@@ -142,8 +142,6 @@ uint8_t can_reset(){
 // -------------------------------------------------------------------------
 uint8_t can_init(uint8_t speed, bool loopback)
 {
-
-
 	pinMode(MCP2512_CS_PINn, OUTPUT); // set the SS pin as an output
 	deactivateMCP2512();
 
@@ -182,12 +180,15 @@ uint8_t can_init(uint8_t speed, bool loopback)
 
 	if (can_read_register(CNF1) != expect_cnf1_result) {
 
+		Serial.println("Error readback CNF1");
 		Serial.println(can_read_register(CNF1), HEX);
 
 		//SET(LED2_HIGH);
 
 		return false;
 	}
+	Serial.println("Oke readback CNF1");
+	Serial.println(can_read_register(CNF1), HEX);
 	
 	// deaktivate the RXnBF Pins (High Impedance State)
 	can_write_register(BFPCTRL, 0);

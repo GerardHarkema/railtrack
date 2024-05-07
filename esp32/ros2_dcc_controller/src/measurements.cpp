@@ -2,10 +2,11 @@
 #include "measurements.h"
 
 #define CURRENT_MEASUREMENT_PIN         34
-#define VOLTAGE_MEASUREMENT_PIN         34
-#define TEMPERATURE_MEASUREMENT_PIN     34
+#define VOLTAGE_MEASUREMENT_PIN         39
+#define TEMPERATURE_MEASUREMENT_PIN     35
 #define CURRENT_MEASUREMENT_SHUNT_VALUE (double)10000.0 // Ohms
 
+#define VOLTAGE_SCALING                 (11.0/1.0)/1000.0 //mV scale
 #define IBT_2_CURRENT_SCALING           4.154
 
 #define CURRENT_SCALING                 IBT_2_CURRENT_SCALING
@@ -82,19 +83,19 @@ float Measurements::getLastCurrentMeasurement(){
 float Measurements::getVoltage(){
     int total_value = 0;
     for(int i = 0; i < INTEGRATION_SIZE; i++) total_value += adc_voltage_buffer[i];
-    return ((float)total_value/INTEGRATION_SIZE)/CURRENT_MEASUREMENT_SHUNT_VALUE;// Amps
+    return ((float)total_value/INTEGRATION_SIZE)*VOLTAGE_SCALING;// Volts
 }
 
 float Measurements::getLastVoltageMeasurement(){
-    return ((float)adc_voltage_last_value/INTEGRATION_SIZE)/CURRENT_MEASUREMENT_SHUNT_VALUE;// Amps
+    return ((float)adc_voltage_last_value/INTEGRATION_SIZE)*VOLTAGE_SCALING;// Volts
 }
 
 float Measurements::getTemperature(){
     int total_value = 0;
     for(int i = 0; i < INTEGRATION_SIZE; i++) total_value += adc_temperature_buffer[i];
-    return ((float)total_value/INTEGRATION_SIZE)/CURRENT_MEASUREMENT_SHUNT_VALUE;// milli Volts
+    return (((float)total_value/INTEGRATION_SIZE)-500.0)*0.1; // Degrees Celsius
 }
 
 float Measurements::getLastTemperatureMeasurement(){
-    return ((float)adc_temperature_last_value/INTEGRATION_SIZE)/CURRENT_MEASUREMENT_SHUNT_VALUE;// Degrees Celsius
+    return (((float)adc_temperature_last_value/INTEGRATION_SIZE)-500.0)*0.1; // Degrees Celsius
 }

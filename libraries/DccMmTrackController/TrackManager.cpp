@@ -33,17 +33,29 @@
     do {} while (0)
 #endif
 
+#if 0
 #define LED_RED     0
 #define LED_GREEN   2
 #define LED_BLUE    4
 
 #ifdef HW_DEBUG
 #define TRACK_PULSE_PIN_H         LED_BLUE
-#define TRACK_POWER_ENABLE_PIN  LED_GREEN
+#define TRACK_POWER_ENABLE_PIN    LED_GREEN
 #else
+
+#ifdef DCC_EX_MOTOR_SHIELD_8874
 #define TRACK_PULSE_PIN_H       (gpio_num_t)32
 #define TRACK_PULSE_PIN_L       (gpio_num_t)33
 #define TRACK_POWER_ENABLE_PIN  (gpio_num_t)25
+#endif
+
+#ifdef ARDUINO_MOTOR_SHIELD_L298
+#define TRACK_PULSE_PIN_H       (gpio_num_t)32
+#define TRACK_PULSE_PIN_L       (gpio_num_t)33
+#define TRACK_POWER_ENABLE_PIN  (gpio_num_t)25
+#endif
+
+#endif
 #endif
 
 #define TRACK_POWER_ON    HIGH
@@ -104,6 +116,15 @@ void IRAM_ATTR interrupt(rmt_channel_t channel, void *t) {
   if (channel == 0)
     updateMinimumFreeMemoryISR(0);
 #endif
+}
+
+
+void protect_motor_driver_outputs(){
+  pinMode(TRACK_POWER_ENABLE_PIN, OUTPUT);
+  digitalWrite(TRACK_POWER_ENABLE_PIN, TRACK_POWER_OFF);
+
+  pinMode(TRACK_PULSE_PIN_H, OUTPUT);
+  digitalWrite(TRACK_PULSE_PIN_H, LOW);
 }
 
 #define MAX_PACKET_LEN  64
@@ -172,11 +193,14 @@ void TrackManager::begin(){
                             // 2 mem block of 64 RMT items should be enough
 
   ESP_ERROR_CHECK(rmt_config(&config));
-
+#ifdef DCC_EX_MOTOR_SHIELD_8874
   PIN_FUNC_SELECT(GPIO_PIN_MUX_REG[TRACK_PULSE_PIN_L], PIN_FUNC_GPIO);
   gpio_set_direction(TRACK_PULSE_PIN_L, GPIO_MODE_OUTPUT);
   gpio_matrix_out(TRACK_PULSE_PIN_L, RMT_SIG_OUT0_IDX+RMT_CHANNEL, true, 0);
-
+#else
+  gpio_set_direction(TRACK_PULSE_PIN_L, GPIO_MODE_OUTPUT);
+  digitalWrite(TRACK_PULSE_PIN_L, false);
+#endif
   // NOTE: ESP_INTR_FLAG_IRAM is *NOT* included in this bitmask
   ESP_ERROR_CHECK(rmt_driver_install(RMT_CHANNEL, 0, ESP_INTR_FLAG_LOWMED|ESP_INTR_FLAG_SHARED));
 

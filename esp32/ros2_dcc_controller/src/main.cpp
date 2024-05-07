@@ -31,6 +31,7 @@
 #include <TrackPacket.h>
 #include <TrackPacketQueueList.h>
 #include <TrackPacketScheduler.h>
+#include <TrackManager.h>
 
 #include "defines.h"
 #include "track_config.h"
@@ -98,6 +99,7 @@ Measurements measurements;
 bool display_measurents = false;
 
 void setup() {
+  protect_motor_driver_outputs();
   Serial.begin(115200);
   while (!Serial);
   delay(2000);

@@ -25,10 +25,29 @@
 #include "soc/rmt_struct.h"
 
 
+#ifdef DCC_EX_MOTOR_SHIELD_8874
+#define TRACK_PULSE_PIN_H       (gpio_num_t)32
+#define TRACK_PULSE_PIN_L       (gpio_num_t)33
+#define TRACK_POWER_ENABLE_PIN  (gpio_num_t)25
+#endif
+
+#ifdef ARDUINO_MOTOR_SHIELD_L298
+#define TRACK_PULSE_PIN_H       (gpio_num_t)32
+#define TRACK_PULSE_PIN_L       (gpio_num_t)33
+#define TRACK_POWER_ENABLE_PIN  (gpio_num_t)25
+#endif
+
+
+#define TRACK_POWER_ON    HIGH
+#define TRACK_POWER_OFF   LOW
+
 // make calculations easy and set up for microseconds
 #define RMT_CLOCK_DIVIDER 80
 #define DCC_1_HALFPERIOD 58  //4640 // 1 / 80000000 * 4640 = 58us
 #define DCC_0_HALFPERIOD 100 //8000
+
+
+void protect_motor_driver_outputs();
 
 class TrackManager {
  public:
