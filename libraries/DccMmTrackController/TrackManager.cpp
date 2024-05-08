@@ -33,33 +33,6 @@
     do {} while (0)
 #endif
 
-#if 0
-#define LED_RED     0
-#define LED_GREEN   2
-#define LED_BLUE    4
-
-#ifdef HW_DEBUG
-#define TRACK_PULSE_PIN_H         LED_BLUE
-#define TRACK_POWER_ENABLE_PIN    LED_GREEN
-#else
-
-#ifdef DCC_EX_MOTOR_SHIELD_8874
-#define TRACK_PULSE_PIN_H       (gpio_num_t)32
-#define TRACK_PULSE_PIN_L       (gpio_num_t)33
-#define TRACK_POWER_ENABLE_PIN  (gpio_num_t)25
-#endif
-
-#ifdef ARDUINO_MOTOR_SHIELD_L298
-#define TRACK_PULSE_PIN_H       (gpio_num_t)32
-#define TRACK_PULSE_PIN_L       (gpio_num_t)33
-#define TRACK_POWER_ENABLE_PIN  (gpio_num_t)25
-#endif
-
-#endif
-#endif
-
-#define TRACK_POWER_ON    HIGH
-#define TRACK_POWER_OFF   LOW
 
 // Number of bits resulting out of X bytes of DCC payload data
 // Each byte has one bit extra and at the end we have one EOF marker
@@ -120,11 +93,32 @@ void IRAM_ATTR interrupt(rmt_channel_t channel, void *t) {
 
 
 void protect_motor_driver_outputs(){
+#ifdef DCC_EX_MOTOR_SHIELD_8874 # ARDUINO_MOTOR_SHIELD_L298
   pinMode(TRACK_POWER_ENABLE_PIN, OUTPUT);
   digitalWrite(TRACK_POWER_ENABLE_PIN, TRACK_POWER_OFF);
 
   pinMode(TRACK_PULSE_PIN_H, OUTPUT);
   digitalWrite(TRACK_PULSE_PIN_H, LOW);
+
+  pinMode(PROG_POWER_ENABLE_PIN, OUTPUT);
+  digitalWrite(PROG_POWER_ENABLE_PIN, TRACK_POWER_OFF);
+
+  pinMode(PROG_PULSE_PIN, OUTPUT);
+  digitalWrite(PROG_PULSE_PIN, LOW);
+#endif
+
+#ifdef IBT_2_MOTOR_DRIVER
+  pinMode(TRACK_POWER_ENABLE_PIN, OUTPUT);
+  digitalWrite(TRACK_POWER_ENABLE_PIN, TRACK_POWER_OFF);
+
+  pinMode(TRACK_PULSE_PIN_H, OUTPUT);
+  digitalWrite(TRACK_PULSE_PIN_H, LOW);
+
+  pinMode(TRACK_PULSE_PIN_L, OUTPUT);
+  digitalWrite(TRACK_PULSE_PIN_L, LOW);
+#endif
+
+
 }
 
 #define MAX_PACKET_LEN  64

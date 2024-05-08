@@ -125,7 +125,16 @@ void setup() {
   tft->setTextSize(1);
   tft->setCursor(1, 22);
   tft->println("DCC/MM Control");
-  tft_printf(ST77XX_MAGENTA, "DCC/MM\ncontroller\nstarted\n");
+#ifdef ARDUINO_MOTOR_SHIELD_L298
+  tft_printf(ST77XX_MAGENTA, "Controller\nStarted\n\nL298 Version");
+#elif IBT_2_MOTOR_DRIVER
+  tft_printf(ST77XX_MAGENTA, "Controller\nStarted\n\nIBT_2 Version");
+#elif DCC_EX_MOTOR_SHIELD_8874
+  tft_printf(ST77XX_MAGENTA, "Controller\nStarted\n\n8874 Version");
+#else
+  tft_printf(ST77XX_MAGENTA, "Controller\nStarted\n\nUnknown Version");
+#endif
+
 
   EEPROM.begin(NUMBER_OF_ACTIVE_TURNOUTS_MM);
 
@@ -166,7 +175,18 @@ void setup() {
 
   pinMode(LED_BUILTIN, OUTPUT);
   digitalWrite(LED_BUILTIN, HIGH);
-  tft_printf(ST77XX_MAGENTA, "DCC/MM\nWiFi\nConnected\n");
+
+#ifdef ARDUINO_MOTOR_SHIELD_L298
+  tft_printf(ST77XX_MAGENTA, "WiFi Connected\n\n\nL298 Version");
+#elif IBT_2_MOTOR_DRIVER
+  tft_printf(ST77XX_MAGENTA, "WiFi Connected\n\n\nIBT_2 Version");
+#elif DCC_EX_MOTOR_SHIELD_8874
+  tft_printf(ST77XX_MAGENTA, "WiFi Connected\n\n\n8874 Version");
+#else
+  tft_printf(ST77XX_MAGENTA, "WiFi Connected\n\n\nUnknown Version");
+#endif
+
+
   Serial.printf("DCC/MM WiFi Connected\n");
 
   delay(2000);
@@ -284,7 +304,15 @@ void setup() {
   measurements.begin();
 
   Serial.printf("!!! Ready for operating !!!\n");
-  tft_printf(ST77XX_MAGENTA, "DCC/MM\ncontroller\nReady\n");
+#ifdef ARDUINO_MOTOR_SHIELD_L298
+  tft_printf(ST77XX_MAGENTA, "Controller\nReady\n\nL298 Version");
+#elif IBT_2_MOTOR_DRIVER
+  tft_printf(ST77XX_MAGENTA, "Controller\nReady\n\nIBT_2 Version");
+#elif DCC_EX_MOTOR_SHIELD_8874
+  tft_printf(ST77XX_MAGENTA, "Controller\nReady\n\n8874 Version");
+#else
+  tft_printf(ST77XX_MAGENTA, "Controller\nReady\n\nUnknown Version");
+#endif
 }
 
 int old_display_measurents_switch = HIGH;

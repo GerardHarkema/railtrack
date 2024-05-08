@@ -10,6 +10,9 @@
 #define IBT_2_CURRENT_SCALING           4.154
 
 #define CURRENT_SCALING                 IBT_2_CURRENT_SCALING
+#define TMP36_OFFSET_mV                 500.0
+#define TMP36_SCALING                    0.1
+
 
 #ifdef DEBUG
 #define DEBUG_PRINT(fmt, ...) \
@@ -90,12 +93,13 @@ float Measurements::getLastVoltageMeasurement(){
     return ((float)adc_voltage_last_value/INTEGRATION_SIZE)*VOLTAGE_SCALING;// Volts
 }
 
+
 float Measurements::getTemperature(){
     int total_value = 0;
     for(int i = 0; i < INTEGRATION_SIZE; i++) total_value += adc_temperature_buffer[i];
-    return (((float)total_value/INTEGRATION_SIZE)-500.0)*0.1; // Degrees Celsius
+    return (((float)total_value/INTEGRATION_SIZE)-TMP36_OFFSET_mV)*TMP36_SCALING; // Degrees Celsius
 }
 
 float Measurements::getLastTemperatureMeasurement(){
-    return (((float)adc_temperature_last_value/INTEGRATION_SIZE)-500.0)*0.1; // Degrees Celsius
+    return (((float)adc_temperature_last_value/INTEGRATION_SIZE)-TMP36_OFFSET_mV)*TMP36_SCALING; // Degrees Celsius
 }

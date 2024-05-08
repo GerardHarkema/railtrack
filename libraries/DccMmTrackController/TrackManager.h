@@ -29,14 +29,23 @@
 #define TRACK_PULSE_PIN_H       (gpio_num_t)32
 #define TRACK_PULSE_PIN_L       (gpio_num_t)33
 #define TRACK_POWER_ENABLE_PIN  (gpio_num_t)25
+#define PROG_POWER_ENABLE_PIN   (gpio_num_t)22
+#define PROG_PULSE_PIN          (gpio_num_t)14        
 #endif
 
 #ifdef ARDUINO_MOTOR_SHIELD_L298
 #define TRACK_PULSE_PIN_H       (gpio_num_t)32
 #define TRACK_PULSE_PIN_L       (gpio_num_t)33
 #define TRACK_POWER_ENABLE_PIN  (gpio_num_t)25
+#define PROG_POWER_ENABLE_PIN   (gpio_num_t)22
+#define PROG_PULSE_PIN          (gpio_num_t)14   
 #endif
 
+#ifdef IBT_2_MOTOR_DRIVER
+#define TRACK_PULSE_PIN_H       (gpio_num_t)32
+#define TRACK_PULSE_PIN_L       (gpio_num_t)33
+#define TRACK_POWER_ENABLE_PIN  (gpio_num_t)25
+#endif
 
 #define TRACK_POWER_ON    HIGH
 #define TRACK_POWER_OFF   LOW
