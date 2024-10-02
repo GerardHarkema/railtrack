@@ -62,7 +62,7 @@ git clone https://github.com/GerardHarkema/railtrack.git
 ### Build ROS2 railtrack workspace
 ```bash
 cd ~/railtrack_ws
-colcon build
+colcon build --symlink-install
 ```
 Add the workspace to the ROS environment:
 ```bash

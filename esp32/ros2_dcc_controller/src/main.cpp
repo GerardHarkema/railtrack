@@ -35,6 +35,7 @@
 
 #include "defines.h"
 #include "track_config.h"
+#include "network_config.h"
 #include "support.h"
 
 #include "power.h"

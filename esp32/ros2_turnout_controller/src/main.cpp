@@ -98,6 +98,7 @@ typedef struct{
 
 Adafruit_ST7735 *tft;
 
+#include "network_config.h"
 #include "turnout_config.h"
 
 IPAddress agent_ip(ip_address[0], ip_address[1], ip_address[2], ip_address[3]);

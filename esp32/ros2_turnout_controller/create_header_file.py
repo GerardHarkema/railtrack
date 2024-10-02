@@ -43,15 +43,6 @@ def create_turnout_config_struct_line(turnout):
 
 
 def main():
-    agent_config_file = '../../config/micro_ros_agent_config.json'
-    my_agent_config_file = '../../../micro_ros_agent_config.json'
-
-    try:
-        with open(my_agent_config_file, 'r', encoding='utf-8') as f:
-            agent_config = json.load(f)
-    except OSError:
-        with open(agent_config_file, 'r', encoding='utf-8') as f:
-            agent_config = json.load(f)
 
     header = "// !!! This is an automated generated header file, do not modify by your self !!!\n"
 
@@ -64,23 +55,6 @@ def main():
     line = "#define _TURNOUT_CONFIG_\n"
     header = header + line + "\n"
 
-    line = "// Agent config generated from: " + agent_config_file + "\n"
-    header = header + line
-    line = "#define SSID   \"" + agent_config['wifi']['ssid'] + "\"\n"
-    header = header + line
-    line = "#define PASSWORD   \"" + agent_config['wifi']['password'] + "\"\n"
-    header = header + line
-
-    ip_address = agent_config['agent']['ip']
-    ip_segements = ip_address.split(":")
-    line = "uint8_t ip_address[4] = {" + ip_segements[0] + ", "\
-                                    + ip_segements[1] + ", "\
-                                    + ip_segements[2] + ", "\
-                                    + ip_segements[3] + "};\n"
-    header = header + line
-
-    line = "#define PORT   " + str(agent_config['agent']['port']) + "\n\n"
-    header = header + line
 
     load_title = "Load turnout config from..."
     turnout_config_file = easygui.fileopenbox(title=load_title, default="../../config/*.json")
