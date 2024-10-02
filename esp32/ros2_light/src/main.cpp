@@ -19,7 +19,8 @@ rclc_support_t support;
 rcl_allocator_t allocator;
 rcl_node_t node;
 
-
+#define  NODE_NAME  "light_controller"
+#define STATUS_LED 3
 
 #include "network_config.h"
 
@@ -34,7 +35,6 @@ int scan_index = 0;
 
 
 void error_loop(){
-  tft_printf(ST77XX_BLUE, "DCC controller\nError\nSystem halted");
   Serial.printf("DCC controller\nError\nSystem halted");
   while(1){
     digitalWrite(STATUS_LED, !digitalRead(STATUS_LED));
@@ -43,15 +43,12 @@ void error_loop(){
 }
 
 
-int turnout_state_index = 0;
+
 
 void timer_callback(rcl_timer_t * timer, int64_t last_call_time) {
   RCLC_UNUSED(last_call_time);
   if (timer != NULL) {
-    //Serial.print("x");
-    RCSOFTCHECK(rcl_publish(&turnout_status_publisher, &turnout_status[turnout_state_index], NULL));
-    turnout_state_index++;
-    if(turnout_state_index == NUMBER_OF_TURNOUTS)turnout_state_index = 0;
+
   }
 }
 
@@ -114,7 +111,7 @@ void setup() {
 
 
   // create timer,
-  const unsigned int timer_timeout = 500/NUMBER_OF_TURNOUTS;
+  const unsigned int timer_timeout = 500;
   RCCHECK(rclc_timer_init_default(
     &timer,
     &support,
@@ -125,7 +122,7 @@ void setup() {
   int number_of_executors = 2;
   RCCHECK(rclc_executor_init(&executor, &support.context, number_of_executors, &allocator));
   RCCHECK(rclc_executor_add_timer(&executor, &timer));
-  RCCHECK(rclc_executor_add_subscription(&executor, &turnout_control_subscriber, &turnout_control, &turnout_control_callback, ON_NEW_DATA));
+  //RCCHECK(rclc_executor_add_subscription(&executor, &turnout_control_subscriber, &turnout_control, &turnout_control_callback, ON_NEW_DATA));
 
   Serial.println("Light-controller ready");
 }
