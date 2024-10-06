@@ -403,7 +403,7 @@ void setup() {
     }
   }
   WiFi.setHostname("RailTrackController");
-  set_microros_wifi_transports(SSID, PASSWORD, agent_ip, (size_t)PORT);
+  set_microros_wifi_transports(WIFI_SSID, PASSWORD, agent_ip, (size_t)PORT);
 
   pinMode(LED_BUILTIN, OUTPUT);
   digitalWrite(LED_BUILTIN, HIGH);

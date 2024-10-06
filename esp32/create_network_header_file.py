@@ -35,7 +35,7 @@ def main():
 
     line = "// Agent config generated from: " + agent_config_file + "\n"
     header = header + line
-    line = "#define SSID   \"" + agent_config['wifi']['ssid'] + "\"\n"
+    line = "#define WIFI_SSID   \"" + agent_config['wifi']['ssid'] + "\"\n"
     header = header + line
     line = "#define PASSWORD   \"" + agent_config['wifi']['password'] + "\"\n"
     header = header + line

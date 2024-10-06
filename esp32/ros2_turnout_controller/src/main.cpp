@@ -269,7 +269,7 @@ void setup() {
   const char *host_name = convertToCamelCase(NODE_NAME);
   //Serial.printf("hostname :%s\n", host_name);
   WiFi.setHostname(NODE_NAME);
-  set_microros_wifi_transports(SSID, PASSWORD, agent_ip, (size_t)PORT);
+  set_microros_wifi_transports(WIFI_SSID, PASSWORD, agent_ip, (size_t)PORT);
 
   pinMode(STATUS_LED, OUTPUT);
   digitalWrite(STATUS_LED, HIGH);

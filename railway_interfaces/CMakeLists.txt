@@ -35,7 +35,10 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/PowerControl.msg"
   "msg/PowerState.msg"
   "msg/DccCvWrite.msg"
-  DEPENDENCIES std_msgs
+  "msg/ColorRGB.msg"
+  "msg/LightRGB.msg"
+   DEPENDENCIES std_msgs
  )
+
 
 ament_package()
