@@ -71,6 +71,7 @@ void error_loop(){
   }
 }
 
+
 void light_rgb_control_callback(const void * msgin)
 {  
   const railway_interfaces__msg__LightRGB * control = (const railway_interfaces__msg__LightRGB *)msgin;
