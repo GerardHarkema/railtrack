@@ -49,22 +49,53 @@ bool errorLedState = false;
 #define LED_COUNT 24
 #define LED_PIN 2
 
+#define STATUS_LED_PIN    8
+
+
+
 WS2812FX ws2812fx = WS2812FX(LED_COUNT, LED_PIN, NEO_GRB + NEO_KHZ800);
-WS2812FX ws2812fxStatus = WS2812FX(1, RGB_BUILTIN, NEO_GRB + NEO_KHZ800);
+
+
+#if defined(ARDUINO_ESP32C3_DEV)
+#elif defined(ARDUINO_ESP32S3_DEV)
+    WS2812FX ws2812fxStatus = WS2812FX(1, RGB_BUILTIN, NEO_GRB + NEO_KHZ800);
+#else
+    "Unknown Platform"
+#endif
 
 
 void error_loop(){
   Serial.printf("Light RGB controller\nError\nSystem halted");
   while(1){
-      ws2812fxStatus.service();
+      
+#if defined(ARDUINO_ESP32C3_DEV)
+
+#elif defined(ARDUINO_ESP32S3_DEV)
+        ws2812fxStatus.service();
+#else
+    "Unknown Platform"
+#endif
         if(errorLedState){
             //neopixelWrite(RGB_BUILTIN,0,0, 0);
+#if defined(ARDUINO_ESP32C3_DEV)
+              digitalWrite(STATUS_LED_PIN, HIGH);
+
+#elif defined(ARDUINO_ESP32S3_DEV)
             ws2812fxStatus.setColor(0,0,0);
+#else
+    "Unknown Platform"
+#endif
             errorLedState = false;
         }
         else{
             //neopixelWrite(RGB_BUILTIN,RGB_BRIGHTNESS,0, 0);
+#if defined(ARDUINO_ESP32C3_DEV)
+              digitalWrite(STATUS_LED_PIN, LOW);
+#elif defined(ARDUINO_ESP32S3_DEV)
             ws2812fxStatus.setColor(RGB_BRIGHTNESS,0,0);
+#else
+    "Unknown Platform"
+#endif
             errorLedState = true;
         }
     delay(100);
@@ -138,15 +169,24 @@ void setup() {
   ws2812fx.setColor(0,0,0);
   ws2812fx.service();
 
+
+#if defined(ARDUINO_ESP32C3_DEV)
+  pinMode(STATUS_LED_PIN, OUTPUT); 
+  digitalWrite(STATUS_LED_PIN, HIGH);
+#elif defined(ARDUINO_ESP32S3_DEV)
   ws2812fxStatus.init();
   ws2812fxStatus.setBrightness(100);
   ws2812fxStatus.setSpeed(200);
   ws2812fxStatus.setMode(FX_MODE_STATIC);
   ws2812fxStatus.start();
-  
-
   ws2812fxStatus.setColor(RGB_BRIGHTNESS,0,0);
   ws2812fxStatus.service();
+#else
+    "Unknown Platform"
+#endif
+
+
+
 
   //neopixelWrite(RGB_BUILTIN,RGB_BRIGHTNESS,0, 0);
 
@@ -156,7 +196,9 @@ void setup() {
 
     // Set WiFi to station mode and disconnect from an AP if it was previously connected.
     //WiFi.mode(WIFI_STA);
-#if 1
+
+
+#if defined(ARDUINO_ESP32S3_DEV)
   WiFi.mode(WIFI_STA);
   WiFi.begin(WIFI_SSID, PASSWORD);
   WiFi.setTxPower(WIFI_POWER_8_5dBm);
@@ -250,8 +292,14 @@ void setup() {
   //WiFi.setMinSecurity(WIFI_AUTH_WPA_PSK); // Lower min security to WPA.
   set_microros_wifi_transports(WIFI_SSID, PASSWORD, agent_ip, (size_t)PORT);
   //neopixelWrite(RGB_BUILTIN,0,0,RGB_BRIGHTNESS);
+#if defined(ARDUINO_ESP32C3_DEV)
+#elif defined(ARDUINO_ESP32S3_DEV)
   ws2812fxStatus.setColor(0, 0, RGB_BRIGHTNESS);
   ws2812fxStatus.service();
+#else
+    "Unknown Platform"
+#endif
+
 
 
 
@@ -296,7 +344,15 @@ void setup() {
     Serial.println("Light-controller ready");
     // turn led off, running!  
   //neopixelWrite(RGB_BUILTIN,0,RGB_BRIGHTNESS,0);
+#if defined(ARDUINO_ESP32C3_DEV)
+    digitalWrite(STATUS_LED_PIN, LOW);
+
+#elif defined(ARDUINO_ESP32S3_DEV)
     ws2812fxStatus.setColor(0, RGB_BRIGHTNESS,0);
+
+#else
+    "Unknown Platform"
+#endif
 
 }
 
@@ -305,6 +361,13 @@ void loop() {
   delay(100);
   RCSOFTCHECK(rclc_executor_spin_some(&executor, RCL_MS_TO_NS(100)));
   ws2812fx.service();
-  ws2812fxStatus.service();
+  
+#if defined(ARDUINO_ESP32C3_DEV)
+
+#elif defined(ARDUINO_ESP32S3_DEV)
+    ws2812fxStatus.service();
+#else
+    "Unknown Platform"
+#endif
 
 }
