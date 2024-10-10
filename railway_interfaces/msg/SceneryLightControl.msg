@@ -71,8 +71,9 @@ uint8 FX_MODE_FLIPBOOK                = 69
 uint8 FX_MODE_POPCORN                 = 70
 uint8 FX_MODE_OSCILLATOR              = 71
 
-railway_interfaces/ColorRGB color
+uint32 number
 
+railway_interfaces/ColorRGB color
 uint8 mode
 uint8 brightness
 uint8 speed

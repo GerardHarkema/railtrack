@@ -36,7 +36,8 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/PowerState.msg"
   "msg/DccCvWrite.msg"
   "msg/ColorRGB.msg"
-  "msg/LightRGB.msg"
+  "msg/SceneryLightControl.msg"
+  "msg/SceneryLightState.msg"
    DEPENDENCIES std_msgs
  )
 

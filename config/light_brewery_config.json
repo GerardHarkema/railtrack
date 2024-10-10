@@ -1,0 +1,16 @@
+{
+    "Node_name" : "lights_brewery",
+    "Lights":[
+        {
+            "type" : "mono",
+            "number" : 1,
+            "pin_number" : 2
+        },
+        {
+            "type" : "rgb",
+            "number" : 2,
+            "pin_number" : 3
+        }
+
+    ]
+}

@@ -13,7 +13,7 @@
 			"path": "ros2_dcc_controller"
 		},
 		{
-			"path": "ros2_light"
+			"path": "ros2_scenery_light"
 		}
 	],
 	"settings": {

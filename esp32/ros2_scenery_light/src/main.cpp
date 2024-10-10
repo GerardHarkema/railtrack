@@ -11,11 +11,12 @@
 #include <rclc/executor.h>
 
 #include <std_msgs/msg/bool.h>
-#include <railway_interfaces/msg/light_rgb.h>
+#include <railway_interfaces/msg/scenery_light_control.h>
+#include <railway_interfaces/msg/scenery_light_state.h>
 
 rcl_subscription_t light_rgb_subscriber;
 
-railway_interfaces__msg__LightRGB light_rgb_control;
+railway_interfaces__msg__SceneryLightControl scenery_light_control;
 
 rclc_executor_t executor;
 
@@ -103,9 +104,9 @@ void error_loop(){
 }
 
 
-void light_rgb_control_callback(const void * msgin)
+void scenery_light_control_callback(const void * msgin)
 {  
-  const railway_interfaces__msg__LightRGB * control = (const railway_interfaces__msg__LightRGB *)msgin;
+  const railway_interfaces__msg__SceneryLightControl * control = (const railway_interfaces__msg__SceneryLightControl *)msgin;
 
   ws2812fx.setMode(control->mode);
   ws2812fx.setBrightness(control->brightness);
@@ -215,81 +216,6 @@ void setup() {
 #endif
 
 
-#if 0
-    WiFi.disconnect();
-
-    Serial.println("Scan start");
- 
-    // WiFi.scanNetworks will return the number of networks found.
-    int n = WiFi.scanNetworks();
-    Serial.println("Scan done");
-    if (n == 0) {
-        Serial.println("no networks found");
-    } else {
-        Serial.print(n);
-        Serial.println(" networks found");
-        Serial.println("Nr | SSID                             | RSSI | CH | Encryption");
-        for (int i = 0; i < n; ++i) {
-            // Print SSID and RSSI for each network found
-            Serial.printf("%2d",i + 1);
-            Serial.print(" | ");
-            Serial.printf("%-32.32s", WiFi.SSID(i).c_str());
-            Serial.print(" | ");
-            Serial.printf("%4d", WiFi.RSSI(i));
-            Serial.print(" | ");
-            Serial.printf("%2d", WiFi.channel(i));
-            Serial.print(" | ");
-            switch (WiFi.encryptionType(i))
-            {
-            case WIFI_AUTH_OPEN:
-                Serial.print("open");
-                break;
-            case WIFI_AUTH_WEP:
-                Serial.print("WEP");
-                break;
-            case WIFI_AUTH_WPA_PSK:
-                Serial.print("WPA");
-                break;
-            case WIFI_AUTH_WPA2_PSK:
-                Serial.print("WPA2");
-                break;
-            case WIFI_AUTH_WPA_WPA2_PSK:
-                Serial.print("WPA+WPA2");
-                break;
-            case WIFI_AUTH_WPA2_ENTERPRISE:
-                Serial.print("WPA2-EAP");
-                break;
-            case WIFI_AUTH_WPA3_PSK:
-                Serial.print("WPA3");
-                break;
-            case WIFI_AUTH_WPA2_WPA3_PSK:
-                Serial.print("WPA2+WPA3");
-                break;
-            case WIFI_AUTH_WAPI_PSK:
-                Serial.print("WAPI");
-                break;
-            default:
-                Serial.print("unknown");
-            }
-            Serial.println();
-            delay(10);
-        }
-    }
-    Serial.println("");
- 
-    // Delete the scan result to free memory for code below.
-    WiFi.scanDelete();
- 
-    // Wait a bit before scanning again.
-    delay(5000);
-
-    WiFi.mode(WIFI_STA);
-#endif
-
-
-  //WiFi.setTxPower(WIFI_POWER_19_5dBm);//WIFI_POWER_8_5dBm);
-  //WiFi.setMinSecurity(WIFI_AUTH_WEP); // Lower min security to WEP.
-  //WiFi.setMinSecurity(WIFI_AUTH_WPA_PSK); // Lower min security to WPA.
   set_microros_wifi_transports(WIFI_SSID, PASSWORD, agent_ip, (size_t)PORT);
   //neopixelWrite(RGB_BUILTIN,0,0,RGB_BRIGHTNESS);
 #if defined(ARDUINO_ESP32C3_DEV)
@@ -301,9 +227,7 @@ void setup() {
 #endif
 
 
-
-
-  Serial.printf("Light Control WiFi Connected\n");
+  Serial.printf(" Scenery Light Control WiFi Connected\n");
 
 
   allocator = rcl_get_default_allocator();
@@ -322,7 +246,7 @@ void setup() {
   RCCHECK(rclc_subscription_init_default(
     &light_rgb_subscriber,
     &node,
-    ROSIDL_GET_MSG_TYPE_SUPPORT(railway_interfaces, msg, LightRGB),
+    ROSIDL_GET_MSG_TYPE_SUPPORT(railway_interfaces, msg, SceneryLightControl),
     topic_name));
 
 
@@ -338,7 +262,7 @@ void setup() {
   int number_of_executors = 1;
   RCCHECK(rclc_executor_init(&executor, &support.context, number_of_executors, &allocator));
   //RCCHECK(rclc_executor_add_timer(&executor, &timer));
-  RCCHECK(rclc_executor_add_subscription(&executor, &light_rgb_subscriber, &light_rgb_control, &light_rgb_control_callback, ON_NEW_DATA));
+  RCCHECK(rclc_executor_add_subscription(&executor, &light_rgb_subscriber, &scenery_light_control, &scenery_light_control_callback, ON_NEW_DATA));
 
  
     Serial.println("Light-controller ready");
