@@ -14,10 +14,9 @@
 #include <railway_interfaces/msg/scenery_light_control.h>
 #include <railway_interfaces/msg/scenery_light_state.h>
 
-rcl_subscription_t light_rgb_subscriber;
-
+rcl_publisher_t scenery_light_status_publisher;
+rcl_subscription_t scenery_light_control_subscriber;
 railway_interfaces__msg__SceneryLightControl scenery_light_control;
-
 rclc_executor_t executor;
 
 
@@ -25,13 +24,57 @@ rclc_support_t support;
 rcl_allocator_t allocator;
 rcl_node_t node;
 
-#define  NODE_NAME  "light_controller"
 #define STATUS_LED 3
 
+
+typedef struct{
+  int pin;
+}SCENERY_LIGHT_MONO_CONFIG;
+
+typedef enum{
+  LED_ORDER_RGB = 0,
+  LED_ORDER_GRB
+}LED_ORDER;
+
+typedef struct{
+  int pin;
+  int number_of_leds;
+  LED_ORDER led_order; // to be implemented
+
+}SCENERY_LIGHT_RGB_CONFIG;
+
+typedef enum{
+    LT_MONO = railway_interfaces__msg__SceneryLightState__TYPE_MONO, 
+    LT_RGB = railway_interfaces__msg__SceneryLightState__TYPE_RGB
+}LIGHT_TYPES;
+
+typedef struct{
+  LIGHT_TYPES type;
+  int scenery_light_number;
+  union{
+    SCENERY_LIGHT_MONO_CONFIG mono;
+    SCENERY_LIGHT_RGB_CONFIG rgb;   
+  };
+}SCENERY_LIGHT_CONFIG;
+
+
+
 #include "network_config.h"
+#include "scenery_config.h"
 
 IPAddress agent_ip(ip_address[0], ip_address[1], ip_address[2], ip_address[3]);
 
+
+typedef struct{
+  int mode;
+  int brightness;
+  int speed;
+  int r, g, b;
+}EEPROM_STORE;
+
+EEPROM_STORE eeprom_store[NUMBER_OF_SCENERY_LIGHTS];
+
+railway_interfaces__msg__SceneryLightState scenery_light_status[NUMBER_OF_SCENERY_LIGHTS] = {0};
 
 rcl_timer_t timer;
 #define RCCHECK(fn) { rcl_ret_t temp_rc = fn; if((temp_rc != RCL_RET_OK)){error_loop();}}
@@ -52,9 +95,13 @@ bool errorLedState = false;
 
 #define STATUS_LED_PIN    8
 
+typedef struct{
+  bool active;
+  WS2812FX *ws2812fx;
+}WS2812_CONFIGURATION;
 
+WS2812_CONFIGURATION WS2812_configurations[NUMBER_OF_SCENERY_LIGHTS];
 
-WS2812FX ws2812fx = WS2812FX(LED_COUNT, LED_PIN, NEO_GRB + NEO_KHZ800);
 
 
 #if defined(ARDUINO_ESP32C3_DEV)
@@ -63,6 +110,21 @@ WS2812FX ws2812fx = WS2812FX(LED_COUNT, LED_PIN, NEO_GRB + NEO_KHZ800);
 #else
     "Unknown Platform"
 #endif
+
+
+bool lookupSceneryLightIndex(int scenery_light_number, int *scenery_light_index){
+
+  while(scan_index < NUMBER_OF_SCENERY_LIGHTS){
+    if(scenery_lights_config[scan_index].scenery_light_number == scenery_light_number){
+      *scenery_light_index = scan_index;
+      scan_index++; 
+      return true;
+    }
+    scan_index++; 
+  }  
+  if(scan_index == NUMBER_OF_SCENERY_LIGHTS) scan_index = 0;
+  return false;
+}
 
 
 void error_loop(){
@@ -106,20 +168,74 @@ void error_loop(){
 
 void scenery_light_control_callback(const void * msgin)
 {  
+  int scenery_index;
   const railway_interfaces__msg__SceneryLightControl * control = (const railway_interfaces__msg__SceneryLightControl *)msgin;
 
-  ws2812fx.setMode(control->mode);
-  ws2812fx.setBrightness(control->brightness);
-  ws2812fx.setSpeed(control->speed);
-  ws2812fx.setColor(control->color.r,control->color.g,control->color.b);
+  while(lookupSceneryLightIndex(control->number, &scenery_index)){
+      //Serial.println("set turnout");
+      uint pin;
+      bool state;
+      int pwm_value, analog_value;
 
+      switch(scenery_lights_config[scenery_index].type){
+        case LT_MONO:
+          scenery_light_status[scenery_index].brightness = control->brightness;
+          scenery_light_status[scenery_index].speed = 0;
+          scenery_light_status[scenery_index].mode = 0;
+          scenery_light_status[scenery_index].color.r = 0;
+          scenery_light_status[scenery_index].color.g = 0;
+          scenery_light_status[scenery_index].color.b = 0;
+          scenery_light_status[scenery_index].light_type = LT_MONO;
+
+
+          // set led with analog write
+          break;
+        case LT_RGB:
+          scenery_light_status[scenery_index].brightness = control->brightness;
+          scenery_light_status[scenery_index].speed = control->speed;
+          scenery_light_status[scenery_index].mode = control->mode;
+          scenery_light_status[scenery_index].color.r = control->color.r;
+          scenery_light_status[scenery_index].color.g = control->color.g;
+          scenery_light_status[scenery_index].color.b = control->color.b;
+          scenery_light_status[scenery_index].light_type = LT_RGB;
+
+          WS2812_configurations[scenery_index].ws2812fx->setMode(control->mode);
+          WS2812_configurations[scenery_index].ws2812fx->setBrightness(control->brightness);
+          WS2812_configurations[scenery_index].ws2812fx->setSpeed(control->speed);
+          WS2812_configurations[scenery_index].ws2812fx->setColor(control->color.r,control->color.g,control->color.b);
+          break;
+        default:
+          break;
+      }
+
+      eeprom_store[scenery_index].brightness = scenery_light_status[scenery_index].brightness;
+      eeprom_store[scenery_index].speed = scenery_light_status[scenery_index].speed;
+      eeprom_store[scenery_index].mode = scenery_light_status[scenery_index].mode;
+      eeprom_store[scenery_index].r = scenery_light_status[scenery_index].color.r;
+      eeprom_store[scenery_index].g = scenery_light_status[scenery_index].color.g;
+      eeprom_store[scenery_index].b = scenery_light_status[scenery_index].color.b;
+
+      int address = scenery_index * sizeof(EEPROM_STORE);
+    
+      // Cast the current structure as a byte array
+      byte *eeprom = (byte*)&eeprom_store[scenery_index];
+    
+      // Read each byte from EEPROM
+      for(int j = 0; j < sizeof(EEPROM_STORE); j++) {
+          EEPROM.write(address + j, eeprom[j]);
+      }
+      EEPROM.commit();
+  }
 }
 
+int scenery_light_state_index = 0;
 
 void timer_callback(rcl_timer_t * timer, int64_t last_call_time) {
   RCLC_UNUSED(last_call_time);
   if (timer != NULL) {
-
+    RCSOFTCHECK(rcl_publish(&scenery_light_status_publisher, &scenery_light_status[scenery_light_state_index], NULL));
+    scenery_light_state_index++;
+    if(scenery_light_state_index == NUMBER_OF_SCENERY_LIGHTS)scenery_light_state_index = 0;
   }
 }
 
@@ -162,14 +278,55 @@ void setup() {
   Serial.print("Light-controller started, node: ");
   Serial.println(NODE_NAME);
 
-  ws2812fx.init();
-  ws2812fx.setBrightness(100);
-  ws2812fx.setSpeed(200);
-  ws2812fx.setMode(FX_MODE_STATIC);
-  ws2812fx.start();
-  ws2812fx.setColor(0,0,0);
-  ws2812fx.service();
+  EEPROM.begin(sizeof(EEPROM_STORE) * NUMBER_OF_SCENERY_LIGHTS);
 
+
+  for(int i = 0; i< NUMBER_OF_SCENERY_LIGHTS; i++){
+    // Get the starting address for the current EEPROM_STORE
+    int address = i * sizeof(EEPROM_STORE);
+    
+    // Cast the current structure as a byte array
+    byte *eeprom = (byte*)&eeprom_store[i];
+    
+    // Read each byte from EEPROM
+    for(int j = 0; j < sizeof(EEPROM_STORE); j++) {
+        eeprom[j] = EEPROM.read(address + j);
+    }
+    scenery_light_status[i].number = scenery_lights_config[i].scenery_light_number;
+    scenery_light_status[i].light_type = scenery_lights_config[i].type;
+    WS2812_configurations[i].active = false;
+    switch(scenery_lights_config[i].type){
+      case LT_MONO:
+        // make output pin
+        break;
+      case LT_RGB:
+        WS2812_configurations[i].ws2812fx = new WS2812FX(scenery_lights_config[i].rgb.number_of_leds,
+                                                          scenery_lights_config[i].rgb.pin, NEO_GRB + NEO_KHZ800);
+        
+        WS2812_configurations[i].ws2812fx->init();
+        WS2812_configurations[i].ws2812fx->setBrightness(eeprom_store[i].brightness);
+        scenery_light_status[i].brightness = eeprom_store[i].brightness;
+        WS2812_configurations[i].ws2812fx->setSpeed(eeprom_store[i].speed);
+        scenery_light_status[i].speed = eeprom_store[i].speed;
+        WS2812_configurations[i].ws2812fx->setMode(eeprom_store[i].mode);
+        scenery_light_status[i].mode = eeprom_store[i].mode;
+        WS2812_configurations[i].ws2812fx->start();
+        WS2812_configurations[i].ws2812fx->setColor(eeprom_store[i].r,
+                                                    eeprom_store[i].g,
+                                                    eeprom_store[i].b);
+        scenery_light_status[i].color.r = eeprom_store[i].r;
+        scenery_light_status[i].color.g = eeprom_store[i].g;
+        scenery_light_status[i].color.b = eeprom_store[i].b;
+      
+        WS2812_configurations[i].ws2812fx->service();
+        
+        WS2812_configurations[i].active = true;
+        break;
+      default:
+        break;
+    }
+     
+  }
 
 #if defined(ARDUINO_ESP32C3_DEV)
   pinMode(STATUS_LED_PIN, OUTPUT); 
@@ -187,8 +344,6 @@ void setup() {
 #endif
 
 
-
-
   //neopixelWrite(RGB_BUILTIN,RGB_BRIGHTNESS,0, 0);
 
   const char *host_name = convertToCamelCase(NODE_NAME);
@@ -197,7 +352,6 @@ void setup() {
 
     // Set WiFi to station mode and disconnect from an AP if it was previously connected.
     //WiFi.mode(WIFI_STA);
-
 
 #if defined(ARDUINO_ESP32S3_DEV)
   WiFi.mode(WIFI_STA);
@@ -239,19 +393,26 @@ void setup() {
   RCCHECK(rclc_node_init_default(&node, NODE_NAME, "", &support));
 
   char topic_name[40];
-  // create turnout_control_subscriber
-  sprintf(topic_name, "LightRGB");
-  // create turnout_status_publisher
+  // create scenery_light_control_subscriber
+  sprintf(topic_name, "railtrack/scenery_light/control");
+  // create scenery_light_status_publisher
 
   RCCHECK(rclc_subscription_init_default(
-    &light_rgb_subscriber,
+    &scenery_light_control_subscriber,
     &node,
     ROSIDL_GET_MSG_TYPE_SUPPORT(railway_interfaces, msg, SceneryLightControl),
     topic_name));
 
+  sprintf(topic_name, "railtrack/scenery_light/status");
+  // create scenery_light_status_publisher
+  RCCHECK(rclc_publisher_init_default(
+    &scenery_light_status_publisher,
+    &node,
+    ROSIDL_GET_MSG_TYPE_SUPPORT(railway_interfaces, msg, SceneryLightState),
+    topic_name));
 
   // create timer,
-  const unsigned int timer_timeout = 500;
+  const unsigned int timer_timeout = 500/NUMBER_OF_SCENERY_LIGHTS;
   RCCHECK(rclc_timer_init_default(
     &timer,
     &support,
@@ -259,11 +420,10 @@ void setup() {
     timer_callback));
 
   // create executor
-  int number_of_executors = 1;
+  int number_of_executors = 2;
   RCCHECK(rclc_executor_init(&executor, &support.context, number_of_executors, &allocator));
-  //RCCHECK(rclc_executor_add_timer(&executor, &timer));
-  RCCHECK(rclc_executor_add_subscription(&executor, &light_rgb_subscriber, &scenery_light_control, &scenery_light_control_callback, ON_NEW_DATA));
-
+  RCCHECK(rclc_executor_add_timer(&executor, &timer));
+  RCCHECK(rclc_executor_add_subscription(&executor, &scenery_light_control_subscriber, &scenery_light_control, &scenery_light_control_callback, ON_NEW_DATA));
  
     Serial.println("Light-controller ready");
     // turn led off, running!  
@@ -283,8 +443,10 @@ void setup() {
 void loop() {
 
   delay(100);
-  RCSOFTCHECK(rclc_executor_spin_some(&executor, RCL_MS_TO_NS(100)));
-  ws2812fx.service();
+  for(int i; i < NUMBER_OF_SCENERY_LIGHTS; i++){
+    if(WS2812_configurations[i].active) WS2812_configurations[i].ws2812fx->service();
+  }
+
   
 #if defined(ARDUINO_ESP32C3_DEV)
 
@@ -293,5 +455,6 @@ void loop() {
 #else
     "Unknown Platform"
 #endif
+  RCSOFTCHECK(rclc_executor_spin_some(&executor, RCL_MS_TO_NS(100)));
 
 }

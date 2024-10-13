@@ -9,7 +9,9 @@
         {
             "type" : "rgb",
             "number" : 2,
-            "pin_number" : 3
+            "pin_number" : 2,
+            "number_of_leds" : 28,
+            "color_order" : "GRB"
         }
 
     ]
