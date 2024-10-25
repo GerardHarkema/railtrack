@@ -21,11 +21,14 @@ from railway_interfaces.msg import LocomotiveState
 from railway_interfaces.msg import TurnoutControl  
 from railway_interfaces.msg import TurnoutState
 from railway_interfaces.msg import PowerControl   
-from railway_interfaces.msg import PowerState   
+from railway_interfaces.msg import PowerState 
+from railway_interfaces.msg import SceneryControl  
+from railway_interfaces.msg import SceneryState   
 
 from turnout_control import turnout_control
 from locomotive_control import locomotive_control
 from railtracklayout_control import railtracklayout_control
+from scenery_control import scenery_control
 from maintenance_control import maintenance_control
 
 class RailTrackNode(Node):
@@ -69,10 +72,17 @@ class RailTrackNode(Node):
         self.power_msg = PowerControl()
         self.power_msg.enable = False
 
+        topic = "/railtrack/scenery/status"
+        self.scenery_status_subscription = self.create_subscription(SceneryState, topic,  self.scenery_status_callback, qos_profile=self.qos_profile)
+
+        topic = "/railtrack/scenery/control"
+        self.scenery_control_publisher = self.create_publisher(SceneryControl, topic,  1)
+
 
         self.turnoutsui= []
         self.locomotivesui = []
         self.turnouts = []
+        self.sceneryui = []
         with Client.auto_index_client:
             with ui.tabs().classes('w-full') as tabs:
 
@@ -91,6 +101,11 @@ class RailTrackNode(Node):
                 except KeyError:
                     pass
 
+                try:
+                    tmp = self.track_config["Scenerys"]
+                    self.scenery_tab = ui.tab('Scenerys')
+                except KeyError:
+                    pass
 
                 try:
                     tmp = self.track_config["railtrack_layout_image"]
@@ -133,7 +148,18 @@ class RailTrackNode(Node):
                                 self.locomotivesui.append(locomotive)
                 except KeyError:
                     pass
-                
+
+                try:
+                    tmp = self.track_config["Scenerys"]                
+                    with ui.tab_panel(self.scenery_tab):
+                        with ui.grid(columns=3):
+                            for sc in self.track_config['Scenerys']:
+                                scenery = scenery_control(sc, self.scenery_control_publisher)
+                                self.sceneryui.append(scenery)
+                except KeyError:
+                    pass
+
+
                 try:
                     tmp = self.track_config["railtrack_layout_image"]
                     with ui.tab_panel(self.tracklayouts_tab):
@@ -185,6 +211,11 @@ class RailTrackNode(Node):
         #print(status)
         for loc in self.locomotivesui:
             loc.set_status(status)
+
+    def scenery_status_callback(self, status):
+        #print(status)
+        for scenery in self.sceneryui:
+            scenery.set_status(status)
 
     def power_status_callback(self, status):
         if status.state:

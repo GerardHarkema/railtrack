@@ -374,5 +374,11 @@
         } 
       ]         
     }
+  ],
+  "Scenerys" : [
+  	{
+  		"number" : 2,
+  		"name" : "Brewery"
+  	}
   ]
 }

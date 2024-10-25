@@ -11,12 +11,12 @@
 #include <rclc/executor.h>
 
 #include <std_msgs/msg/bool.h>
-#include <railway_interfaces/msg/scenery_light_control.h>
-#include <railway_interfaces/msg/scenery_light_state.h>
+#include <railway_interfaces/msg/scenery_control.h>
+#include <railway_interfaces/msg/scenery_state.h>
 
-rcl_publisher_t scenery_light_status_publisher;
-rcl_subscription_t scenery_light_control_subscriber;
-railway_interfaces__msg__SceneryLightControl scenery_light_control;
+rcl_publisher_t scenery_status_publisher;
+rcl_subscription_t scenery_control_subscriber;
+railway_interfaces__msg__SceneryControl scenery_light_control;
 rclc_executor_t executor;
 
 
@@ -44,8 +44,8 @@ typedef struct{
 }SCENERY_LIGHT_RGB_CONFIG;
 
 typedef enum{
-    LT_MONO = railway_interfaces__msg__SceneryLightState__TYPE_MONO, 
-    LT_RGB = railway_interfaces__msg__SceneryLightState__TYPE_RGB
+    LT_MONO = railway_interfaces__msg__SceneryState__TYPE_MONO, 
+    LT_RGB = railway_interfaces__msg__SceneryState__TYPE_RGB
 }LIGHT_TYPES;
 
 typedef struct{
@@ -74,7 +74,7 @@ typedef struct{
 
 EEPROM_STORE eeprom_store[NUMBER_OF_SCENERY_LIGHTS];
 
-railway_interfaces__msg__SceneryLightState scenery_light_status[NUMBER_OF_SCENERY_LIGHTS] = {0};
+railway_interfaces__msg__SceneryState scenery_light_status[NUMBER_OF_SCENERY_LIGHTS] = {0};
 
 rcl_timer_t timer;
 #define RCCHECK(fn) { rcl_ret_t temp_rc = fn; if((temp_rc != RCL_RET_OK)){error_loop();}}
@@ -166,10 +166,10 @@ void error_loop(){
 }
 
 
-void scenery_light_control_callback(const void * msgin)
+void scenery_control_callback(const void * msgin)
 {  
   int scenery_index;
-  const railway_interfaces__msg__SceneryLightControl * control = (const railway_interfaces__msg__SceneryLightControl *)msgin;
+  const railway_interfaces__msg__SceneryControl * control = (const railway_interfaces__msg__SceneryControl *)msgin;
 
   while(lookupSceneryLightIndex(control->number, &scenery_index)){
       //Serial.println("set turnout");
@@ -233,7 +233,7 @@ int scenery_light_state_index = 0;
 void timer_callback(rcl_timer_t * timer, int64_t last_call_time) {
   RCLC_UNUSED(last_call_time);
   if (timer != NULL) {
-    RCSOFTCHECK(rcl_publish(&scenery_light_status_publisher, &scenery_light_status[scenery_light_state_index], NULL));
+    RCSOFTCHECK(rcl_publish(&scenery_status_publisher, &scenery_light_status[scenery_light_state_index], NULL));
     scenery_light_state_index++;
     if(scenery_light_state_index == NUMBER_OF_SCENERY_LIGHTS)scenery_light_state_index = 0;
   }
@@ -393,22 +393,22 @@ void setup() {
   RCCHECK(rclc_node_init_default(&node, NODE_NAME, "", &support));
 
   char topic_name[40];
-  // create scenery_light_control_subscriber
-  sprintf(topic_name, "railtrack/scenery_light/control");
-  // create scenery_light_status_publisher
+  // create scenery_control_subscriber
+  sprintf(topic_name, "railtrack/scenery/control");
+  // create scenery_status_publisher
 
   RCCHECK(rclc_subscription_init_default(
-    &scenery_light_control_subscriber,
+    &scenery_control_subscriber,
     &node,
-    ROSIDL_GET_MSG_TYPE_SUPPORT(railway_interfaces, msg, SceneryLightControl),
+    ROSIDL_GET_MSG_TYPE_SUPPORT(railway_interfaces, msg, SceneryControl),
     topic_name));
 
-  sprintf(topic_name, "railtrack/scenery_light/status");
-  // create scenery_light_status_publisher
+  sprintf(topic_name, "railtrack/scenery/status");
+  // create scenery_status_publisher
   RCCHECK(rclc_publisher_init_default(
-    &scenery_light_status_publisher,
+    &scenery_status_publisher,
     &node,
-    ROSIDL_GET_MSG_TYPE_SUPPORT(railway_interfaces, msg, SceneryLightState),
+    ROSIDL_GET_MSG_TYPE_SUPPORT(railway_interfaces, msg, SceneryState),
     topic_name));
 
   // create timer,
@@ -423,7 +423,7 @@ void setup() {
   int number_of_executors = 2;
   RCCHECK(rclc_executor_init(&executor, &support.context, number_of_executors, &allocator));
   RCCHECK(rclc_executor_add_timer(&executor, &timer));
-  RCCHECK(rclc_executor_add_subscription(&executor, &scenery_light_control_subscriber, &scenery_light_control, &scenery_light_control_callback, ON_NEW_DATA));
+  RCCHECK(rclc_executor_add_subscription(&executor, &scenery_control_subscriber, &scenery_light_control, &scenery_control_callback, ON_NEW_DATA));
  
     Serial.println("Light-controller ready");
     // turn led off, running!  
