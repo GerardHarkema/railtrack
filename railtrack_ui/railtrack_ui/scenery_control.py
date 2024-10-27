@@ -2,6 +2,7 @@
 import math
 import threading
 from pathlib import Path
+from time import sleep
 
 import rclpy
 import os
@@ -18,6 +19,8 @@ from rclpy.qos import QoSProfile, QoSReliabilityPolicy, QoSHistoryPolicy
 from std_msgs.msg import Bool;
 from railway_interfaces.msg import SceneryControl  
 from railway_interfaces.msg import SceneryState  
+
+from ws2812_modes import ws2812_modes
 
 
 class scenery_control(Node):
@@ -42,43 +45,16 @@ class scenery_control(Node):
             with ui.grid(columns=3):
                 self.decrement_button = ui.button(icon = 'remove', on_click=lambda:self.set_decrement_brightness()) 
                 self.brightness_slider = ui.slider(min=0, max=self.max_brightness_slider, value=50, on_change=lambda:self.set_brightness())
-                self.brightness_slider.on(type = 'update:model-valuex', leading_events = False, trailing_events = False, throttle = 0)#5.0) 
+                self.brightness_slider.on(type = 'update:model-valuex', leading_events = False, trailing_events = False, throttle = 5.0) 
                 self.increment_button = ui.button(icon = 'add', on_click=lambda:self.set_increment_brightness()) 
                 self.off_button = ui.button('OFF', on_click=lambda:self.off())
-                if 0:
-                    try:
-                        functions = scenery_descr['functions']
-                        with ui.dialog() as dialog, ui.card():
-                            self.set_functions = []
-                            self.function_buttons = []
-                            self.once = []
-                            ui.label('Functions')
-                            
-                            with ui.grid(columns=2):
-                                for function in functions:
-                                    number = function['number']
-                                    set_function = partial(self.set_function, number)
-                                    self.set_functions.append(set_function)
-                                    text = "F" + str(number) + " " + function['title']
-                                    try:
-                                        icon = function['icon']
-                                        button = ui.button(text, icon = icon, on_click=set_function).classes('drop-shadow bg-red')
-                                    except KeyError:
-                                        button = ui.button(text, on_click=set_function).classes('drop-shadow bg-red')
-                                    self.function_buttons.append(button)
-                                    self.function_status.append(False)
-                                    self.function_numbers.append(number)
-                                    try:
-                                        once = function['once'] 
-                                    except KeyError:
-                                        once = False;
-                                    self.once.append(once)         
-                                    # see icons https://fonts.google.com/icons
-                            ui.button('Close', on_click=dialog.close)
-                        ui.button('Functions', on_click=dialog.open)
-                    except KeyError:
-                        pass
-    
+                #self.color_picker = ui.color_picker(on_pick=lambda e: button.classes(f'!bg-[{e.color}]'))
+                with ui.button(icon='colorize') as button:
+                    self.color_picker = ui.color_picker(on_pick=lambda e: self.set_color(e.color))
+                with ui.dropdown_button('Operating mode', auto_close=True):
+                    for mode in ws2812_modes:
+                        ui.item(mode, on_click=lambda: self.set_mode(mode))
+
     
     def set_brightness(self):
         brightness = int((self.brightness_slider.value/100) * self.max_brightness)
@@ -111,6 +87,35 @@ class scenery_control(Node):
     def off(self):
         # generates callback
         self.brightness_slider.value = 0
+    
+    def set_color(self, color):
+ 
+        r = int(color[1:3], 16)
+        g = int(color[3:5], 16)
+        b = int(color[5:7], 16)
+
+        brightness = int((self.brightness_slider.value/100) * self.max_brightness)
+        self.scenery_msg.brightness = brightness
+        self.scenery_msg.mode = self.status.mode
+        self.scenery_msg.color.r = r
+        self.scenery_msg.color.g = g
+        self.scenery_msg.color.b = b
+        self.control_publisher.publish(self.scenery_msg)
+        notify_text = "Set RGB of "  \
+            + str(self.scenery_descr['name']) \
+            + " to R:" \
+            + str(r)   \
+            + ", G:" \
+            + str(g)   \
+            + ", B:" \
+            + str(b)
+        ui.notify(notify_text)  
+
+        pass
+
+    def set_mode(self, mode):
+        ui.notify(mode)
+        pass
 
     def set_function(self, function_index):
         if 0:
@@ -151,6 +156,10 @@ class scenery_control(Node):
             self.status = status
             brightness = int((status.brightness/self.max_brightness) * self.max_brightness_slider)
             #print(brightness)
+            hex_color = f"#{self.status.color.r:02x}{self.status.color.g:02x}{self.status.color.b:02x}"
+            self.color_picker.set_color(hex_color)
+
             self.brightness_slider.disable()
             #self.brightness_slider.value = brightness
             self.brightness_slider.enable()
+

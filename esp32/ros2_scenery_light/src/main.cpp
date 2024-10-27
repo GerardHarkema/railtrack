@@ -200,7 +200,7 @@ void scenery_control_callback(const void * msgin)
           scenery_light_status[scenery_index].light_type = LT_RGB;
 
           WS2812_configurations[scenery_index].ws2812fx->setMode(control->mode);
-          WS2812_configurations[scenery_index].ws2812fx->setBrightness(control->brightness);
+          WS2812_configurations[scenery_index].ws2812fx->setBrightness(control->brightness ? control->brightness : 1); // Patch to set leds off on zero brightspace
           WS2812_configurations[scenery_index].ws2812fx->setSpeed(control->speed);
           WS2812_configurations[scenery_index].ws2812fx->setColor(control->color.r,control->color.g,control->color.b);
           break;
@@ -304,7 +304,7 @@ void setup() {
                                                           scenery_lights_config[i].rgb.pin, NEO_GRB + NEO_KHZ800);
         
         WS2812_configurations[i].ws2812fx->init();
-        WS2812_configurations[i].ws2812fx->setBrightness(eeprom_store[i].brightness);
+        WS2812_configurations[i].ws2812fx->setBrightness(eeprom_store[i].brightness ? eeprom_store[i].brightness : 1); // Patch to set leds off on zero brightspace
         scenery_light_status[i].brightness = eeprom_store[i].brightness;
         WS2812_configurations[i].ws2812fx->setSpeed(eeprom_store[i].speed);
         scenery_light_status[i].speed = eeprom_store[i].speed;
