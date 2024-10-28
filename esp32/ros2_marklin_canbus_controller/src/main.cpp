@@ -270,7 +270,7 @@ void locomotive_control_callback(const void * msgin)
       }
       lookupLocomotiveProtocol((PROTOCOL)control->protocol, protocol_txt);
       tft_printf(ST77XX_GREEN, "ROS msg\nLocomotive\nAddress(%s): %i\nSet speed: %i\n",
-            protocol_txt, address, control->speed);
+            protocol_txt, control->address, control->speed);
       break;
     case railway_interfaces__msg__LocomotiveControl__SET_DIRECTION:
       address = getCANAdress((PROTOCOL)control->protocol, control->address);
@@ -281,16 +281,18 @@ void locomotive_control_callback(const void * msgin)
       direction_txt = getDirectionTxt(control->direction);
       lookupLocomotiveProtocol((PROTOCOL)control->protocol, protocol_txt);
       tft_printf(ST77XX_GREEN, "ROS msg\nLocomotive\nAddress(%s): %i\nSet dir: %s\n",
-            protocol_txt, address, direction_txt);      
+            protocol_txt, control->address, direction_txt);      
       break;
     case railway_interfaces__msg__LocomotiveControl__SET_FUNCTION:
       address = getCANAdress((PROTOCOL)control->protocol, control->address);
-      if(lookupLocomotiveIndex(address, (PROTOCOL)control->protocol, &locomotive_index)){
+      //Serial.printf("address = %i, function_index = %i, state = %i/n", address, control->function_index, control->function_state);
+      ctrl->setLocoFunction(address, control->function_index, control->function_state ? 31 : 0); // see 3.6 marklin protocol
+      if(lookupLocomotiveIndex(control->address, (PROTOCOL)control->protocol, &locomotive_index)){
         locomotive_status[locomotive_index].function_state.data[control->function_index] = control->function_state;
       }
       lookupLocomotiveProtocol((PROTOCOL)control->protocol, protocol_txt);
       tft_printf(ST77XX_GREEN, "ROS msg\nLocomotive\nAddress(%s): %i\nSet Func. %i: %s\n",
-            protocol_txt, address, control->function_index, control->function_state ? "True" : "False");
+            protocol_txt, control->address, control->function_index, control->function_state ? "True" : "False");
       break;
     default:
       Serial.println("Invalid command");
@@ -631,29 +633,31 @@ void loop() {
           }
 #endif
           direction_txt = getDirectionTxt(message.data[4]);
-        //lookupLocomotiveProtocol(control->protocol, protocol_txt);
-
-#if 0
-            Serial.printf("Length %i\n", message.length);
-            Serial.printf("CANBUS msg\nLocomotive\nAddress(%s): %i\nSet dir: %s\n",
-              protocol_txt, sub_address, direction_txt); 
-#endif
+          if(getProtocolFromAddress(address, &sub_address, &protocol)){
+            lookupLocomotiveProtocol(protocol, protocol_txt);
+            if(lookupLocomotiveIndex(sub_address, protocol, &index)){
+              locomotive_status[index].direction = (message.data[4] == 1) ? true : false;
+            }
             tft_printf(ST77XX_GREEN, "CANBUS msg\nLocomotive\nAddress(%s): %i\nSet dir: %s\n",
-              protocol_txt, sub_address, direction_txt);      
+              protocol_txt, sub_address, direction_txt);
+          }
+
+
+
+    
           break;
       case LOC_FUNCTION:
-          //lookupLocomotiveProtocol(address, protocol_txt, &sub_address);
-          //lookupLocomotiveProtocol(control->protocol, protocol_txt);
-
           function_index = message.data[4];
           function_enable = message.data[5];
-          tft_printf(ST77XX_GREEN, "CANBUS msg\nLocomotive\nAddress(%s): %i\nSet Func. %i: %s\n",
+
+          if(getProtocolFromAddress(address, &sub_address, &protocol)){
+            if(lookupLocomotiveIndex(sub_address, protocol, &index)){
+              locomotive_status[index].function_state.data[function_index] = function_enable ? true : false;
+            }
+            lookupLocomotiveProtocol(protocol, protocol_txt);
+            tft_printf(ST77XX_GREEN, "CANBUS msg\nLocomotive\nAddress(%s): %i\nSet Func. %i: %s\n",
             protocol_txt, sub_address, function_index, function_enable ? "True" : "False");
-          #if 0
-          if(lookupLocomotiveIndex(address, &index)){
-            locomotive_status[index].function_state.data[function_index] = function_enable ? true : false;
-          } 
-          #endif 
+          }
         break;
       default:
         break;    

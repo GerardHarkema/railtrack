@@ -38,6 +38,8 @@ class scenery_control(Node):
 
 
 
+        self.set_mode_function = []
+
         with ui.card():
             text = str(scenery_descr['name'])
             ui.label(text)
@@ -53,7 +55,11 @@ class scenery_control(Node):
                     self.color_picker = ui.color_picker(on_pick=lambda e: self.set_color(e.color))
                 with ui.dropdown_button('Operating mode', auto_close=True):
                     for mode in ws2812_modes:
-                        ui.item(mode, on_click=lambda: self.set_mode(mode))
+                        #self.modex.append(mode)
+                        set_mode_function = partial(self.set_mode, mode)
+                        #self.set_mode_function.append(set_mode_function)
+                        ui.item(mode, on_click=set_mode_function)
+                        #i = i + 1
 
     
     def set_brightness(self):
@@ -113,43 +119,21 @@ class scenery_control(Node):
 
         pass
 
-    def set_mode(self, mode):
+    def set_mode(self, new_mode):
+        i = 0
+        for mode in ws2812_modes:
+            if new_mode == mode:
+                break
+            i = i + 1
+
+        brightness = int((self.brightness_slider.value/100) * self.max_brightness)
+        self.scenery_msg.brightness = brightness
+        self.scenery_msg.mode = i
+        self.control_publisher.publish(self.scenery_msg)
+
         ui.notify(mode)
         pass
 
-    def set_function(self, function_index):
-        if 0:
-            found = False
-            index = 0
-            for number in self.function_numbers:
-                if number == function_index:
-                    found = True
-                    break;
-                index = index + 1
-            if not found:
-                return
-            #ui.notify(str(index))
-            if  self.function_status[index]:
-                self.function_status[index] = False
-                self.function_buttons[index].classes('drop-shadow bg-red', remove='bg-green')
-            else:
-                self.function_status[index] = True
-                self.function_buttons[index].classes('drop-shadow bg-green', remove='bg-red')
-
-            notify_text = "Set Function " + str(function_index) + ": " + str(self.function_status[index])
-            self.scenery_msg.command = LocomotiveControl().__class__.SET_FUNCTION;
-            self.scenery_msg.function_index = function_index;
-            self.scenery_msg.function_state = self.function_status[index];
-            self.control_publisher.publish(self.scenery_msg);
-            if(self.once[index]):
-                self.function_status[index] = False
-                self.function_buttons[index].classes('drop-shadow bg-red', remove='bg-green')
-                self.scenery_msg.function_state = self.function_status[index];
-                self.control_publisher.publish(self.scenery_msg);
-
-            ui.notify(notify_text) 
-            
-            pass
 
     def set_status(self, status) -> None:
         if(status.number == int(self.scenery_descr['number'])):

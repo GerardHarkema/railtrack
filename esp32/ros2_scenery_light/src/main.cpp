@@ -353,10 +353,10 @@ void setup() {
     // Set WiFi to station mode and disconnect from an AP if it was previously connected.
     //WiFi.mode(WIFI_STA);
 
-#if defined(ARDUINO_ESP32S3_DEV)
+//#if defined(ARDUINO_ESP32S3_DEV)
   WiFi.mode(WIFI_STA);
   WiFi.begin(WIFI_SSID, PASSWORD);
-  WiFi.setTxPower(WIFI_POWER_8_5dBm);
+  //WiFi.setTxPower(WIFI_POWER_8_5dBm);
   Serial.print("Connecting to WiFi ..");
   while (WiFi.status() != WL_CONNECTED) {
     Serial.print('.');
@@ -367,7 +367,7 @@ void setup() {
   Serial.println(WiFi.localIP());
   Serial.print("MAC adress: ");
   Serial.println(WiFi.macAddress());
-#endif
+//#endif
 
 
   set_microros_wifi_transports(WIFI_SSID, PASSWORD, agent_ip, (size_t)PORT);
