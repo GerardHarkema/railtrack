@@ -20,7 +20,7 @@ from std_msgs.msg import Bool;
 from railway_interfaces.msg import SceneryControl  
 from railway_interfaces.msg import SceneryState  
 
-from ws2812_modes import ws2812_modes
+from ws2812_effects import ws2812_effects
 
 
 class scenery_control(Node):
@@ -36,9 +36,10 @@ class scenery_control(Node):
         self.max_brightness_slider = 100
         self.increment_decrement_brightness_step = 5
 
+        self.max_effect_speed = 255
+        self.max_effect_speed_slider = 100
+        self.increment_decrement_effect_speed_step = 5
 
-
-        self.set_mode_function = []
 
         with ui.card():
             text = str(scenery_descr['name'])
@@ -46,27 +47,33 @@ class scenery_control(Node):
 
             with ui.grid(columns=3):
                 self.decrement_button = ui.button(icon = 'remove', on_click=lambda:self.set_decrement_brightness()) 
-                self.brightness_slider = ui.slider(min=0, max=self.max_brightness_slider, value=50, on_change=lambda:self.set_brightness())
+                self.brightness_slider = ui.slider(min=0, max=self.max_brightness_slider, value=50, on_change=lambda:self.set_brightness()).props('label-always')
                 self.brightness_slider.on(type = 'update:model-valuex', leading_events = False, trailing_events = False, throttle = 5.0) 
                 self.increment_button = ui.button(icon = 'add', on_click=lambda:self.set_increment_brightness()) 
                 self.off_button = ui.button('OFF', on_click=lambda:self.off())
                 #self.color_picker = ui.color_picker(on_pick=lambda e: button.classes(f'!bg-[{e.color}]'))
-                with ui.button(icon='colorize') as button:
-                    self.color_picker = ui.color_picker(on_pick=lambda e: self.set_color(e.color))
-                with ui.dropdown_button('Operating mode', auto_close=True):
-                    for mode in ws2812_modes:
-                        #self.modex.append(mode)
-                        set_mode_function = partial(self.set_mode, mode)
-                        #self.set_mode_function.append(set_mode_function)
-                        ui.item(mode, on_click=set_mode_function)
-                        #i = i + 1
+
+                with ui.dialog() as dialog, ui.card():
+                    ui.label("Options")
+                    with ui.grid(columns=3):
+                        with ui.button(icon='colorize') as button:
+                            self.color_picker = ui.color_picker(on_pick=lambda e: self.set_color(e.color))
+                        with ui.dropdown_button('Effect mode', auto_close=True):
+                            for effect in ws2812_effects:
+                                #self.effectx.append(mode)
+                                set_effect_function = partial(self.set_effect, effect)
+                                ui.item(effect, on_click=set_effect_function)
+                        self.effect_speed_slider = ui.slider(min=0, max=self.max_effect_speed_slider, value=50, on_change=lambda:self.set_effect_speed()).props('label-always')
+                        self.effect_speed_slider.on(type = 'update:model-valuex', leading_events = False, trailing_events = False, throttle = 5.0) 
+
+                    ui.button('Close', on_click=dialog.close)
+                ui.button('Options', on_click=dialog.open)
+
 
     
     def set_brightness(self):
         brightness = int((self.brightness_slider.value/100) * self.max_brightness)
         self.scenery_msg.brightness = brightness
-        self.scenery_msg.mode = self.status.mode
-        self.scenery_msg.color = self.status.color
         self.control_publisher.publish(self.scenery_msg)
         notify_text = "Set Brightness of "  \
                     + str(self.scenery_descr['name']) \
@@ -100,9 +107,6 @@ class scenery_control(Node):
         g = int(color[3:5], 16)
         b = int(color[5:7], 16)
 
-        brightness = int((self.brightness_slider.value/100) * self.max_brightness)
-        self.scenery_msg.brightness = brightness
-        self.scenery_msg.mode = self.status.mode
         self.scenery_msg.color.r = r
         self.scenery_msg.color.g = g
         self.scenery_msg.color.b = b
@@ -119,25 +123,36 @@ class scenery_control(Node):
 
         pass
 
-    def set_mode(self, new_mode):
+    def set_effect(self, new_effect):
         i = 0
-        for mode in ws2812_modes:
-            if new_mode == mode:
+        for effects in ws2812_effects:
+            if new_effect == effects:
                 break
             i = i + 1
 
-        brightness = int((self.brightness_slider.value/100) * self.max_brightness)
-        self.scenery_msg.brightness = brightness
-        self.scenery_msg.mode = i
+        self.scenery_msg.effect = i
         self.control_publisher.publish(self.scenery_msg)
 
-        ui.notify(mode)
+        ui.notify(new_effect)
         pass
 
+    def set_effect_speed(self):
+        effect_speed = int((self.effect_speed_slider.value/100) * self.max_effect_speed)
+        self.scenery_msg.effect_speed = effect_speed
+        self.control_publisher.publish(self.scenery_msg)
+        notify_text = "Set effect speed of "  \
+                    + str(self.scenery_descr['name']) \
+                    + " to " \
+                    + str(self.effect_speed_slider.value)
+        ui.notify(notify_text)  
 
     def set_status(self, status) -> None:
         if(status.number == int(self.scenery_descr['number'])):
             self.status = status
+            self.scenery_msg.brightness = self.status.brightness
+            self.scenery_msg.effect_speed = self.status.effect_speed
+            self.scenery_msg.effect = self.status.effect
+            self.scenery_msg.color = self.status.color
             brightness = int((status.brightness/self.max_brightness) * self.max_brightness_slider)
             #print(brightness)
             hex_color = f"#{self.status.color.r:02x}{self.status.color.g:02x}{self.status.color.b:02x}"

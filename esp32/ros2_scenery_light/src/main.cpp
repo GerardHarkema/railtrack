@@ -66,9 +66,9 @@ IPAddress agent_ip(ip_address[0], ip_address[1], ip_address[2], ip_address[3]);
 
 
 typedef struct{
-  int mode;
+  int effect;
   int brightness;
-  int speed;
+  int effect_speed;
   int r, g, b;
 }EEPROM_STORE;
 
@@ -101,7 +101,6 @@ typedef struct{
 }WS2812_CONFIGURATION;
 
 WS2812_CONFIGURATION WS2812_configurations[NUMBER_OF_SCENERY_LIGHTS];
-
 
 
 #if defined(ARDUINO_ESP32C3_DEV)
@@ -180,8 +179,8 @@ void scenery_control_callback(const void * msgin)
       switch(scenery_lights_config[scenery_index].type){
         case LT_MONO:
           scenery_light_status[scenery_index].brightness = control->brightness;
-          scenery_light_status[scenery_index].speed = 0;
-          scenery_light_status[scenery_index].mode = 0;
+          scenery_light_status[scenery_index].effect_speed = 0;
+          scenery_light_status[scenery_index].effect = 0;
           scenery_light_status[scenery_index].color.r = 0;
           scenery_light_status[scenery_index].color.g = 0;
           scenery_light_status[scenery_index].color.b = 0;
@@ -192,16 +191,16 @@ void scenery_control_callback(const void * msgin)
           break;
         case LT_RGB:
           scenery_light_status[scenery_index].brightness = control->brightness;
-          scenery_light_status[scenery_index].speed = control->speed;
-          scenery_light_status[scenery_index].mode = control->mode;
+          scenery_light_status[scenery_index].effect_speed = control->effect_speed;
+          scenery_light_status[scenery_index].effect = control->effect;
           scenery_light_status[scenery_index].color.r = control->color.r;
           scenery_light_status[scenery_index].color.g = control->color.g;
           scenery_light_status[scenery_index].color.b = control->color.b;
           scenery_light_status[scenery_index].light_type = LT_RGB;
 
-          WS2812_configurations[scenery_index].ws2812fx->setMode(control->mode);
+          WS2812_configurations[scenery_index].ws2812fx->setMode(control->effect);
           WS2812_configurations[scenery_index].ws2812fx->setBrightness(control->brightness ? control->brightness : 1); // Patch to set leds off on zero brightspace
-          WS2812_configurations[scenery_index].ws2812fx->setSpeed(control->speed);
+          WS2812_configurations[scenery_index].ws2812fx->setSpeed(control->effect_speed);
           WS2812_configurations[scenery_index].ws2812fx->setColor(control->color.r,control->color.g,control->color.b);
           break;
         default:
@@ -209,8 +208,8 @@ void scenery_control_callback(const void * msgin)
       }
 
       eeprom_store[scenery_index].brightness = scenery_light_status[scenery_index].brightness;
-      eeprom_store[scenery_index].speed = scenery_light_status[scenery_index].speed;
-      eeprom_store[scenery_index].mode = scenery_light_status[scenery_index].mode;
+      eeprom_store[scenery_index].effect_speed = scenery_light_status[scenery_index].effect_speed;
+      eeprom_store[scenery_index].effect = scenery_light_status[scenery_index].effect;
       eeprom_store[scenery_index].r = scenery_light_status[scenery_index].color.r;
       eeprom_store[scenery_index].g = scenery_light_status[scenery_index].color.g;
       eeprom_store[scenery_index].b = scenery_light_status[scenery_index].color.b;
@@ -306,10 +305,10 @@ void setup() {
         WS2812_configurations[i].ws2812fx->init();
         WS2812_configurations[i].ws2812fx->setBrightness(eeprom_store[i].brightness ? eeprom_store[i].brightness : 1); // Patch to set leds off on zero brightspace
         scenery_light_status[i].brightness = eeprom_store[i].brightness;
-        WS2812_configurations[i].ws2812fx->setSpeed(eeprom_store[i].speed);
-        scenery_light_status[i].speed = eeprom_store[i].speed;
-        WS2812_configurations[i].ws2812fx->setMode(eeprom_store[i].mode);
-        scenery_light_status[i].mode = eeprom_store[i].mode;
+        WS2812_configurations[i].ws2812fx->setSpeed(eeprom_store[i].effect_speed);
+        scenery_light_status[i].effect_speed = eeprom_store[i].effect_speed;
+        WS2812_configurations[i].ws2812fx->setMode(eeprom_store[i].effect);
+        scenery_light_status[i].effect = eeprom_store[i].effect;
         WS2812_configurations[i].ws2812fx->start();
         WS2812_configurations[i].ws2812fx->setColor(eeprom_store[i].r,
                                                     eeprom_store[i].g,
@@ -351,10 +350,14 @@ void setup() {
   WiFi.setHostname(NODE_NAME);
 
     // Set WiFi to station mode and disconnect from an AP if it was previously connected.
-    //WiFi.mode(WIFI_STA);
+    //WiFi.effect(WIFI_STA);
 
-//#if defined(ARDUINO_ESP32S3_DEV)
   WiFi.mode(WIFI_STA);
+  WiFi.begin(WIFI_SSID, PASSWORD);
+  //WiFi.setTxPower(WIFI_POWER_5dBm);
+  delay(100);
+#if defined(ARDUINO_ESP32S3_DEV)
+  WiFi.effect(WIFI_STA);
   WiFi.begin(WIFI_SSID, PASSWORD);
   //WiFi.setTxPower(WIFI_POWER_8_5dBm);
   Serial.print("Connecting to WiFi ..");
@@ -367,7 +370,7 @@ void setup() {
   Serial.println(WiFi.localIP());
   Serial.print("MAC adress: ");
   Serial.println(WiFi.macAddress());
-//#endif
+#endif
 
 
   set_microros_wifi_transports(WIFI_SSID, PASSWORD, agent_ip, (size_t)PORT);

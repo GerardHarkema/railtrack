@@ -69,7 +69,7 @@ class locomotive_control(Node):
             ui.image(image).classes('w-64')
             with ui.grid(columns=3):
                 self.decrement_button = ui.button(icon = 'remove', on_click=lambda:self.set_decrement_speed()) 
-                self.speed_slider = ui.slider(min=0, max=1000, value=50, on_change=lambda:self.set_speed())
+                self.speed_slider = ui.slider(min=0, max=1000, value=50, on_change=lambda:self.set_speed()).props('label-always')
                 self.speed_slider.on(type = 'update:model-valuex', leading_events = False, trailing_events = False, throttle = 5.0) 
                 self.increment_button = ui.button(icon = 'add', on_click=lambda:self.set_increment_speed()) 
                 self.direction_button = ui.button('FORWARD', on_click=lambda:self.set_direction()).classes('drop-shadow bg-red')
