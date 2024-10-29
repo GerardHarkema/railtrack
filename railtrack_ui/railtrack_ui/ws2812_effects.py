@@ -1,4 +1,4 @@
-ws2812_modes = [\
+ws2812_effects = [\
 "STATIC",\
 "BLINK",\
 "BREATH",\
