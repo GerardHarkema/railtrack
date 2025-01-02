@@ -55,6 +55,20 @@
 #define DCC_1_HALFPERIOD 58  //4640 // 1 / 80000000 * 4640 = 58us
 #define DCC_0_HALFPERIOD 100 //8000
 
+#define MM_SHORT_PULSE    26    
+#define MM_LONG_PULSE     182
+
+#define MM_SHORT_PULSE_DF    MM_SHORT_PULSE/2  // Double frquency
+#define MM_LONG_PULSE_DF     MM_LONG_PULSE/2
+
+#define MM_HALF_IDLE_PULSE   (MM_SHORT_PULSE + MM_LONG_PULSE) * 2 * 4 / 2// according datasheet MC145026 (dead time discriminator. 4 tribits)
+#define MM_HALF_IDLE_PULSE_DF MM_HALF_IDLE_PULSE/2
+
+typedef enum{
+  NO_TRACK_DATA,
+  DCC_TRACK_DATA,
+  MM_TRACK_DATA,
+}TRACK_DATA_AVAILABLE;
 
 void protect_motor_driver_outputs();
 
@@ -63,7 +77,8 @@ class TrackManager {
  void begin();
 
   void IRAM_ATTR RMTinterrupt();
-  int RMTfillData(const byte buffer[], byte byteCount);
+  int RMTfillDataDcc(const byte buffer[], byte byteCount);
+  int RMTfillDataMM(const u_int32_t, bool doubleFrequency);
   bool requestNewPacket();
 
   bool disableTrackPower();
@@ -73,14 +88,19 @@ class TrackManager {
   // 2 types of data to send idle or data
 #if 1
   rmt_item32_t *idle;
-  byte idleLen;
+  byte idle_len;
   rmt_item32_t *idle_message;
-  byte startDataIndex;
-  byte dataLen;
-  rmt_item32_t *data_message;
+  byte dcc_start_data_index;
+  byte dcc_data_len;
+  rmt_item32_t *dcc_data_message;
+  
+  byte mm_data_len;
+  rmt_item32_t *mm_data_message;
+
+
   // flags 
-  volatile bool dataReady = false;    // do we have real data available or send idle
-  volatile bool request_new_packet = false;
+  volatile TRACK_DATA_AVAILABLE track_data_available = NO_TRACK_DATA;    // do we have real data available or send idle
+  volatile bool track_new_track_packet = false;
 #endif
   bool track_power_enable = false;
 

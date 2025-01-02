@@ -64,7 +64,51 @@ void setDCCBit0Long(rmt_item32_t* item) {
   item->duration1 = DCC_0_HALFPERIOD + DCC_0_HALFPERIOD/10;
 }
 
-void setEOT(rmt_item32_t* item) {
+void setMMBit1(rmt_item32_t* item, bool double_frequncy){
+  item->level0    = 1;
+  item->duration0 = double_frequncy ? MM_LONG_PULSE_DF : MM_LONG_PULSE;
+  item->level1    = 0;
+  item->duration1 = double_frequncy ? MM_SHORT_PULSE_DF : MM_SHORT_PULSE;
+}
+
+void setMMBit0(rmt_item32_t* item, bool double_frequncy){
+  item->level0    = 1;
+  item->duration0 = double_frequncy ? MM_SHORT_PULSE_DF : MM_SHORT_PULSE;
+  item->level1    = 0;
+  item->duration1 = double_frequncy ? MM_LONG_PULSE_DF : MM_LONG_PULSE;
+}
+
+void setMMidle(rmt_item32_t* item, bool double_frequncy){
+  item->level0    = 0;
+  item->duration0 = double_frequncy ? MM_HALF_IDLE_PULSE_DF : MM_HALF_IDLE_PULSE;
+  item->level1    = 0;
+  item->duration1 = double_frequncy ? MM_HALF_IDLE_PULSE_DF : MM_HALF_IDLE_PULSE;
+}
+
+#if 0
+void setMMTribit0(rmt_item32_t* item, bool double_frequncy){
+  rmt_item32_t* l_item = item;
+  setMMBit0(item, double_frequncy);
+  l_item++;
+  setMMBit0(item, double_frequncy);
+}
+
+void setMMTribit1(rmt_item32_t* item, bool double_frequncy){
+  rmt_item32_t* l_item = item;
+  setMMBit1(item, double_frequncy);
+  l_item++;
+  setMMBit1(item, double_frequncy);
+}
+
+void setMMTribitOpen(rmt_item32_t* item, bool double_frequncy){
+  rmt_item32_t* l_item = item;
+  setMMBit1(item, double_frequncy);
+  l_item++;
+  setMMBit0(item, double_frequncy);
+}
+#endif
+
+void setDCCeot(rmt_item32_t* item) {
   item->val = 0;
 }
 #if 0
@@ -118,12 +162,15 @@ void protect_motor_driver_outputs(){
   digitalWrite(TRACK_PULSE_PIN_L, LOW);
 #endif
 
-
 }
 
-#define MAX_PACKET_LEN  64
-#define PREAMBLE_LEN    12
-#define RMT_CHANNEL     (rmt_channel_t)0
+#define DCC_MAX_PACKET_LEN  64
+#define DCC_PREAMBLE_LEN    12
+#define RMT_CHANNEL         (rmt_channel_t)0
+
+
+#define MM_MAX_PACKET_LEN  80 // 4(twice a double packet) * (18 pulses + 1 idle states(no pulses)) + 4 spare
+
 
 void TrackManager::begin(){
 
@@ -135,44 +182,44 @@ void TrackManager::begin(){
 
 
   // Create idle message
-  idleLen = 0;
-  idle_message = (rmt_item32_t*)malloc(MAX_PACKET_LEN*sizeof(rmt_item32_t));
-  for (byte n=0; n<PREAMBLE_LEN; n++){
-    setDCCBit1(idle_message + idleLen++);      // preamble bits
+  idle_len = 0;
+  idle_message = (rmt_item32_t*)malloc(DCC_MAX_PACKET_LEN*sizeof(rmt_item32_t));
+  for (byte n=0; n<DCC_PREAMBLE_LEN; n++){
+    setDCCBit1(idle_message + idle_len++);      // preamble bits
   }
 
 #ifdef SCOPE
-  setDCCBit0Long(idle_message + idleLen++); // start of packet 0 bit long version
+  setDCCBit0Long(idle_message + idle_len++); // start of packet 0 bit long version
 #else
-  setDCCBit0(idle_message + idleLen++);     // start of packet 0 bit normal version
+  setDCCBit0(idle_message + idle_len++);     // start of packet 0 bit normal version
 #endif
-  //setEOT(idle_message + idleLen++);     // EOT marker
+  //setDCCeot(idle_message + idle_len++);     // EOT marker
 
   for (byte n=0; n<8; n++){   // 0 to 7
-    setDCCBit1(idle_message + idleLen++);
+    setDCCBit1(idle_message + idle_len++);
   }
   for (byte n=8; n<18; n++){  // 8, 9 to 16, 17
-    setDCCBit0(idle_message + idleLen++);
+    setDCCBit0(idle_message + idle_len++);
   }
   for (byte n=18; n<26; n++){ // 18 to 25
-    setDCCBit1(idle_message + idleLen++);
+    setDCCBit1(idle_message + idle_len++);
   }
-  setDCCBit1(idle_message + idleLen++);     // end bit
-  setEOT(idle_message + idleLen++);         // EOT marker
+  setDCCBit1(idle_message + idle_len++);     // end bit
+  setDCCeot(idle_message + idle_len++);         // EOT marker
 
  // Create preamble for data message
-  startDataIndex = 0; // calculates th index whare data is stored
-  data_message = (rmt_item32_t*)malloc((MAX_PACKET_LEN)*sizeof(rmt_item32_t));
-  for (byte n=0; n<PREAMBLE_LEN; n++){
-    setDCCBit1(data_message + startDataIndex++);      // preamble bits
+  dcc_start_data_index = 0; // calculates th index whare data is stored
+  dcc_data_message = (rmt_item32_t*)malloc((DCC_MAX_PACKET_LEN)*sizeof(rmt_item32_t));
+  for (byte n=0; n<DCC_PREAMBLE_LEN; n++){
+    setDCCBit1(dcc_data_message + dcc_start_data_index++);      // preamble bits
   }
 
 #ifdef SCOPE
-  setDCCBit0Long(data_message + startDataIndex++); // start of packet 0 bit long version
+  setDCCBit0Long(dcc_data_message + dcc_start_data_index++); // start of packet 0 bit long version
 #else
-  setDCCBit0(data_message + startDataIndex++);     // start of packet 0 bit normal version
+  setDCCBit0(dcc_data_message + dcc_start_data_index++);     // start of packet 0 bit normal version
 #endif
-  //setEOT(data_message + startDataIndex++);     // EOT marker
+  //setDCCeot(dcc_data_message + dcc_start_data_index++);     // EOT marker
 
   rmt_config_t config;
   // Configure the RMT channel for TX
@@ -210,11 +257,13 @@ void TrackManager::begin(){
   // send one bit to kickstart the signal, remaining data will come from the
   // packet queue. We intentionally do not wait for the RMT TX complete here.
   //rmt_write_items(channel, preamble, preambleLen, false);
-  rmt_fill_tx_items(RMT_CHANNEL, idle_message, idleLen, 0);
+  rmt_fill_tx_items(RMT_CHANNEL, idle_message, idle_len, 0);
 
-  dataReady = false;
-  request_new_packet = true;
+  mm_data_len = 0;
+  mm_data_message = (rmt_item32_t*)malloc((MM_MAX_PACKET_LEN)*sizeof(rmt_item32_t));;
 
+  track_data_available = NO_TRACK_DATA;
+  track_new_track_packet = true;
 }
 
 
@@ -234,48 +283,82 @@ bool TrackManager::disableTrackPower(){
 
 
 bool TrackManager::requestNewPacket(){ 
-  return request_new_packet;
+  return track_new_track_packet;
 }
 
 
 const byte transmitMask[] = {0x80, 0x40, 0x20, 0x10, 0x08, 0x04, 0x02, 0x01};
 
-int TrackManager::RMTfillData(const byte buffer[], byte byteCount) {
+int TrackManager::RMTfillDataDcc(const byte buffer[], byte byteCount) {
 
-if(!requestNewPacket()) return 0; // no data neded
-  request_new_packet = false;
+  if(!requestNewPacket()) return 0; // no data neded
+  track_new_track_packet = false;
 
   // convert bytes to RMT stream of "bits"
 
-  dataLen = startDataIndex;
+  dcc_data_len = dcc_start_data_index;
   for(byte n=0; n<byteCount; n++) {
     for(byte bit=0; bit<8; bit++) {
       if (buffer[n] & transmitMask[bit])
-	      setDCCBit1(data_message + dataLen++);
+	      setDCCBit1(dcc_data_message + dcc_data_len++);
       else
-	      setDCCBit0(data_message + dataLen++);
+	      setDCCBit0(dcc_data_message + dcc_data_len++);
     }
-    setDCCBit0(data_message + dataLen++); // zero at end of each byte
+    setDCCBit0(dcc_data_message + dcc_data_len++); // zero at end of each byte
   }
 
-  setDCCBit1(data_message + dataLen-1);     // overwrite previous zero bit with one bit
-  setEOT(data_message + dataLen++);         // EOT marker
-  //Serial.printf("dataLen = %i\n", dataLen);
+  setDCCBit1(dcc_data_message + dcc_data_len-1);     // overwrite previous zero bit with one bit
+  setDCCeot(dcc_data_message + dcc_data_len++);         // EOT marker
+  //Serial.printf("dcc_data_len = %i\n", dcc_data_len);
   noInterrupts();                      // keep dataReady and dataRepeat consistnet to each other
-  dataReady = true;
+  track_data_available = DCC_TRACK_DATA;
   interrupts();
 
   return 0;
 }
 
-void IRAM_ATTR TrackManager::RMTinterrupt() {
-    if(dataReady){
-      dataReady = false;
-      rmt_fill_tx_items(RMT_CHANNEL, data_message, dataLen, 0);
-      request_new_packet = true;
+int TrackManager::RMTfillDataMM(const u_int32_t data, bool doubleFrequency) {
+
+  if(!requestNewPacket()) return 0; // no data neded
+  track_new_track_packet = false;
+
+  mm_data_len = 0;
+  for(int i = 0; i < 2; i++){ // Send twice a double packet
+    setMMidle(mm_data_message + mm_data_len++, doubleFrequency);
+    u_int32_t mask = 1; // controleer dit getal !!!
+    for(int j = 0; j < 18; i++){
+      if(data & mask)
+        setMMBit1(mm_data_message + mm_data_len++, doubleFrequency);
+      else
+        setMMBit0(mm_data_message + mm_data_len++, doubleFrequency);
+      mask = mask << 1;
     }
+  }    
+    
+  //Serial.printf("dcc_data_len = %i\n", dcc_data_len);
+  noInterrupts();                      // keep dataReady and dataRepeat consistnet to each other
+  track_data_available = MM_TRACK_DATA;
+  interrupts();
+
+  return 0;
+}
+
+
+void IRAM_ATTR TrackManager::RMTinterrupt() {
+    if(track_data_available == DCC_TRACK_DATA){
+      track_data_available = NO_TRACK_DATA;
+      rmt_fill_tx_items(RMT_CHANNEL, dcc_data_message, dcc_data_len, 0);
+      track_new_track_packet = true;
+    }
+    else if (track_data_available == MM_TRACK_DATA)
+    {
+      track_data_available = NO_TRACK_DATA;
+      rmt_fill_tx_items(RMT_CHANNEL, mm_data_message, mm_data_len, 0);
+      track_new_track_packet = true;
+    }
+    
     else
-      rmt_fill_tx_items(RMT_CHANNEL, idle_message, idleLen, 0);
+      rmt_fill_tx_items(RMT_CHANNEL, idle_message, idle_len, 0);
 }
 
 

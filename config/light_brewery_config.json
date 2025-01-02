@@ -3,14 +3,21 @@
     "Lights":[
         {
             "type" : "mono",
-            "number" : 1,
+            "number" : 3,
             "pin_number" : 2
         },
         {
             "type" : "rgb",
-            "number" : 2,
+            "number" : 1,
             "pin_number" : 2,
-            "number_of_leds" : 28,
+            "number_of_leds" : 4,
+            "color_order" : "GRB"
+        },
+        {
+            "type" : "rgb",
+            "number" : 2,
+            "pin_number" : 3,
+            "number_of_leds" : 4,
             "color_order" : "GRB"
         }
 

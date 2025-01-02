@@ -42,7 +42,7 @@ class TrackPacketQueue
     inline bool notRepeat(unsigned int address)
     {
       #if 0
-      return (address != read_pos->getAddress());
+      return (address != read_pos->dccGetAddress());
       #endif
       return false;
     }
@@ -52,7 +52,7 @@ class TrackPacketQueue
     bool insertPacket(TrackPacket &packet); //makes a local copy, does not take over memory management!
     bool readPacket(TrackPacket &packet); //does not hand off memory management of packet. used immediately.
     void printQueue(void);   
-    bool forget(uint16_t address, uint8_t address_kind);
+    bool forget(uint16_t address, uint8_t dcc_address_kind);
     void clear(void);
 };
 

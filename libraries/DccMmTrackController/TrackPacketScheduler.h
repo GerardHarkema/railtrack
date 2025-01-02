@@ -36,28 +36,28 @@ class TrackPacketScheduler
     bool trackPower(bool enable);
    
     //for enqueueing packets
-    bool dccSetSpeed(uint16_t address, uint8_t address_kind, int8_t new_speed, uint8_t steps = 0); //new_speed: [-127,127]
-    bool dccSetSpeed14(uint16_t address, uint8_t address_kind, int8_t new_speed, bool F0=true); //new_speed: [-13,13], and optionally F0 settings.
-    bool dccSetSpeed28(uint16_t address, uint8_t address_kind, int8_t new_speed); //new_speed: [-28,28]
-    bool dccSetSpeed128(uint16_t address, uint8_t address_kind, int8_t new_speed); //new_speed: [-127,127]
+    bool dccSetSpeed(uint16_t address, ADDRESS_KIND dcc_address_kind, int8_t new_speed, uint8_t steps = 0); //new_speed: [-127,127]
+    bool dccSetSpeed14(uint16_t address, ADDRESS_KIND dcc_address_kind, int8_t new_speed, bool F0=true); //new_speed: [-13,13], and optionally F0 settings.
+    bool dccSetSpeed28(uint16_t address, ADDRESS_KIND dcc_address_kind, int8_t new_speed); //new_speed: [-28,28]
+    bool dccSetSpeed128(uint16_t address, ADDRESS_KIND dcc_address_kind, int8_t new_speed); //new_speed: [-127,127]
     
     //the function methods are NOT stateful; you must specify all functions each time you call one
     //keeping track of function state is the responsibility of the calling program.
-    bool dccSetFunctions(uint16_t address, uint8_t address_kind, uint8_t F0to4, uint8_t F5to9=0x00, uint8_t F9to12=0x00);
-    bool dccSetFunctions(uint16_t address, uint8_t address_kind, uint16_t functions);
-    bool dccSetFunctions0to4(uint16_t address, uint8_t address_kind, uint8_t functions);
-    bool dccSetFunctions5to8(uint16_t address, uint8_t address_kind, uint8_t functions);
-    bool dccSetFunctions9to12(uint16_t address, uint8_t address_kind, uint8_t functions);
+    bool dccSetFunctions(uint16_t address, ADDRESS_KIND dcc_address_kind, uint8_t F0to4, uint8_t F5to9=0x00, uint8_t F9to12=0x00);
+    bool dccSetFunctions(uint16_t address, ADDRESS_KIND dcc_address_kind, uint16_t functions);
+    bool dccSetFunctions0to4(uint16_t address, ADDRESS_KIND dcc_address_kind, uint8_t functions);
+    bool dccSetFunctions5to8(uint16_t address, ADDRESS_KIND dcc_address_kind, uint8_t functions);
+    bool dccSetFunctions9to12(uint16_t address, ADDRESS_KIND dcc_address_kind, uint8_t functions);
     //other cool functions to follow. Just get these working first, I think.
     
     bool dccSetBasicAccessory(uint16_t address, uint8_t function);
     bool dccUnsetBasicAccessory(uint16_t address, uint8_t function);
     
-    bool dccProgramCV(uint16_t address, uint8_t address_kind, uint16_t CV, uint8_t CV_data);
+    bool dccProgramCV(uint16_t address, ADDRESS_KIND dcc_address_kind, uint16_t CV, uint8_t CV_data);
 
     //more specific functions
     bool dcc_eStop(void); //all locos
-    bool dcc_eStop(uint16_t address, uint8_t address_kind); //just one specific loco
+    bool dcc_eStop(uint16_t address, ADDRESS_KIND dcc_address_kind); //just one specific loco
 #if THREAD_SAFE_QUEUE 
     static void scheduler_task(void *pvParameters);
 #endif
@@ -70,7 +70,7 @@ class TrackPacketScheduler
     bool mmSetFunctions(uint16_t address, uint8_t function);
 
     //to be called periodically within loop()
-    void update(void); //checks queues, puts whatever's pending on the rails via global current_packet. easy-peasy
+    void update(void); //checks queues, puts whatever's pending on the rails via global dcc_bitstream. easy-peasy
 
 
   //private:

@@ -93,14 +93,15 @@ bool TrackPacketScheduler::setup(void) //for any post-constructor initialization
 
   //waveform_generator.setup_DCC_waveform_generator();
 
-  TrackPacket p;
+  TrackPacket p(TRACK_PROTOCOL_DCC);
+
   uint8_t data[] = {0x00};
   
   //reset packet: address 0x00, data 0x00, XOR 0x00; S 9.2 line 75
-  p.addData(data,1);
-  p.setAddress(0x00, DCC_SHORT_ADDRESS);
+  p.dccAddData(data,1);
+  p.dccSetAddress(0x00, DCC_SHORT_ADDRESS);
   p.setRepeatCount(20);
-  p.setKind(reset_packet_kind);
+  p.dccSetKind(DCC_RESET_PACKET_KIND);
   p.setPriority(HIGH_PRIORIY);
   packet_buffer.insertPacket(p);
   
@@ -110,9 +111,9 @@ bool TrackPacketScheduler::setup(void) //for any post-constructor initialization
   // 00 FF FF   what are these?
   
   //idle packet: address 0xFF, data 0x00, XOR 0xFF; S 9.2 line 90
-  p.setAddress(0xFF, DCC_SHORT_ADDRESS);
+  p.dccSetAddress(0xFF, DCC_SHORT_ADDRESS);
   p.setRepeatCount(10);
-  p.setKind(idle_packet_kind);
+  p.dccSetKind(DCC_IDLE_PACKET_KIND);
   p.setPriority(HIGH_PRIORIY);
 
   packet_buffer.insertPacket(p); //e_stop_queue will be empty, so no need to check if insertion was OK.
@@ -146,9 +147,11 @@ bool TrackPacketScheduler::trackPower(bool enable){
 //for enqueueing packets
 
 //setSpeed* functions:
-bool TrackPacketScheduler::dccSetSpeed14(uint16_t address, uint8_t address_kind, int8_t new_speed, bool F0)
+bool TrackPacketScheduler::dccSetSpeed14(uint16_t address, ADDRESS_KIND dcc_address_kind, int8_t new_speed, bool F0)
 {
-  TrackPacket p(address, address_kind);
+  TrackPacket p(TRACK_PROTOCOL_DCC);
+  p.dccSetAddress(address, dcc_address_kind);
+
   uint8_t dir = 1;
   uint8_t speed_data_uint8_ts[] = {0x40};
   uint16_t abs_speed = new_speed;
@@ -160,7 +163,7 @@ bool TrackPacketScheduler::dccSetSpeed14(uint16_t address, uint8_t address_kind,
   if(abs_speed > 14)abs_speed = 14;
 
   if(!new_speed) //dcc_eStop!
-    return dcc_eStop(address, speed_packet_kind);//speed_data_uint8_ts[0] |= 0x01; //dcc_eStop
+    return dcc_eStop(address, DCC_SHORT_ADDRESS);//speed_data_uint8_ts[0] |= 0x01; //dcc_eStop
     
   else if (abs_speed == 1) //regular stop!
     speed_data_uint8_ts[0] |= 0x00; //stop
@@ -168,20 +171,22 @@ bool TrackPacketScheduler::dccSetSpeed14(uint16_t address, uint8_t address_kind,
     speed_data_uint8_ts[0] |= abs_speed;
   speed_data_uint8_ts[0] |= (0x20*dir); //flip bit 3 to indicate direction;
   //DEBUG_PRINTLN2(speed_data_uint8_ts[0],BIN);
-  p.addData(speed_data_uint8_ts,1);
+  p.dccAddData(speed_data_uint8_ts,1);
 
   p.setRepeatCount(REPEAT_COUNT_CONTINOUS);
   
-  p.setKind(speed_packet_kind);  
+  p.dccSetKind(DCC_SPEED_PACKET_KIND);  
 
   //speed packets get refreshed indefinitely, and so the repeat doesn't need to be set.
   //speed packets go to the high proirity queue
   return(packet_buffer.insertPacket(p));
 }
 
-bool TrackPacketScheduler::dccSetSpeed28(uint16_t address, uint8_t address_kind, int8_t new_speed)
+bool TrackPacketScheduler::dccSetSpeed28(uint16_t address, ADDRESS_KIND dcc_address_kind, int8_t new_speed)
 {
-  TrackPacket p(address, address_kind);
+  TrackPacket p(TRACK_PROTOCOL_DCC);
+  p.dccSetAddress(address, dcc_address_kind);
+
   uint8_t dir = 1;
   uint8_t speed_data_uint8_ts[] = {0x40};
   uint16_t abs_speed = new_speed;
@@ -196,7 +201,7 @@ bool TrackPacketScheduler::dccSetSpeed28(uint16_t address, uint8_t address_kind,
 //  DEBUG_PRINTLN(speed);
 //  DEBUG_PRINTLN(dir);
   if(new_speed == 0) //dcc_eStop!
-    return dcc_eStop(address, speed_packet_kind);//speed_data_uint8_ts[0] |= 0x01; //dcc_eStop
+    return dcc_eStop(address, DCC_SHORT_ADDRESS);//speed_data_uint8_ts[0] |= 0x01; //dcc_eStop
   else if (abs_speed == 1) //regular stop!
     speed_data_uint8_ts[0] |= 0x00; //stop
   else //movement
@@ -208,11 +213,11 @@ bool TrackPacketScheduler::dccSetSpeed28(uint16_t address, uint8_t address_kind,
   speed_data_uint8_ts[0] |= (0x20*dir); //flip bit 3 to indicate direction;
 //  DEBUG_PRINTLN(speed_data_uint8_ts[0],BIN);
 //  DEBUG_PRINTLN("=======");
-  p.addData(speed_data_uint8_ts,1);
+  p.dccAddData(speed_data_uint8_ts,1);
   
   p.setRepeatCount(REPEAT_COUNT_CONTINOUS);
   
-  p.setKind(speed_packet_kind);
+  p.dccSetKind(DCC_SPEED_PACKET_KIND);
     
   //speed packets get refreshed indefinitely, and so the repeat doesn't need to be set.
   //speed packets go to the high proirity queue
@@ -220,13 +225,14 @@ bool TrackPacketScheduler::dccSetSpeed28(uint16_t address, uint8_t address_kind,
   return(packet_buffer.insertPacket(p));
 }
 
-bool TrackPacketScheduler::dccSetSpeed128(uint16_t address, uint8_t address_kind, int8_t new_speed)
+bool TrackPacketScheduler::dccSetSpeed128(uint16_t address, ADDRESS_KIND dcc_address_kind, int8_t new_speed)
 {
   //why do we get things like this?
   // 03 3F 16 15 3F (speed packet addressed to loco 03)
   // 03 3F 11 82 AF  (speed packet addressed to loco 03, speed hex 0x11);
 
-  TrackPacket p(address, address_kind);
+  TrackPacket p(TRACK_PROTOCOL_DCC);
+  p.dccSetAddress(address, dcc_address_kind);
 
   uint8_t dir = 1;
   uint16_t abs_speed = new_speed;
@@ -240,7 +246,7 @@ bool TrackPacketScheduler::dccSetSpeed128(uint16_t address, uint8_t address_kind
   if(abs_speed > 0x7f)abs_speed = 0x7f;
 
   if(!new_speed){
-    return dcc_eStop(address, speed_packet_kind);//speed_data_uint8_ts[0] |= 0x01; //dcc_eStop
+    return dcc_eStop(address, DCC_SHORT_ADDRESS);//speed_data_uint8_ts[0] |= 0x01; //dcc_eStop
   }
   else 
   if (abs_speed == 1) //regular stop!
@@ -249,14 +255,14 @@ bool TrackPacketScheduler::dccSetSpeed128(uint16_t address, uint8_t address_kind
     speed_data_uint8_ts[1] = abs_speed; //no conversion necessary.
 
   speed_data_uint8_ts[1] |= (0x80*dir); //flip bit 7 to indicate direction;
-  p.addData(speed_data_uint8_ts,2);
+  p.dccAddData(speed_data_uint8_ts,2);
   //DEBUG_PRINT2(speed_data_uint8_ts[0],BIN);
   //DEBUG_PRINT(" ");
   //DEBUG_PRINTLN2(speed_data_uint8_ts[1],BIN);
   
   p.setRepeatCount(REPEAT_COUNT_CONTINOUS);
   
-  p.setKind(speed_packet_kind);
+  p.dccSetKind(DCC_SPEED_PACKET_KIND);
   
   //speed packets get refreshed indefinitely, and so the repeat doesn't need to be set.
   //speed packets go to the high proirity queue
@@ -267,30 +273,32 @@ bool TrackPacketScheduler::dccSetSpeed128(uint16_t address, uint8_t address_kind
   return result;
 }
 
-bool TrackPacketScheduler::dccSetFunctions(uint16_t address, uint8_t address_kind, uint16_t functions)
+bool TrackPacketScheduler::dccSetFunctions(uint16_t address, ADDRESS_KIND dcc_address_kind, uint16_t functions)
 {
 //  DEBUG_PRINTLN(functions,HEX);
-  if(dccSetFunctions0to4(address, address_kind, functions&0x1F))
-    if(dccSetFunctions5to8(address, address_kind, (functions>>5)&0x0F))
-      if(dccSetFunctions9to12(address, address_kind, (functions>>9)&0x0F))
+  if(dccSetFunctions0to4(address, dcc_address_kind, functions&0x1F))
+    if(dccSetFunctions5to8(address, dcc_address_kind, (functions>>5)&0x0F))
+      if(dccSetFunctions9to12(address, dcc_address_kind, (functions>>9)&0x0F))
         return true;
   return false;
 }
 
-bool TrackPacketScheduler::dccSetFunctions(uint16_t address, uint8_t address_kind, uint8_t F0to4, uint8_t F5to8, uint8_t F9to12)
+bool TrackPacketScheduler::dccSetFunctions(uint16_t address, ADDRESS_KIND dcc_address_kind, uint8_t F0to4, uint8_t F5to8, uint8_t F9to12)
 {
-  if(dccSetFunctions0to4(address, address_kind, F0to4))
-    if(dccSetFunctions5to8(address, address_kind, F5to8))
-      if(dccSetFunctions9to12(address, address_kind, F9to12))
+  if(dccSetFunctions0to4(address, dcc_address_kind, F0to4))
+    if(dccSetFunctions5to8(address, dcc_address_kind, F5to8))
+      if(dccSetFunctions9to12(address, dcc_address_kind, F9to12))
         return true;
   return false;
 }
 
-bool TrackPacketScheduler::dccSetFunctions0to4(uint16_t address, uint8_t address_kind, uint8_t functions)
+bool TrackPacketScheduler::dccSetFunctions0to4(uint16_t address, ADDRESS_KIND dcc_address_kind, uint8_t functions)
 {
 //  DEBUG_PRINTLN("dccSetFunctions0to4");
 //  DEBUG_PRINTLN(functions,HEX);
-  TrackPacket p(address, address_kind);
+  TrackPacket p(TRACK_PROTOCOL_DCC);
+  p.dccSetAddress(address, dcc_address_kind);
+
   uint8_t data[] = {0x80};
   
   //Obnoxiously, the headlights (F0, AKA FL) are not controlled
@@ -301,40 +309,42 @@ bool TrackPacketScheduler::dccSetFunctions0to4(uint16_t address, uint8_t address
   //get functions 0
   data[0] |= (functions&0x01) << 4;
 
-  p.addData(data,1);
-  p.setKind(function_packet_1_kind);
+  p.dccAddData(data,1);
+  p.dccSetKind(DCC_FUNCTION_PACKET_1_KIND);
   p.setRepeatCount(FUNCTION_REPEAT);
   return packet_buffer.insertPacket(p);
 }
 
 
-bool TrackPacketScheduler::dccSetFunctions5to8(uint16_t address, uint8_t address_kind, uint8_t functions)
+bool TrackPacketScheduler::dccSetFunctions5to8(uint16_t address, ADDRESS_KIND dcc_address_kind, uint8_t functions)
 {
 //  DEBUG_PRINTLN("dccSetFunctions5to8");
 //  DEBUG_PRINTLN(functions,HEX);
-  TrackPacket p(address, address_kind);
+  TrackPacket p(TRACK_PROTOCOL_DCC);
+  p.dccSetAddress(address, dcc_address_kind);
   uint8_t data[] = {0xB0};
   
   data[0] |= functions & 0x0F;
   
-  p.addData(data,1);
-  p.setKind(function_packet_2_kind);
+  p.dccAddData(data,1);
+  p.dccSetKind(DCC_FUNCTION_PACKET_2_KIND);
   p.setRepeatCount(FUNCTION_REPEAT);
   return packet_buffer.insertPacket(p);
 }
 
-bool TrackPacketScheduler::dccSetFunctions9to12(uint16_t address, uint8_t address_kind, uint8_t functions)
+bool TrackPacketScheduler::dccSetFunctions9to12(uint16_t address, ADDRESS_KIND dcc_address_kind, uint8_t functions)
 {
 //  DEBUG_PRINTLN("dccSetFunctions9to12");
 //  DEBUG_PRINTLN(functions,HEX);
-  TrackPacket p(address, address_kind);
+  TrackPacket p(TRACK_PROTOCOL_DCC);
+  p.dccSetAddress(address, dcc_address_kind);
   uint8_t data[] = {0xA0};
   
   //least significant four functions (F5--F8)
   data[0] |= functions & 0x0F;
   
-  p.addData(data,1);
-  p.setKind(function_packet_3_kind);
+  p.dccAddData(data,1);
+  p.dccSetKind(DCC_FUNCTION_PACKET_3_KIND);
   p.setRepeatCount(FUNCTION_REPEAT);
   return packet_buffer.insertPacket(p);
 }
@@ -345,7 +355,7 @@ bool TrackPacketScheduler::dccSetFunctions9to12(uint16_t address, uint8_t addres
 //bool TrackPacketScheduler::setTurnout(uint16_t address)
 //bool TrackPacketScheduler::unsetTurnout(uint16_t address)
 
-bool TrackPacketScheduler::dccProgramCV(uint16_t address, uint8_t address_kind, uint16_t CV, uint8_t CV_data)
+bool TrackPacketScheduler::dccProgramCV(uint16_t address, ADDRESS_KIND dcc_address_kind, uint16_t CV, uint8_t CV_data)
 {
   //format of packet:
   // {preamble} 0 [ AAAAAAAA ] 0 111011VV 0 VVVVVVVV 0 DDDDDDDD 0 EEEEEEEE 1 (write)
@@ -353,7 +363,9 @@ bool TrackPacketScheduler::dccProgramCV(uint16_t address, uint8_t address_kind, 
   // {preamble} 0 [ AAAAAAAA ] 0 111010VV 0 VVVVVVVV 0 DDDDDDDD 0 EEEEEEEE 1 (bit manipulation)
   // only concerned with "write" form here.
   
-  TrackPacket p(address, address_kind);
+  TrackPacket p(TRACK_PROTOCOL_DCC);
+  p.dccSetAddress(address, dcc_address_kind);
+
   uint8_t data[] = {0xEC, 0x00, 0x00};
   
   // split the CV address up among data uint8_ts 0 and 1
@@ -361,8 +373,8 @@ bool TrackPacketScheduler::dccProgramCV(uint16_t address, uint8_t address_kind, 
   data[1] = (CV-1) & 0xFF;
   data[2] = CV_data;
   
-  p.addData(data,3);
-  p.setKind(ops_mode_programming_kind);
+  p.dccAddData(data,3);
+  p.dccSetKind(DCC_OPS_MODE_PROGRAMMING_KIND);
   p.setRepeatCount(OPS_MODE_PROGRAMMING_REPEAT);
   
   return packet_buffer.insertPacket(p);
@@ -374,10 +386,10 @@ bool TrackPacketScheduler::dccProgramCV(uint16_t address, uint8_t address_kind, 
 bool TrackPacketScheduler::dcc_eStop(void)
 {
     // 111111111111 0 00000000 0 01DC0001 0 EEEEEEEE 1
-    TrackPacket e_stop_packet(0); //address 0
+    TrackPacket e_stop_packet(TRACK_PROTOCOL_DCC); //address 0
     uint8_t data[] = {0x71}; //01110001
-    e_stop_packet.addData(data,1);
-    e_stop_packet.setKind(e_stop_packet_kind);
+    e_stop_packet.dccAddData(data,1);
+    e_stop_packet.dccSetKind(DCC_E_STOP_PACKET_KIND);
     e_stop_packet.setRepeatCount(10);
   #if 0
     e_stop_packet_buffer.insertPacket(e_stop_packet);
@@ -390,20 +402,22 @@ bool TrackPacketScheduler::dcc_eStop(void)
     return true;
 }
     
-bool TrackPacketScheduler::dcc_eStop(uint16_t address, uint8_t address_kind)
+bool TrackPacketScheduler::dcc_eStop(uint16_t address, ADDRESS_KIND dcc_address_kind)
 {
   // 111111111111 0	0AAAAAAA 0 01001001 0 EEEEEEEE 1
   // or
   // 111111111111 0	0AAAAAAA 0 01000001 0 EEEEEEEE 1
-  TrackPacket e_stop_packet(address, address_kind);
+  TrackPacket e_stop_packet(TRACK_PROTOCOL_DCC);
+  e_stop_packet.dccSetAddress(address, dcc_address_kind);
+
   uint8_t data[] = {0x41}; //01000001
 
-  e_stop_packet.addData(data,1);
-  e_stop_packet.setKind(e_stop_packet_kind);
+  e_stop_packet.dccAddData(data,1);
+  e_stop_packet.dccSetKind(DCC_E_STOP_PACKET_KIND);
   e_stop_packet.setRepeatCount(10);
   e_stop_packet.setPriority(HIGH_PRIORIY);
   
-  packet_buffer.forget(address, address_kind);
+  packet_buffer.forget(address, dcc_address_kind);
 #ifdef DEBUG
   packet_buffer.printQueue();
 #endif
@@ -416,11 +430,12 @@ bool TrackPacketScheduler::dcc_eStop(uint16_t address, uint8_t address_kind)
 
 bool TrackPacketScheduler::dccSetBasicAccessory(uint16_t address, uint8_t function)
 {
-    TrackPacket p(address);
+    TrackPacket p(TRACK_PROTOCOL_DCC);
+    p.dccSetAddress(address);
 
 	  uint8_t data[] = { 0x01 | ((function & 0x03) << 1) };
-	  p.addData(data, 1);
-	  p.setKind(basic_accessory_packet_kind);
+	  p.dccAddData(data, 1);
+	  p.dccSetKind(DCC_BASIC_ACCESSORY_PACKET_KIND);
 	  p.setRepeatCount(OTHER_REPEAT);
 
 	  return packet_buffer.insertPacket(p);
@@ -428,11 +443,12 @@ bool TrackPacketScheduler::dccSetBasicAccessory(uint16_t address, uint8_t functi
 
 bool TrackPacketScheduler::dccUnsetBasicAccessory(uint16_t address, uint8_t function)
 {
-  TrackPacket p(address);
+  TrackPacket p(TRACK_PROTOCOL_DCC);
+  p.dccSetAddress(address);
 
   uint8_t data[] = { ((function & 0x03) << 1) };
-  p.addData(data, 1);
-  p.setKind(basic_accessory_packet_kind);
+  p.dccAddData(data, 1);
+  p.dccSetKind(DCC_BASIC_ACCESSORY_PACKET_KIND);
   p.setRepeatCount(OTHER_REPEAT);
 
   return packet_buffer.insertPacket(p);
@@ -440,11 +456,23 @@ bool TrackPacketScheduler::dccUnsetBasicAccessory(uint16_t address, uint8_t func
 
 
 bool TrackPacketScheduler::mm1SetSpeed(uint16_t address, int8_t new_speed){
-  return false; 
+  TrackPacket p(TRACK_PROTOCOL_MM);
+  p.mmSetKind(MM1_LOC_SPEED_TELEGRAM);
+  p.mmSetAddress(address);
+  p.mmSetSpeed(new_speed);
+  p.setRepeatCount(FUNCTION_REPEAT);
+  return packet_buffer.insertPacket(p);
 }
+
 bool TrackPacketScheduler::mm2SetSpeed(uint16_t address, int8_t new_speed){
-  return false;   
+  TrackPacket p(TRACK_PROTOCOL_MM);
+  p.mmSetKind(MM2_LOC_SPEED_TELEGRAM);
+  p.mmSetAddress(address);
+  p.mmSetSpeed(new_speed);
+  p.setRepeatCount(FUNCTION_REPEAT);
+  return packet_buffer.insertPacket(p);
 }
+
 bool TrackPacketScheduler::mmSetBasicAccessory(uint16_t address, uint8_t function){
   return false; 
 }
@@ -456,13 +484,15 @@ bool TrackPacketScheduler::mmSetFunctions(uint16_t address, uint8_t function){
 }
 
 //to be called periodically within loop()
-void TrackPacketScheduler::update() //checks queues, puts whatever's pending on the rails via global current_packet. easy-peasy
+void TrackPacketScheduler::update() //checks queues, puts whatever's pending on the rails via global dcc_bitstream. easy-peasy
 {
   if(track.requestNewPacket()){
 
-    TrackPacket p;
-    uint8_t data_size;
-    uint8_t current_packet[6];
+    TrackPacket p(TRACK_PROTOCOL_UNKNOWN);
+    uint8_t dcc_bitstream_size;
+    uint8_t dcc_bitstream[6];
+    uint32_t mm2_bitstream;
+    bool mm2_double_frequency;
 
     if(packet_buffer.isEmpty()) return;
 #ifdef DEBUG_QUEUE
@@ -470,8 +500,18 @@ void TrackPacketScheduler::update() //checks queues, puts whatever's pending on 
 #endif
     packet_buffer.readPacket(p);
 
-    data_size = p.getBitstream(current_packet);
-    //DEBUG_PRINT("data_size = %i\n", data_size);
-    track.RMTfillData(current_packet, data_size);
+    TRACK_PROTOCOL track_protocol = p.getPacketProtocol();
+    switch(track_protocol){
+      case TRACK_PROTOCOL_DCC:
+        dcc_bitstream_size = p.dccGetBitstream(dcc_bitstream);
+        //DEBUG_PRINT("dcc_bitstream_size = %i\n", dcc_bitstream_size);
+        track.RMTfillDataDcc(dcc_bitstream, dcc_bitstream_size);
+        break;
+      case TRACK_PROTOCOL_MM:
+        p.mm2GetBitstream(&mm2_bitstream, &mm2_double_frequency);
+        track.RMTfillDataMM(mm2_bitstream, mm2_double_frequency);
+        break;  
+
+    }
   }
 }

@@ -1,3 +1,4 @@
+#if 0
 #include <Arduino.h>
 #include "TrackPacketQueueList.h"
 #include <stdexcept>
@@ -44,7 +45,7 @@ bool TrackPacketQueue::insertPacket(TrackPacket &packet)
 #endif
   std::list<TrackPacket>::iterator queue_packet;
   for (queue_packet = queue.begin(); queue_packet != queue.end(); ++queue_packet){
-    if(queue_packet->getAddress() == packet.getAddress() && queue_packet->getKind() == packet.getKind() ){
+    if(queue_packet->dccGetAddress() == packet.dccGetAddress() && queue_packet->dccGetKind() == packet.dccGetKind() ){
       queue.erase(queue_packet);
       break;
     }
@@ -82,15 +83,15 @@ void TrackPacketQueue::printQueue(void)
   if(queue.size()){
     for (queue_packet = queue.begin(); queue_packet != queue.end(); ++queue_packet){
       Serial.printf("%i: Address = 0x%04x, Kind = %i, Repeatcount = %i", i,
-        queue_packet->getAddress(), 
-        queue_packet->getKind(), 
+        queue_packet->dccGetAddress(), 
+        queue_packet->dccGetKind(), 
         queue_packet->getRepeatCount());
-      u_int8_t data_size = queue_packet->getSize();
-      Serial.printf(", Size = %i", data_size);
-      if(data_size){
+      u_int8_t dcc_bitstream_size = queue_packet->dccGetSize();
+      Serial.printf(", Size = %i", dcc_bitstream_size);
+      if(dcc_bitstream_size){
         Serial.printf(", Data =");
-        for(int j = 0; j < data_size; j++)
-          Serial.printf(" 0x%02x", queue_packet->getData(j));
+        for(int j = 0; j < dcc_bitstream_size; j++)
+          Serial.printf(" 0x%02x", queue_packet->dccGetData(j));
       }
       Serial.printf("\n");
       i++;
@@ -134,7 +135,7 @@ bool TrackPacketQueue::readPacket(TrackPacket &packet)
   return result;
 }
 
-bool TrackPacketQueue::forget(uint16_t address, uint8_t address_kind)
+bool TrackPacketQueue::forget(uint16_t address, uint8_t dcc_address_kind)
 {
 #ifdef THREAD_SAFE_QUEUE
   if(xSemaphoreTake(semaphore, portMAX_DELAY) != pdTRUE){
@@ -145,9 +146,9 @@ bool TrackPacketQueue::forget(uint16_t address, uint8_t address_kind)
   bool found = false;
   std::list<TrackPacket>::iterator queue_packet;
   for (queue_packet = queue.begin(); queue_packet != queue.end(); ++queue_packet){
-    DEBUG_PRINT("Packet address = %04x, kind = %i\n", queue_packet->getAddress(), queue_packet->getKind());
-    DEBUG_PRINT("Request address = %04x, kind = %i\n", address, address_kind);
-    if((queue_packet->getAddress() == address) && (queue_packet->getKind() == address_kind)){
+    DEBUG_PRINT("Packet address = %04x, kind = %i\n", queue_packet->dccGetAddress(), queue_packet->dccGetKind());
+    DEBUG_PRINT("Request address = %04x, kind = %i\n", address, dcc_address_kind);
+    if((queue_packet->dccGetAddress() == address) && (queue_packet->dccGetKind() == dcc_address_kind)){
       DEBUG_PRINT("Erase packet\n");
       queue.erase(queue_packet);
       queue_full = false;
@@ -173,4 +174,4 @@ void TrackPacketQueue::clear(void)
   xSemaphoreGive(semaphore);
 #endif
 }
-
+#endif

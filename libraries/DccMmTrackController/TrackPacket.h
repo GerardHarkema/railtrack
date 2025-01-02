@@ -7,45 +7,48 @@ typedef unsigned char uint8_t;
 
 //Packet kinds
 // enum packet_kind_t {
-//   idle_packet_kind,
-//   e_stop_packet_kind,
-//   speed_packet_kind,
+//   DCC_IDLE_PACKET_KIND,
+//   DCC_E_STOP_PACKET_KIND,
+//   DCC_SPEED_PACKET_KIND,
 //   function_packet_kind,
-//   accessory_packet_kind,
-//   reset_packet_kind,
-//   ops_mode_programming_kind,
+//   DCC_ACCESSORY_PACKET_KIND,
+//   DCC_RESET_PACKET_KIND,
+//   DCC_OPS_MODE_PROGRAMMING_KIND,
 //   other_packet_kind
 // };
 
 #define MULTIFUNCTION_PACKET_KIND_MASK 0x10
-#if 1
-#define idle_packet_kind            0x10
-#define e_stop_packet_kind          0x11
-#define speed_packet_kind           0x12
-#define function_packet_1_kind      0x13
-#define function_packet_2_kind      0x14
-#define function_packet_3_kind      0x15
-#define accessory_packet_kind       0x16
-#define reset_packet_kind           0x17
-#define ops_mode_programming_kind   0x18
+#if 0
+#define DCC_IDLE_PACKET_KIND            0x10
+#define DCC_E_STOP_PACKET_KIND          0x11
+#define DCC_SPEED_PACKET_KIND           0x12
+#define DCC_FUNCTION_PACKET_1_KIND      0x13
+#define DCC_FUNCTION_PACKET_2_KIND      0x14
+#define DCC_FUNCTION_PACKET_3_KIND      0x15
+#define DCC_ACCESSORY_PACKET_KIND       0x16
+#define DCC_RESET_PACKET_KIND           0x17
+#define DCC_OPS_MODE_PROGRAMMING_KIND   0x18
 #else
 
 typedef enum {
-  idle_packet_kind  = 0x10,
-  e_stop_packet_kind,
-  speed_packet_kind,
-  function_packet_1_kind,
-  function_packet_2_kind,
-  function_packet_3_kind,
-  accessory_packet_kind,
-  reset_packet_kind,
-  ops_mode_programming_kind
-} kind_type;
+  DCC_IDLE_PACKET_KIND  = 0x10,
+  DCC_E_STOP_PACKET_KIND,
+  DCC_SPEED_PACKET_KIND,
+  DCC_FUNCTION_PACKET_1_KIND,
+  DCC_FUNCTION_PACKET_2_KIND,
+  DCC_FUNCTION_PACKET_3_KIND,
+  //DCC_ACCESSORY_PACKET_KIND,
+  DCC_RESET_PACKET_KIND,
+  DCC_OPS_MODE_PROGRAMMING_KIND,
+
+  DCC_BASIC_ACCESSORY_PACKET_KIND  = 0x40,
+  DCC_EXTEND_ACCESSORY_PACKET_KIND 
+} DCC_KIND_TYPE;
 #endif
 
-#define ACCESSORY_PACKET_KIND_MASK 0x40
-#define basic_accessory_packet_kind 0x40
-#define extended_accessory_packet_kind 0x41
+#define DCC_ACCESSORY_PACKET_KIND_MASK 0x40
+//#define DCC_BASIC_ACCESSORY_PACKET_KIND 0x40
+//#define EXTEND_DCC_ACCESSORY_PACKET_KIND 0x41
 
 #define other_packet_kind           0x00
 
@@ -57,42 +60,97 @@ typedef enum {
 typedef enum{
   DCC_SHORT_ADDRESS,
   DCC_LONG_ADDRESS
-}address_type;
+}ADDRESS_KIND;
+
+typedef enum{
+  TRACK_PROTOCOL_DCC,
+  TRACK_PROTOCOL_MM,
+  TRACK_PROTOCOL_UNKNOWN
+}TRACK_PROTOCOL;
+
+typedef enum{
+  MM1_LOC_SPEED_TELEGRAM,
+  MM1_LOC_CHANGE_DIR_TELEGRAM,
+  MM2_LOC_SPEED_TELEGRAM,
+  MM2_LOC_F1_TELEGRAM,
+  MM2_LOC_F2_TELEGRAM,
+  MM2_LOC_F3_TELEGRAM,
+  MM2_LOC_F4_TELEGRAM,
+  MM2_MAGNET_TELEGRAM
+}MM_KIND_TYPE;
 
 #define HIGH_PRIORIY    true
 #define LOW_PRIORIY     false
 #define REPEAT_COUNT_CONTINOUS  -1
 
+//A DCC packet is at most 6 uint8_ts: 2 of address, three of dcc_data, one of XOR
+typedef struct{
+    uint16_t address;
+    ADDRESS_KIND address_kind;
+    uint8_t data[3];
+    uint8_t size;  
+    DCC_KIND_TYPE kind;
+}DCC_DATA;
+
+typedef struct{
+    MM_KIND_TYPE kind;
+    uint8_t address;
+    uint8_t magnet_sub_address;
+    bool magnet_state;
+    uint8_t speed;
+    bool function_on;
+    bool auxiliary;
+    uint32_t data;
+
+}MM2_DATA;
+
+
 class TrackPacket
 {
   private:
-   //A DCC packet is at most 6 uint8_ts: 2 of address, three of data, one of XOR
-    uint16_t address;
-    uint8_t address_kind;
-    uint8_t data[3];
+
+    TRACK_PROTOCOL track_protocol;
+    DCC_DATA dcc_data;
+    MM2_DATA mm_data;
     int8_t repeat_count; 
-    uint8_t size;  
-    uint8_t kind;
     bool priority;
     
   public:
-    TrackPacket(uint16_t decoder_address=0xFF, uint8_t decoder_address_kind=0x00);
+    TrackPacket(TRACK_PROTOCOL track_protocol);
     
-    uint8_t getBitstream(uint8_t rawuint8_ts[]); //returns size of array.
-    //uint8_t getSize(void);
-    inline uint16_t getAddress(void) { return address; }
-    inline uint8_t getAddressKind(void) { return address_kind; }
-    inline void setAddress(uint16_t new_address) { address = new_address; }
-    inline void setAddress(uint16_t new_address, uint8_t new_address_kind) { address = new_address; address_kind = new_address_kind; }
-    void addData(uint8_t *new_data, uint8_t new_size); //insert freeform data.
-    inline uint8_t getData(uint8_t index){return data[index];}; //insert freeform data.
-    inline void setKind(uint8_t new_kind) { kind = new_kind; }
-    inline uint8_t getKind(void) { return kind; }
+    uint8_t dccGetBitstream(uint8_t rawuint8_ts[]); //returns size of bitstream
+    //uint8_t dccGetSize(void);
+    inline uint16_t dccGetAddress(void) { return dcc_data.address; }
+    inline ADDRESS_KIND dccGetAddressKind(void) { return dcc_data.address_kind; }
+    inline void dccSetAddress(uint16_t new_address) { dcc_data.address = new_address; }
+    inline void dccSetAddress(uint16_t new_address, ADDRESS_KIND new_address_kind) { dcc_data.address = new_address; dcc_data.address_kind = new_address_kind; }
+    void dccAddData(uint8_t *new_data, uint8_t new_size); //insert freeform dcc_data.
+    inline uint8_t dccGetData(uint8_t index){return dcc_data.data[index];}; //insert freeform dcc_data.
+    inline uint8_t dccGetSize(void) { return dcc_data.size ; }
+    inline void dccSetKind(DCC_KIND_TYPE new_kind) { dcc_data.kind = new_kind; }
+    inline DCC_KIND_TYPE dccGetKind(void) { return dcc_data.kind; }
+
+
+    void mm2GetBitstream(uint32_t *bitstream, bool *double_frequency); // fixed size bitstream
+
+    inline void mmSetKind(MM_KIND_TYPE kind) { mm_data.kind = kind; }
+    inline MM_KIND_TYPE mmGetKind(void) { return mm_data.kind; }
+    inline void mmSetAddress(uint8_t new_address) { mm_data.address = new_address; }
+    inline uint8_t mmGetAddress(void) { return mm_data.address; }
+    inline void mmSetSpeed(uint8_t new_speed) { mm_data.speed = new_speed; }
+    inline uint8_t mmGetSpeed(void) { return mm_data.speed; }
+    inline void mmSetMagnetSubaddress(uint8_t magnet_sub_address) { mm_data.magnet_sub_address = magnet_sub_address; }
+    inline uint8_t mmgetMagnetSubaddress(void) { return mm_data.magnet_sub_address; }
+    inline void mmSetAuxiliary(bool auxiliary) { mm_data.auxiliary = auxiliary; }
+    inline bool mmGetAuxiliary(void) { return mm_data.auxiliary; }
+    inline void mmSetFunction(bool function_on) { mm_data.function_on = function_on; }
+    inline bool mmGetFunction(void) { return mm_data.function_on; }
+
     inline void setRepeatCount(uint8_t new_repeat_count) { repeat_count = new_repeat_count;}
-    inline uint8_t getRepeatCount(void) { return repeat_count; }//return repeat; }
-    inline uint8_t getSize(void) { return size ; }
+    inline uint8_t getRepeatCount(void) { return repeat_count; }//return repeat
     inline bool isHighPriority(void) { return priority; }
     inline void setPriority(bool new_priority) {  priority = new_priority; }
+    inline TRACK_PROTOCOL getPacketProtocol(void){return track_protocol;}
 };
 
 #endif //__DCCPACKET_H__

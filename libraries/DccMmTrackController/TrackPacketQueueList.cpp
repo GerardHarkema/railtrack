@@ -34,6 +34,7 @@ bool TrackPacketQueue::setup()
 bool TrackPacketQueue::insertPacket(TrackPacket &packet)
 {
 
+  bool found = false;
   bool result = true;
 #ifdef THREAD_SAFE_QUEUE
   if(xSemaphoreTake(semaphore, portMAX_DELAY) != pdTRUE){
@@ -42,21 +43,89 @@ bool TrackPacketQueue::insertPacket(TrackPacket &packet)
   };
 #endif
   std::list<TrackPacket>::iterator queue_packet;
-  for (queue_packet = queue.begin(); queue_packet != queue.end(); ++queue_packet){
-    if(queue_packet->getAddress() == packet.getAddress() && queue_packet->getKind() == packet.getKind() ){
-      queue.erase(queue_packet);
+  switch(packet.getPacketProtocol()){
+    case TRACK_PROTOCOL_DCC:
+      for (queue_packet = queue.begin(); queue_packet != queue.end(); ++queue_packet){
+        if(queue_packet->dccGetAddress() == packet.dccGetAddress() && 
+            queue_packet->dccGetKind() == packet.dccGetKind() && 
+            queue_packet->getPacketProtocol() == TRACK_PROTOCOL_DCC){
+          queue.erase(queue_packet);
+          break;
+        }
+      }
+      try {
+        if(packet.isHighPriority())
+          queue.push_front(packet);
+        else
+          queue.push_back(packet);
+      }
+      catch (const std::exception& e){
+        queue_full = true;
+        result = false;
+      }
       break;
-    }
-  }
-  try {
-    if(packet.isHighPriority())
-      queue.push_front(packet);
-    else
-      queue.push_back(packet);
-  }
-  catch (const std::exception& e){
-    queue_full = true;
-    result = false;
+    case TRACK_PROTOCOL_MM:
+      for (queue_packet = queue.begin(); queue_packet != queue.end(); ++queue_packet){
+        if(queue_packet->mmGetAddress() == packet.mmGetAddress() && 
+            queue_packet->mmGetKind() == packet.mmGetKind() &&
+            queue_packet->getPacketProtocol() == TRACK_PROTOCOL_MM){
+          // Update speed of all matching telegrams
+          switch(queue_packet->mmGetKind())
+          {
+            case MM2_LOC_SPEED_TELEGRAM:
+              if(packet.mmGetKind() == MM2_LOC_SPEED_TELEGRAM)
+                queue_packet->mmSetSpeed(packet.mmGetSpeed());
+              if(queue_packet->mmGetKind() == packet.mmGetKind()) found = true;
+              break;
+            case MM2_LOC_F1_TELEGRAM:
+              if(packet.mmGetKind() == MM2_LOC_F1_TELEGRAM)
+                queue_packet->mmSetFunction(packet.mmGetFunction());
+              else
+                queue_packet->mmSetSpeed(packet.mmGetSpeed());
+              if(queue_packet->mmGetKind() == packet.mmGetKind()) found = true;
+              break;
+            case MM2_LOC_F2_TELEGRAM:
+              if(packet.mmGetKind() == MM2_LOC_F3_TELEGRAM)
+                queue_packet->mmSetFunction(packet.mmGetFunction());
+              else
+                queue_packet->mmSetSpeed(packet.mmGetSpeed());
+              if(queue_packet->mmGetKind() == packet.mmGetKind()) found = true;
+              break;
+            case MM2_LOC_F3_TELEGRAM:
+              if(packet.mmGetKind() == MM2_LOC_F3_TELEGRAM)
+                queue_packet->mmSetFunction(packet.mmGetFunction());
+              else
+                queue_packet->mmSetSpeed(packet.mmGetSpeed());
+              if(queue_packet->mmGetKind() == packet.mmGetKind()) found = true;
+              break;
+            case MM2_LOC_F4_TELEGRAM:
+              if(packet.mmGetKind() == MM2_LOC_F4_TELEGRAM)
+                queue_packet->mmSetFunction(packet.mmGetFunction());
+              else
+                queue_packet->mmSetSpeed(packet.mmGetSpeed());
+              if(queue_packet->mmGetKind() == packet.mmGetKind()) found = true;
+              break;
+            case MM2_MAGNET_TELEGRAM:
+              // telegram always added
+              break;
+          }
+          //queue.erase(queue_packet);
+          //break;
+          if(!found){
+            try {
+              if(packet.isHighPriority())
+                queue.push_front(packet);
+              else
+                queue.push_back(packet);
+            }
+            catch (const std::exception& e){
+              queue_full = true;
+              result = false;
+            }
+          }
+        }
+      }
+      break;
   }
 #ifdef THREAD_SAFE_QUEUE
   xSemaphoreGive(semaphore);
@@ -76,22 +145,35 @@ void TrackPacketQueue::printQueue(void)
   };  
 #endif
   int i = 0;
+  u_int8_t dcc_bitstream_size;
   std::list<TrackPacket>::iterator queue_packet;
 
   if(queue.size()){
     for (queue_packet = queue.begin(); queue_packet != queue.end(); ++queue_packet){
-      Serial.printf("Queue-> %i: Address = 0x%04x, Kind = %i, Repeatcount = %i", i,
-        queue_packet->getAddress(), 
-        queue_packet->getKind(), 
-        queue_packet->getRepeatCount());
-      u_int8_t data_size = queue_packet->getSize();
-      Serial.printf(", Size = %i", data_size);
-      if(data_size){
-        DEBUG_PRINT(", Data =\n");
-        for(int j = 0; j < data_size; j++)
-          Serial.printf(" 0x%02x", queue_packet->getData(j));
+      switch(queue_packet->getPacketProtocol()){
+        case TRACK_PROTOCOL_DCC:
+          Serial.printf("Queue-> %i (dcc): Address = 0x%04x, Kind = %i, Repeatcount = %i", i,
+            queue_packet->dccGetAddress(), 
+            queue_packet->dccGetKind(), 
+            queue_packet->getRepeatCount());
+            dcc_bitstream_size = queue_packet->dccGetSize();
+            Serial.printf(", Size = %i", dcc_bitstream_size);
+            if(dcc_bitstream_size){
+              DEBUG_PRINT(", Data =\n");
+              for(int j = 0; j < dcc_bitstream_size; j++)
+                Serial.printf(" 0x%02x", queue_packet->dccGetData(j));
+            }
+            Serial.printf("\n");
+          break;
+        case TRACK_PROTOCOL_MM:
+          Serial.printf("Queue-> %i (mm): Address = 0x%04x, Kind = %i, Repeatcount = %i", i,
+            queue_packet->mmGetAddress(), 
+            queue_packet->mmGetKind(), 
+            queue_packet->getRepeatCount());
+            Serial.printf(", Size = 76(fixed)");
+            Serial.printf("\n");
+          break;
       }
-      Serial.printf("\n");
       i++;
     }
   }
@@ -139,7 +221,7 @@ bool TrackPacketQueue::readPacket(TrackPacket &packet)
   return result;
 }
 
-bool TrackPacketQueue::forget(uint16_t address, uint8_t address_kind)
+bool TrackPacketQueue::forget(uint16_t address, uint8_t dcc_address_kind)
 {
 #ifdef THREAD_SAFE_QUEUE
   if(xSemaphoreTake(semaphore, portMAX_DELAY) != pdTRUE){
@@ -150,9 +232,9 @@ bool TrackPacketQueue::forget(uint16_t address, uint8_t address_kind)
   bool found = false;
   std::list<TrackPacket>::iterator queue_packet;
   for (queue_packet = queue.begin(); queue_packet != queue.end(); ++queue_packet){
-    DEBUG_PRINT("Packet address = %04x, kind = %i\n", queue_packet->getAddress(), queue_packet->getKind());
-    DEBUG_PRINT("Request address = %04x, kind = %i\n", address, address_kind);
-    if((queue_packet->getAddress() == address) && (queue_packet->getKind() == address_kind)){
+    DEBUG_PRINT("Packet address = %04x, kind = %i\n", queue_packet->dccGetAddress(), queue_packet->dccGetKind());
+    DEBUG_PRINT("Request address = %04x, kind = %i\n", address, dcc_address_kind);
+    if((queue_packet->dccGetAddress() == address) && (queue_packet->dccGetKind() == dcc_address_kind)){
       DEBUG_PRINT("Erase packet\n");
       queue.erase(queue_packet);
       queue_full = false;

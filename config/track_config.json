@@ -395,8 +395,12 @@
   ],
   "Scenerys" : [
   	{
-  		"number" : 2,
+  		"number" : 1,
   		"name" : "Brewery"
+  	},
+  	{
+  		"number" : 2,
+  		"name" : "Home"
   	}
   ]
 }

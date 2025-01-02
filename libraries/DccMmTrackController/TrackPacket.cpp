@@ -12,44 +12,51 @@
     do {} while (0)
 #endif
 
-TrackPacket::TrackPacket(uint16_t new_address, 
-					 uint8_t new_address_kind) : 
-					 	address(new_address), 
-						address_kind(new_address_kind), 
-						kind(idle_packet_kind), 
-						size(1), 
-						repeat_count(1),
-						priority(false) 
+TrackPacket::TrackPacket(TRACK_PROTOCOL track_protocol): 
+												repeat_count(1),
+												priority(false) 
 {
-  //address = new_address;
-  //address_kind = new_address_kind;
-  data[0] = 0x00; //default to idle packet
-  data[1] = 0x00;
-  data[2] = 0x00;
+	switch(track_protocol){
+		case TRACK_PROTOCOL_DCC:
+			dcc_data.address = 0;
+			dcc_data.address_kind = DCC_SHORT_ADDRESS;
+			dcc_data.kind = DCC_IDLE_PACKET_KIND;
+			dcc_data.data[0] = 0x00; //default to idle packet
+			dcc_data.data[1] = 0x00;
+			dcc_data.data[2] = 0x00;
+			dcc_data.size  = 1;
+			this->track_protocol = TRACK_PROTOCOL_DCC;
+			break;
+		case TRACK_PROTOCOL_MM:
+			this->track_protocol = TRACK_PROTOCOL_MM;
+			break;
+		case TRACK_PROTOCOL_UNKNOWN:
+		break;
+	}
 }
 
-uint8_t TrackPacket::getBitstream(uint8_t rawbytes[]) //returns size of array.
+uint8_t TrackPacket::dccGetBitstream(uint8_t rawbytes[]) //returns size of array.
 {
 	int total_size = 1; //minimum size
 
-	if (kind & MULTIFUNCTION_PACKET_KIND_MASK) {
-		if (kind == idle_packet_kind) //idle packets work a bit differently:
-		// since the "address" field is 0xFF, the logic below will produce C0 FF 00 3F instead of FF 00 FF
+	if (dcc_data.kind & MULTIFUNCTION_PACKET_KIND_MASK) {
+		if (dcc_data.kind == DCC_IDLE_PACKET_KIND) //idle packets work a bit differently:
+		// since the "dcc_data.address" field is 0xFF, the logic below will produce C0 FF 00 3F instead of FF 00 FF
 		{
 			rawbytes[0] = 0xFF;
-		} else if (address_kind == DCC_LONG_ADDRESS) //This is a 14-bit address
+		} else if (dcc_data.address_kind == DCC_LONG_ADDRESS) //This is a 14-bit dcc_data.address
 		{
-			rawbytes[0] = (uint8_t)((address >> 8) | 0xC0);
-			rawbytes[1] = (uint8_t)(address & 0xFF);
+			rawbytes[0] = (uint8_t)((dcc_data.address >> 8) | 0xC0);
+			rawbytes[1] = (uint8_t)(dcc_data.address & 0xFF);
 			++total_size;
-		} else //we have an 7-bit address
+		} else //we have an 7-bit dcc_data.address
 		{
-			rawbytes[0] = (uint8_t)(address & 0x7F);
+			rawbytes[0] = (uint8_t)(dcc_data.address & 0x7F);
 		}
 
 		uint8_t i;
-		for (i = 0; i < getSize(); ++i, ++total_size) {
-			rawbytes[total_size] = data[i];
+		for (i = 0; i < dccGetSize(); ++i, ++total_size) {
+			rawbytes[total_size] = dcc_data.data[i];
 		}
 
 		uint8_t XOR = 0;
@@ -59,25 +66,25 @@ uint8_t TrackPacket::getBitstream(uint8_t rawbytes[]) //returns size of array.
 		rawbytes[total_size] = XOR;
 
 		return total_size + 1;
-	} else if (kind & ACCESSORY_PACKET_KIND_MASK) {
-		if (kind == basic_accessory_packet_kind) {
+	} else if (dcc_data.kind & DCC_ACCESSORY_PACKET_KIND_MASK) {
+		if (dcc_data.kind == DCC_BASIC_ACCESSORY_PACKET_KIND) {
 			// Basic Accessory Packet looks like this:
 			// {preamble} 0 10AAAAAA 0 1AAACDDD 0 EEEEEEEE 1
 			// or this:
 			// {preamble} 0 10AAAAAA 0 1AAACDDD 0 (1110CCVV 0 VVVVVVVV 0 DDDDDDDD) 0 EEEEEEEE 1 (if programming)
 
-			rawbytes[0] = 0x80; //set up address byte 0
-			rawbytes[1] = 0x88; //set up address byte 1
+			rawbytes[0] = 0x80; //set up dcc_data.address byte 0
+			rawbytes[1] = 0x88; //set up dcc_data.address byte 1
 
-			rawbytes[0] |= address & 0x03F;
-			rawbytes[1] |= (~(address >> 2) & 0x70)
-					| (data[0] & 0x07);
+			rawbytes[0] |= dcc_data.address & 0x03F;
+			rawbytes[1] |= (~(dcc_data.address >> 2) & 0x70)
+					| (dcc_data.data[0] & 0x07);
 
-			//now, add any programming bytes (skipping first data byte, of course)
+			//now, add any programming bytes (skipping first dcc_data.data byte, of course)
 			uint8_t i;
 			uint8_t total_size = 2;
-			for (i = 1; i < getSize(); ++i, ++total_size) {
-				rawbytes[total_size] = data[i];
+			for (i = 1; i < dccGetSize(); ++i, ++total_size) {
+				rawbytes[total_size] = dcc_data.data[i];
 			}
 
 			//and, finally, the XOR
@@ -94,9 +101,171 @@ uint8_t TrackPacket::getBitstream(uint8_t rawbytes[]) //returns size of array.
 }
 
 
-void TrackPacket::addData(uint8_t *new_data, uint8_t new_size) //insert freeform data.
+void TrackPacket::dccAddData(uint8_t *new_data, uint8_t new_size) //insert freeform dcc_data.
 {
   for(int i = 0; i < new_size; ++i)
-    data[i] = new_data[i];
-  size = new_size;
+    dcc_data.data[i] = new_data[i];
+  dcc_data.size = new_size;
+}
+
+uint32_t mm_tribit_lookup[] = {0b00, 	// "0"
+													  0b11, 	// "1"
+													  0b10}; // "Open"
+
+																	 // 111111110000000000
+																	 // 765432109876543210	
+uint32_t mm_speed_index_lookup[] = {0b001000100000000000,  // -14..-7
+																    0b101000100000000000,  //-6..-0
+																    0b100010000000000000,  //+0..+6
+																    0b000010000000000000}; //+7..+14
+
+											 // 111111110000000000
+											 // 765432109876543210	
+#define MM_F1_MASK			0b000010100000000000
+#define MM_F2_MASK			0b001000000000000000
+#define MM_F3_MASK			0b001010000000000000
+#define MM_F4_MASK			0b001010100000000000
+
+void TrackPacket::mm2GetBitstream(uint32_t *bitstream, bool *double_frequency){
+
+	*bitstream = 0;
+	uint32_t bitstream_mask;
+
+	// caluclaute address tribits
+	int tri_value;
+	int div_value = mm_data.address;
+	for(int i = 0; i < 4; i++){
+		tri_value = div_value%3;
+		div_value = div_value/3;
+		bitstream_mask = mm_tribit_lookup[tri_value] << (((4-i) * 2) - 2);
+		*bitstream = *bitstream | bitstream_mask;
+	}
+
+	uint8_t speed;
+	uint8_t speed_mask;
+	switch(mm_data.kind){
+		case MM2_LOC_SPEED_TELEGRAM: 
+		case MM2_LOC_F1_TELEGRAM: 
+		case MM2_LOC_F2_TELEGRAM: 
+		case MM2_LOC_F3_TELEGRAM: 
+		case MM2_LOC_F4_TELEGRAM: 
+
+			*double_frequency = false;
+
+			// Function tribit
+			bitstream_mask = mm_tribit_lookup[1];
+			*bitstream = *bitstream | bitstream_mask;			
+
+			//Speed bits
+			speed = mm_data.speed < 0 ? -mm_data.speed: mm_data.speed;
+			if(speed == 1) speed++;
+			speed_mask = 1;
+			for(int i = 0; i < 4; i++){
+				if(speed & speed_mask){
+								          // 111111110000000000
+									        // 765432109876543210	
+					bitstream_mask = 0b000000010000000000;
+
+					bitstream_mask = bitstream_mask << ((4-i) * 2) - 2;
+					*bitstream = *bitstream | bitstream_mask;
+				}
+				speed_mask = speed_mask << 1;
+			}
+			break;
+		case MM2_MAGNET_TELEGRAM:
+			*double_frequency = true;
+
+			// Function tribit
+			bitstream_mask = mm_tribit_lookup[0] << 8;
+			*bitstream = *bitstream | bitstream_mask;			
+
+			// Magnet subaddress
+			div_value = mm_data.magnet_sub_address;
+			for(int i = 0; i < 3; i++){
+				tri_value = div_value%3;
+				div_value = div_value/3;
+				// reverse value off address
+				bitstream_mask = mm_tribit_lookup[tri_value] << (((3-i) * 2) + 8);
+				*bitstream = *bitstream | bitstream_mask;
+			}
+			// Magnet on/off
+			if(mm_data.magnet_state){
+				bitstream_mask = mm_tribit_lookup[1] << 16;
+			}
+			else{
+				bitstream_mask = mm_tribit_lookup[0] << 16;
+			}
+			*bitstream = *bitstream | bitstream_mask;	
+		break;
+	}	
+
+	switch(mm_data.kind){
+		case MM1_LOC_SPEED_TELEGRAM: 
+		case MM2_LOC_SPEED_TELEGRAM: 
+		case MM2_LOC_F1_TELEGRAM: 
+		case MM2_LOC_F2_TELEGRAM: 
+		case MM2_LOC_F3_TELEGRAM: 
+		case MM2_LOC_F4_TELEGRAM: 
+			if(mm_data.auxiliary){
+												// 111111110000000000
+												// 765432109876543210	
+				bitstream_mask = 0b000000001100000000; // auxiliary On
+
+				*bitstream = *bitstream | bitstream_mask;	
+			}
+		break;
+	}
+
+	switch(mm_data.kind){
+		case MM1_LOC_SPEED_TELEGRAM:
+			div_value = mm_data.speed;
+			if(div_value == 1) div_value++;
+			for(int i = 0; i < 4; i++){
+				tri_value = div_value%3;
+				div_value = div_value/3;
+				// reverse value off address
+				bitstream_mask = mm_tribit_lookup[tri_value] << (((4-i) * 2) + 8);
+				*bitstream = *bitstream | bitstream_mask;
+			}
+			break;
+	}
+
+	switch(mm_data.kind){
+		case MM1_LOC_CHANGE_DIR_TELEGRAM:
+											// 111111110000000000
+											// 765432109876543210	
+			bitstream_mask = 0b000000110000000000; // auxiliary On
+
+			*bitstream = *bitstream | bitstream_mask;	
+			break;
+	}
+
+	bitstream_mask = 0;
+
+	switch(mm_data.kind){
+		case MM2_LOC_SPEED_TELEGRAM:
+			//Function Index
+			if(mm_data.speed < -7) bitstream_mask = mm_speed_index_lookup[0];
+			else if (mm_data.speed < 0) bitstream_mask = mm_speed_index_lookup[1];
+			else if (mm_data.speed < 7) bitstream_mask = mm_speed_index_lookup[2];
+			else bitstream_mask = mm_speed_index_lookup[3];
+			break;
+		case MM2_LOC_F1_TELEGRAM: 
+			bitstream_mask = MM_F1_MASK;
+			if(mm_data.function_on) bitstream_mask = bitstream_mask | (1 << 17);
+			break;
+		case MM2_LOC_F2_TELEGRAM: 
+			bitstream_mask = MM_F2_MASK;
+			if(mm_data.function_on) bitstream_mask = bitstream_mask | (1 << 17);
+			break;
+		case MM2_LOC_F3_TELEGRAM: 
+			bitstream_mask = MM_F3_MASK;
+			if(mm_data.function_on) bitstream_mask = bitstream_mask | (1 << 17);
+			break;
+		case MM2_LOC_F4_TELEGRAM: 
+			bitstream_mask = MM_F4_MASK;
+			if(mm_data.function_on) bitstream_mask = bitstream_mask | (1 << 17);
+			break;
+	}
+	*bitstream = *bitstream | bitstream_mask;
 }
