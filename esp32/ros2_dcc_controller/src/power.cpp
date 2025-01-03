@@ -61,31 +61,31 @@ void power_control_callback(const void * msgin)
           DEBUG_PRINT("Protocol DCC\n");         
           switch(active_locomotives[i].speed_steps){
             case SS_128:
-              trackScheduler.dccSetSpeed128(active_locomotives[i].address, DCC_SHORT_ADDRESS, 0); //This should be in the call backs of the ROS subscribers
+              //trackScheduler.dccSetSpeed128(active_locomotives[i].address, DCC_SHORT_ADDRESS, 0); //This should be in the call backs of the ROS subscribers
               break;
             case SS_28:
-              trackScheduler.dccSetSpeed28(active_locomotives[i].address, DCC_SHORT_ADDRESS, 0); //This should be in the call backs of the ROS subscribers
+              //trackScheduler.dccSetSpeed28(active_locomotives[i].address, DCC_SHORT_ADDRESS, 0); //This should be in the call backs of the ROS subscribers
               break;
             case SS_14:
-              trackScheduler.dccSetSpeed14(active_locomotives[i].address, DCC_SHORT_ADDRESS, 0); //This should be in the call backs of the ROS subscribers
+              //trackScheduler.dccSetSpeed14(active_locomotives[i].address, DCC_SHORT_ADDRESS, 0); //This should be in the call backs of the ROS subscribers
               break;
             default:
               break;
           }
           break;
         case MM1:
-          trackScheduler.mm1SetSpeed(active_locomotives[i].address, 0); //This should be in the call backs of the ROS subscribers
+          //trackScheduler.mm1SetSpeed(active_locomotives[i].address, 0); //This should be in the call backs of the ROS subscribers
           break;
         case MM2:
-          trackScheduler.mm2SetSpeed(active_locomotives[i].address, 0); //This should be in the call backs of the ROS subscribers
+          //trackScheduler.mm2SetSpeed(active_locomotives[i].address, 0); //This should be in the call backs of the ROS subscribers
           break;
         default:
           DEBUG_PRINT("Unknomwn protocol\n"); 
           break;
       }
-      locomotive_status[i].speed = 0;
-      for(int j = 0; j < MAX_NUMBER_OF_FUNCTION; j++)
-        locomotive_status[i].function_state.data[j] = false;
+      //locomotive_status[i].speed = 0;
+      //for(int j = 0; j < MAX_NUMBER_OF_FUNCTION; j++)
+      //  locomotive_status[i].function_state.data[j] = false;
     }
   }
   tft_printf(ST77XX_GREEN, "ROS msg\nSystem: %s", power_status.state ? "Go" : "Stop");

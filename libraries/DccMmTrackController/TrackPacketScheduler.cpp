@@ -476,6 +476,9 @@ bool TrackPacketScheduler::mm1ChangeDir(uint16_t address){
   return packet_buffer.insertPacket(p);
 }
 
+
+
+
 bool TrackPacketScheduler::mm2SetSpeed(uint16_t address, int8_t new_speed){
   Serial.printf("MM2 Set speed--> Address = %i, speed = %i\n" , address, new_speed);
   TrackPacket p(TRACK_PROTOCOL_MM);
@@ -503,9 +506,9 @@ bool TrackPacketScheduler::mmSetFunctions(uint16_t address, uint8_t functions){
   for(int i = 0; i <= MAX_NUMBER_OF_MM_FUNCTIONS; i++){
     switch(i){
       case 0:
-        p.mmSetKind(MM2_LOC_AUXILIARY_TELEGRAM);
-        p.mmSetAddress(address);
-        p.mmSetAuxiliary(functions & mask);
+        //p.mmSetKind(MM2_LOC_AUXILIARY_TELEGRAM);
+        //p.mmSetAddress(address);
+        //p.mmSetAuxiliary(functions & mask);
         break;
       case 1:
         p.mmSetKind(MM2_LOC_F1_TELEGRAM);

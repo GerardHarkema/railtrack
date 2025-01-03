@@ -67,7 +67,6 @@ bool TrackPacketQueue::insertPacket(TrackPacket &packet)
     case TRACK_PROTOCOL_MM:
       for (queue_packet = queue.begin(); queue_packet != queue.end(); ++queue_packet){
         if(queue_packet->mmGetAddress() == packet.mmGetAddress() && 
-            queue_packet->mmGetKind() == packet.mmGetKind() &&
             queue_packet->getPacketProtocol() == TRACK_PROTOCOL_MM){
           // Update speed of all matching telegrams
           switch(queue_packet->mmGetKind())
@@ -78,37 +77,28 @@ bool TrackPacketQueue::insertPacket(TrackPacket &packet)
               if(queue_packet->mmGetKind() == packet.mmGetKind()) found = true;
               break;
             case MM2_LOC_SPEED_TELEGRAM:
-              if(packet.mmGetKind() == MM2_LOC_SPEED_TELEGRAM)
-                queue_packet->mmSetSpeed(packet.mmGetSpeed());
-              if(queue_packet->mmGetKind() == packet.mmGetKind()) found = true;
-              break;
             case MM2_LOC_F1_TELEGRAM:
-              if(packet.mmGetKind() == MM2_LOC_F1_TELEGRAM)
-                queue_packet->mmSetFunction(packet.mmGetFunction());
-              else
-                queue_packet->mmSetSpeed(packet.mmGetSpeed());
-              if(queue_packet->mmGetKind() == packet.mmGetKind()) found = true;
-              break;
             case MM2_LOC_F2_TELEGRAM:
-              if(packet.mmGetKind() == MM2_LOC_F3_TELEGRAM)
-                queue_packet->mmSetFunction(packet.mmGetFunction());
-              else
-                queue_packet->mmSetSpeed(packet.mmGetSpeed());
-              if(queue_packet->mmGetKind() == packet.mmGetKind()) found = true;
-              break;
             case MM2_LOC_F3_TELEGRAM:
-              if(packet.mmGetKind() == MM2_LOC_F3_TELEGRAM)
-                queue_packet->mmSetFunction(packet.mmGetFunction());
-              else
-                queue_packet->mmSetSpeed(packet.mmGetSpeed());
-              if(queue_packet->mmGetKind() == packet.mmGetKind()) found = true;
-              break;
             case MM2_LOC_F4_TELEGRAM:
-              if(packet.mmGetKind() == MM2_LOC_F4_TELEGRAM)
-                queue_packet->mmSetFunction(packet.mmGetFunction());
-              else
-                queue_packet->mmSetSpeed(packet.mmGetSpeed());
-              if(queue_packet->mmGetKind() == packet.mmGetKind()) found = true;
+              found = true;
+              switch(packet.mmGetKind()){
+                case MM2_LOC_SPEED_TELEGRAM:
+                  queue_packet->mmSetSpeed(packet.mmGetSpeed());
+                  break;
+                case MM2_LOC_F1_TELEGRAM:
+                  found = true;
+                  break;
+                case MM2_LOC_F2_TELEGRAM:
+                  found = true;
+                  break;
+                case MM2_LOC_F3_TELEGRAM:
+                  found = true;
+                  break;
+                case MM2_LOC_F4_TELEGRAM:
+                  found = true;
+                  break;
+              }
               break;
             case MM2_MAGNET_TELEGRAM:
               // telegram always added
@@ -204,6 +194,9 @@ bool TrackPacketQueue::readPacket(TrackPacket &packet)
   if(!isEmpty()){
     packet = queue.front();
     queue.pop_front();
+    if(packet.getPacketProtocol() == TRACK_PROTOCOL_MM){
+       packet.mmSetNextKind();
+    }
     int8_t repeat_count =  packet.getRepeatCount();
     if(repeat_count == REPEAT_COUNT_CONTINOUS) queue.push_back(packet);
     else{

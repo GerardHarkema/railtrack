@@ -29,6 +29,15 @@ TrackPacket::TrackPacket(TRACK_PROTOCOL track_protocol):
 			break;
 		case TRACK_PROTOCOL_MM:
 			this->track_protocol = TRACK_PROTOCOL_MM;
+			mm_data.address = 0;
+			mm_data.auxiliary = false;
+			mm_data.function_on = false;
+			mm_data.kind = MM2_LOC_SPEED_TELEGRAM;
+			mm_data.magnet_state = false;
+			mm_data.magnet_sub_address = 0;
+			mm_data.magnet_sub_address = 0;
+			mm_data.magnet_state = false;
+			mm_data.kind_sequence_index = 0;
 			break;
 		case TRACK_PROTOCOL_UNKNOWN:
 		break;
@@ -298,4 +307,32 @@ void TrackPacket::mm2GetBitstream(uint32_t *bitstream, bool *double_frequency){
 	}
 	*bitstream = *bitstream | bitstream_mask;
 #endif
+}
+
+MM_KIND_TYPE mm2_loc_kind_seqence[] = {MM2_LOC_SPEED_TELEGRAM,
+                                       MM2_LOC_F1_TELEGRAM,
+                                       MM2_LOC_SPEED_TELEGRAM,
+                                       MM2_LOC_F2_TELEGRAM,
+                                       MM2_LOC_SPEED_TELEGRAM,
+                                       MM2_LOC_F3_TELEGRAM,
+                                       MM2_LOC_SPEED_TELEGRAM,
+                                       MM2_LOC_F4_TELEGRAM};
+
+int number_of_kind_seqences = sizeof(mm2_loc_kind_seqence)/sizeof(MM_KIND_TYPE);
+
+
+void TrackPacket::mmSetNextKind(void){
+
+	switch(mm_data.kind ){
+		case MM2_LOC_SPEED_TELEGRAM:
+    case MM2_LOC_F1_TELEGRAM:
+    case MM2_LOC_F2_TELEGRAM:
+    case MM2_LOC_F3_TELEGRAM:
+    case MM2_LOC_F4_TELEGRAM:
+			mm_data.kind = mm2_loc_kind_seqence[mm_data.kind_sequence_index];
+			mm_data.kind_sequence_index++;
+			if(mm_data.kind_sequence_index == number_of_kind_seqences)mm_data.kind_sequence_index = 0;
+		break;
+	}
+
 }

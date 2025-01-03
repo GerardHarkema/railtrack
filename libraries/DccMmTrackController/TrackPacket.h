@@ -72,13 +72,13 @@ typedef enum{
   MM1_LOC_SPEED_TELEGRAM,
   MM1_LOC_CHANGE_DIR_TELEGRAM,
   MM2_LOC_SPEED_TELEGRAM,
-  MM2_LOC_AUXILIARY_TELEGRAM,
   MM2_LOC_F1_TELEGRAM,
   MM2_LOC_F2_TELEGRAM,
   MM2_LOC_F3_TELEGRAM,
   MM2_LOC_F4_TELEGRAM,
   MM2_MAGNET_TELEGRAM
 }MM_KIND_TYPE;
+
 
 #define HIGH_PRIORIY    true
 #define LOW_PRIORIY     false
@@ -95,6 +95,7 @@ typedef struct{
 
 typedef struct{
     MM_KIND_TYPE kind;
+    int kind_sequence_index;
     uint8_t address;
     uint8_t magnet_sub_address;
     bool magnet_state;
@@ -102,7 +103,6 @@ typedef struct{
     bool function_on;
     bool auxiliary;
     uint32_t data;
-
 }MM2_DATA;
 
 
@@ -136,6 +136,7 @@ class TrackPacket
 
     inline void mmSetKind(MM_KIND_TYPE kind) { mm_data.kind = kind; }
     inline MM_KIND_TYPE mmGetKind(void) { return mm_data.kind; }
+    void mmSetNextKind(void);
     inline void mmSetAddress(uint8_t new_address) { mm_data.address = new_address; }
     inline uint8_t mmGetAddress(void) { return mm_data.address; }
     inline void mmSetSpeed(uint8_t new_speed) { mm_data.speed = new_speed; }
