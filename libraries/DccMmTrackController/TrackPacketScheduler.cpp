@@ -456,20 +456,33 @@ bool TrackPacketScheduler::dccUnsetBasicAccessory(uint16_t address, uint8_t func
 
 
 bool TrackPacketScheduler::mm1SetSpeed(uint16_t address, int8_t new_speed){
+  Serial.printf("MM1 Set speed--> Address = %i, speed = %i\n" , address, new_speed);
+  int8_t speed;
+
+  speed = new_speed < 0 ? -new_speed : new_speed; // nevre go for a reverse speed
   TrackPacket p(TRACK_PROTOCOL_MM);
   p.mmSetKind(MM1_LOC_SPEED_TELEGRAM);
   p.mmSetAddress(address);
-  p.mmSetSpeed(new_speed);
-  p.setRepeatCount(FUNCTION_REPEAT);
+  p.mmSetSpeed(speed);
+  p.setRepeatCount(REPEAT_COUNT_CONTINOUS);
+  return packet_buffer.insertPacket(p);
+}
+
+bool TrackPacketScheduler::mm1ChangeDir(uint16_t address){
+  TrackPacket p(TRACK_PROTOCOL_MM);
+  p.mmSetKind(MM1_LOC_CHANGE_DIR_TELEGRAM);
+  p.mmSetAddress(address);
+  p.setRepeatCount(1);
   return packet_buffer.insertPacket(p);
 }
 
 bool TrackPacketScheduler::mm2SetSpeed(uint16_t address, int8_t new_speed){
+  Serial.printf("MM2 Set speed--> Address = %i, speed = %i\n" , address, new_speed);
   TrackPacket p(TRACK_PROTOCOL_MM);
   p.mmSetKind(MM2_LOC_SPEED_TELEGRAM);
   p.mmSetAddress(address);
   p.mmSetSpeed(new_speed);
-  p.setRepeatCount(FUNCTION_REPEAT);
+  p.setRepeatCount(REPEAT_COUNT_CONTINOUS);
   return packet_buffer.insertPacket(p);
 }
 
@@ -479,7 +492,47 @@ bool TrackPacketScheduler::mmSetBasicAccessory(uint16_t address, uint8_t functio
 bool TrackPacketScheduler::mmUnsetBasicAccessory(uint16_t address, uint8_t function){
   return false; 
 }
-bool TrackPacketScheduler::mmSetFunctions(uint16_t address, uint8_t function){
+
+#define MAX_NUMBER_OF_MM_FUNCTIONS     5
+
+
+bool TrackPacketScheduler::mmSetFunctions(uint16_t address, uint8_t functions){
+  uint8_t mask = 1;
+  TrackPacket p(TRACK_PROTOCOL_MM);
+
+  for(int i = 0; i <= MAX_NUMBER_OF_MM_FUNCTIONS; i++){
+    switch(i){
+      case 0:
+        p.mmSetKind(MM2_LOC_AUXILIARY_TELEGRAM);
+        p.mmSetAddress(address);
+        p.mmSetAuxiliary(functions & mask);
+        break;
+      case 1:
+        p.mmSetKind(MM2_LOC_F1_TELEGRAM);
+        p.mmSetAddress(address);
+        p.mmSetFunction(functions & mask);
+        break;
+      case 2:
+        p.mmSetKind(MM2_LOC_F2_TELEGRAM);
+        p.mmSetAddress(address);
+        p.mmSetFunction(functions & mask);
+        break;
+      case 3:
+        p.mmSetKind(MM2_LOC_F3_TELEGRAM);
+        p.mmSetAddress(address);
+        p.mmSetFunction(functions & mask);
+        break;
+      case 4:
+        p.mmSetKind(MM2_LOC_F4_TELEGRAM);
+        p.mmSetAddress(address);
+        p.mmSetFunction(functions & mask);
+        break;
+
+    }
+    p.setRepeatCount(REPEAT_COUNT_CONTINOUS);
+    packet_buffer.insertPacket(p);
+    mask = mask << 1;
+  }
   return false; 
 }
 
@@ -494,10 +547,13 @@ void TrackPacketScheduler::update() //checks queues, puts whatever's pending on 
     uint32_t mm2_bitstream;
     bool mm2_double_frequency;
 
-    if(packet_buffer.isEmpty()) return;
 #ifdef DEBUG_QUEUE
-    packet_buffer.printQueue();
+    if(packet_buffer.isEmpty())
+      Serial.printf("Buffer empty\n");
+    else
+      packet_buffer.printQueue();
 #endif
+    if(packet_buffer.isEmpty()) return;
     packet_buffer.readPacket(p);
 
     TRACK_PROTOCOL track_protocol = p.getPacketProtocol();
@@ -505,10 +561,12 @@ void TrackPacketScheduler::update() //checks queues, puts whatever's pending on 
       case TRACK_PROTOCOL_DCC:
         dcc_bitstream_size = p.dccGetBitstream(dcc_bitstream);
         //DEBUG_PRINT("dcc_bitstream_size = %i\n", dcc_bitstream_size);
+        //Serial.printf("Fill dcc\n");
         track.RMTfillDataDcc(dcc_bitstream, dcc_bitstream_size);
         break;
       case TRACK_PROTOCOL_MM:
         p.mm2GetBitstream(&mm2_bitstream, &mm2_double_frequency);
+        //Serial.printf("Fill mm\n");
         track.RMTfillDataMM(mm2_bitstream, mm2_double_frequency);
         break;  
 

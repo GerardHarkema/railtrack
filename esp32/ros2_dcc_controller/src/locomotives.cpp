@@ -2,7 +2,7 @@
 #include "support.h"
 #include "locomotives.h"
 
-//#define DEBUG
+#define DEBUG
 
 #ifdef DEBUG
 #define DEBUG_PRINT(fmt, ...) \
@@ -36,7 +36,7 @@ void locomotive_state_publisher_timer_callback(rcl_timer_t * timer, int64_t last
 
 
 #define MAX_NUMBER_OF_DCC_FUNCTIONS   14
-#define MAX_NUMBER_OF_MM_FUNCTIONS   14
+#define MAX_NUMBER_OF_MM_FUNCTIONS   5
 void locomotive_control_callback(const void * msgin)
 {  
 
@@ -88,8 +88,9 @@ void locomotive_control_callback(const void * msgin)
                 speed = speed * -1;
             DEBUG_PRINT("MM1: Set Speed: %i\n", speed);
             trackScheduler.mm1SetSpeed(control->address, speed); //This should be in the call backs of the ROS subscribers
+            break;
           case MM2:
-            speed = (uint8_t)(control->speed / SPEED_STEP_RESOLUTION_128);
+            speed = (uint8_t)(control->speed / SPEED_STEP_RESOLUTION_14);
             if(locomotive_status[locomotive_index].direction ==
               railway_interfaces__msg__LocomotiveControl__DIRECTION_REVERSE)
                 speed = speed * -1;
@@ -128,6 +129,7 @@ void locomotive_control_callback(const void * msgin)
             }
             break;
           case MM1:
+            trackScheduler.mm1ChangeDir(control->address);
             trackScheduler.mm1SetSpeed(control->address, 0); //This should be in the call backs of the ROS subscribers
             break;
           case MM2:
@@ -163,6 +165,7 @@ void locomotive_control_callback(const void * msgin)
             trackScheduler.dccSetFunctions(control->address, DCC_SHORT_ADDRESS, functions);
             break;
           case MM1:
+            break;
           case MM2:
             DEBUG_PRINT("Protocol MM: Function switch\n"); 
             if(control->function_index > MAX_NUMBER_OF_MM_FUNCTIONS){
@@ -170,7 +173,7 @@ void locomotive_control_callback(const void * msgin)
               return;
             }
             locomotive_status[locomotive_index].function_state.data[control->function_index] = control->function_state;
-
+            //??????
             for(int i = 0; i <= MAX_NUMBER_OF_MM_FUNCTIONS; i++){
                 functions = functions << 1;
                 functions |= locomotive_status[locomotive_index].function_state.data[MAX_NUMBER_OF_MM_FUNCTIONS - i] ? 0x01 : 0x00;

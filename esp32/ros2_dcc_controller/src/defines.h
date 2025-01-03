@@ -8,6 +8,7 @@
 #define SPEED_STEP_RESOLUTION_28      ((int)(1000/28))
 #define SPEED_STEP_RESOLUTION_14      ((int)(1000/14))
 
+//#define MAX_NUMBER_OF_MM_FUNCTIONS     5
 
 // pin defintions for display
 #define CS_PIN  16

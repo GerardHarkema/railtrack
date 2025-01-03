@@ -72,6 +72,11 @@ bool TrackPacketQueue::insertPacket(TrackPacket &packet)
           // Update speed of all matching telegrams
           switch(queue_packet->mmGetKind())
           {
+            case MM1_LOC_SPEED_TELEGRAM:
+              if(packet.mmGetKind() == MM1_LOC_SPEED_TELEGRAM)
+                queue_packet->mmSetSpeed(packet.mmGetSpeed());
+              if(queue_packet->mmGetKind() == packet.mmGetKind()) found = true;
+              break;
             case MM2_LOC_SPEED_TELEGRAM:
               if(packet.mmGetKind() == MM2_LOC_SPEED_TELEGRAM)
                 queue_packet->mmSetSpeed(packet.mmGetSpeed());
@@ -111,18 +116,19 @@ bool TrackPacketQueue::insertPacket(TrackPacket &packet)
           }
           //queue.erase(queue_packet);
           //break;
-          if(!found){
-            try {
-              if(packet.isHighPriority())
-                queue.push_front(packet);
-              else
-                queue.push_back(packet);
-            }
-            catch (const std::exception& e){
-              queue_full = true;
-              result = false;
-            }
-          }
+        }
+      }
+      if(!found){
+        Serial.printf("MM Telegram inserted\n");
+        try {
+          if(packet.isHighPriority())
+            queue.push_front(packet);
+          else
+            queue.push_back(packet);
+        }
+        catch (const std::exception& e){
+          queue_full = true;
+          result = false;
         }
       }
       break;
@@ -159,7 +165,7 @@ void TrackPacketQueue::printQueue(void)
             dcc_bitstream_size = queue_packet->dccGetSize();
             Serial.printf(", Size = %i", dcc_bitstream_size);
             if(dcc_bitstream_size){
-              DEBUG_PRINT(", Data =\n");
+              Serial.printf(", Data = ");
               for(int j = 0; j < dcc_bitstream_size; j++)
                 Serial.printf(" 0x%02x", queue_packet->dccGetData(j));
             }

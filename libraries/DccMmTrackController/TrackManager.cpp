@@ -78,11 +78,19 @@ void setMMBit0(rmt_item32_t* item, bool double_frequncy){
   item->duration1 = double_frequncy ? MM_LONG_PULSE_DF : MM_LONG_PULSE;
 }
 
-void setMMidle(rmt_item32_t* item, bool double_frequncy){
+void setMMt1(rmt_item32_t* item, bool double_frequncy){
   item->level0    = 0;
-  item->duration0 = double_frequncy ? MM_HALF_IDLE_PULSE_DF : MM_HALF_IDLE_PULSE;
+  item->duration0 = double_frequncy ? MM_HALF_T1_PULSE_DF : MM_HALF_T1_PULSE;
   item->level1    = 0;
-  item->duration1 = double_frequncy ? MM_HALF_IDLE_PULSE_DF : MM_HALF_IDLE_PULSE;
+  item->duration1 = double_frequncy ? MM_HALF_T1_PULSE_DF : MM_HALF_T1_PULSE;
+}
+
+
+void setMMt2(rmt_item32_t* item, bool double_frequncy){
+  item->level0    = 0;
+  item->duration0 = double_frequncy ? MM_HALF_T2_PULSE_DF : MM_HALF_T2_PULSE;
+  item->level1    = 0;
+  item->duration1 = double_frequncy ? MM_HALF_T2_PULSE_DF : MM_HALF_T2_PULSE;
 }
 
 #if 0
@@ -324,9 +332,9 @@ int TrackManager::RMTfillDataMM(const u_int32_t data, bool doubleFrequency) {
 
   mm_data_len = 0;
   for(int i = 0; i < 2; i++){ // Send twice a double packet
-    setMMidle(mm_data_message + mm_data_len++, doubleFrequency);
+    setMMt1(mm_data_message + mm_data_len++, doubleFrequency);
     u_int32_t mask = 1; // controleer dit getal !!!
-    for(int j = 0; j < 18; i++){
+    for(int j = 0; j < 18; j++){
       if(data & mask)
         setMMBit1(mm_data_message + mm_data_len++, doubleFrequency);
       else
@@ -334,8 +342,9 @@ int TrackManager::RMTfillDataMM(const u_int32_t data, bool doubleFrequency) {
       mask = mask << 1;
     }
   }    
+  setMMt2(mm_data_message + mm_data_len++, doubleFrequency);
     
-  //Serial.printf("dcc_data_len = %i\n", dcc_data_len);
+  //Serial.printf("mm_data_len = %i\n", mm_data_len);
   noInterrupts();                      // keep dataReady and dataRepeat consistnet to each other
   track_data_available = MM_TRACK_DATA;
   interrupts();

@@ -61,8 +61,12 @@
 #define MM_SHORT_PULSE_DF    MM_SHORT_PULSE/2  // Double frquency
 #define MM_LONG_PULSE_DF     MM_LONG_PULSE/2
 
-#define MM_HALF_IDLE_PULSE   (MM_SHORT_PULSE + MM_LONG_PULSE) * 2 * 4 / 2// according datasheet MC145026 (dead time discriminator. 4 tribits)
-#define MM_HALF_IDLE_PULSE_DF MM_HALF_IDLE_PULSE/2
+#define MM_HALF_T1_PULSE   1500/2  //(MM_SHORT_PULSE + MM_LONG_PULSE) * 2 * 4 / 2// according datasheet MC145026 (dead time discriminator. 4 tribits)
+#define MM_HALF_T1_PULSE_DF MM_HALF_T1_PULSE/2
+
+#define MM_HALF_T2_PULSE   2000/2  //(MM_SHORT_PULSE + MM_LONG_PULSE) * 2 * 4 / 2// according datasheet MC145026 (dead time discriminator. 4 tribits)
+#define MM_HALF_T2_PULSE_DF MM_HALF_T2_PULSE/2
+
 
 typedef enum{
   NO_TRACK_DATA,

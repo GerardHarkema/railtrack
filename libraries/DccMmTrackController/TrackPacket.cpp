@@ -110,7 +110,7 @@ void TrackPacket::dccAddData(uint8_t *new_data, uint8_t new_size) //insert freef
 
 uint32_t mm_tribit_lookup[] = {0b00, 	// "0"
 													  0b11, 	// "1"
-													  0b10}; // "Open"
+													  0b01}; // "Open"
 
 																	 // 111111110000000000
 																	 // 765432109876543210	
@@ -136,13 +136,19 @@ void TrackPacket::mm2GetBitstream(uint32_t *bitstream, bool *double_frequency){
 	int div_value = mm_data.address;
 	for(int i = 0; i < 4; i++){
 		tri_value = div_value%3;
+		//Serial.printf("%i ", tri_value);
 		div_value = div_value/3;
-		bitstream_mask = mm_tribit_lookup[tri_value] << (((4-i) * 2) - 2);
+		//bitstream_mask = mm_tribit_lookup[tri_value] << (((4-i) * 2) - 2);
+		bitstream_mask = mm_tribit_lookup[tri_value] << (i * 2);
 		*bitstream = *bitstream | bitstream_mask;
 	}
+	//Serial.printf("\n");
 
+#if 1
 	uint8_t speed;
 	uint8_t speed_mask;
+	int8_t operating_level_speed;
+	
 	switch(mm_data.kind){
 		case MM2_LOC_SPEED_TELEGRAM: 
 		case MM2_LOC_F1_TELEGRAM: 
@@ -153,12 +159,14 @@ void TrackPacket::mm2GetBitstream(uint32_t *bitstream, bool *double_frequency){
 			*double_frequency = false;
 
 			// Function tribit
-			bitstream_mask = mm_tribit_lookup[1];
-			*bitstream = *bitstream | bitstream_mask;			
+			//bitstream_mask = mm_tribit_lookup[1];
+			//*bitstream = *bitstream | bitstream_mask;			
 
 			//Speed bits
 			speed = mm_data.speed < 0 ? -mm_data.speed: mm_data.speed;
 			if(speed == 1) speed++;
+			operating_level_speed = mm_data.speed < 0 ? -speed : speed;
+			//Serial.printf("Speed: %i, %i ", mm_data.speed , speed);
 			speed_mask = 1;
 			for(int i = 0; i < 4; i++){
 				if(speed & speed_mask){
@@ -166,7 +174,8 @@ void TrackPacket::mm2GetBitstream(uint32_t *bitstream, bool *double_frequency){
 									        // 765432109876543210	
 					bitstream_mask = 0b000000010000000000;
 
-					bitstream_mask = bitstream_mask << ((4-i) * 2) - 2;
+//					bitstream_mask = bitstream_mask << (((4-i) * 2) - 2);
+					bitstream_mask = bitstream_mask << (i* 2);
 					*bitstream = *bitstream | bitstream_mask;
 				}
 				speed_mask = speed_mask << 1;
@@ -198,7 +207,9 @@ void TrackPacket::mm2GetBitstream(uint32_t *bitstream, bool *double_frequency){
 			*bitstream = *bitstream | bitstream_mask;	
 		break;
 	}	
+#endif
 
+#if 0
 	switch(mm_data.kind){
 		case MM1_LOC_SPEED_TELEGRAM: 
 		case MM2_LOC_SPEED_TELEGRAM: 
@@ -215,7 +226,7 @@ void TrackPacket::mm2GetBitstream(uint32_t *bitstream, bool *double_frequency){
 			}
 		break;
 	}
-
+#endif
 	switch(mm_data.kind){
 		case MM1_LOC_SPEED_TELEGRAM:
 			div_value = mm_data.speed;
@@ -224,11 +235,15 @@ void TrackPacket::mm2GetBitstream(uint32_t *bitstream, bool *double_frequency){
 				tri_value = div_value%3;
 				div_value = div_value/3;
 				// reverse value off address
-				bitstream_mask = mm_tribit_lookup[tri_value] << (((4-i) * 2) + 8);
+				//bitstream_mask = mm_tribit_lookup[tri_value] << (((4-i) * 2) + 8);
+				bitstream_mask = mm_tribit_lookup[tri_value] << ((i * 2) + 10);
 				*bitstream = *bitstream | bitstream_mask;
 			}
 			break;
 	}
+
+
+#if 1
 
 	switch(mm_data.kind){
 		case MM1_LOC_CHANGE_DIR_TELEGRAM:
@@ -241,14 +256,28 @@ void TrackPacket::mm2GetBitstream(uint32_t *bitstream, bool *double_frequency){
 	}
 
 	bitstream_mask = 0;
-
+#endif
+#if 1
 	switch(mm_data.kind){
 		case MM2_LOC_SPEED_TELEGRAM:
 			//Function Index
-			if(mm_data.speed < -7) bitstream_mask = mm_speed_index_lookup[0];
-			else if (mm_data.speed < 0) bitstream_mask = mm_speed_index_lookup[1];
-			else if (mm_data.speed < 7) bitstream_mask = mm_speed_index_lookup[2];
-			else bitstream_mask = mm_speed_index_lookup[3];
+			if(operating_level_speed < -6){
+				bitstream_mask = mm_speed_index_lookup[0];
+				//Serial.printf("Operating level: -14..-7\n");
+			}
+			else if (operating_level_speed < 0){
+				bitstream_mask = mm_speed_index_lookup[1];
+				//Serial.printf("Operating level: -6..-0\n");
+			}
+			else if (operating_level_speed < 7){
+				bitstream_mask = mm_speed_index_lookup[2];
+				//Serial.printf("Operating level: +0..+6\n");
+			}
+			else{
+				bitstream_mask = mm_speed_index_lookup[3];
+				//Serial.printf("Operating level: +7..+14\n");
+			}
+
 			break;
 		case MM2_LOC_F1_TELEGRAM: 
 			bitstream_mask = MM_F1_MASK;
@@ -268,4 +297,5 @@ void TrackPacket::mm2GetBitstream(uint32_t *bitstream, bool *double_frequency){
 			break;
 	}
 	*bitstream = *bitstream | bitstream_mask;
+#endif
 }

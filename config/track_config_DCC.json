@@ -42,11 +42,11 @@
       "name": "mp3000 NS",
       "type": "Treinstel",
       "image": "mp3000-ns.jpg",
-      "protocol": "MM1",
+      "protocol": "MM2",
       "address": 30,
       "max_speed" : 1000,
-      "decrement_speed_step" : 50,
-      "increment_speed_step" : 50,
+      "decrement_speed_step" : 71,
+      "increment_speed_step" : 71,
       "functions":[
         {
           "number": 0,
@@ -59,11 +59,22 @@
       "name": "NS 6505 Henschel HDG",
       "type": "Diesel Locomotief",
       "image": "NS_6505_DHG.jpg",
-      "protocol": "MM1",
+      "protocol": "MM2",
       "address": 78,
       "max_speed" : 1000,
-      "decrement_speed_step" : 100,
-      "increment_speed_step" : 100
+      "decrement_speed_step" : 71,
+      "increment_speed_step" : 71
+
+    },
+    {
+      "name": "Dummy MM1",
+      "type": "Dummy MM1",
+      "image": "dummy.jpg",
+      "protocol": "MM1",
+      "address": 50,
+      "max_speed" : 1000,
+      "decrement_speed_step" : 71,
+      "increment_speed_step" : 71
 
     }
   ],

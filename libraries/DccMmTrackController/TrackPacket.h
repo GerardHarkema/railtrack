@@ -72,6 +72,7 @@ typedef enum{
   MM1_LOC_SPEED_TELEGRAM,
   MM1_LOC_CHANGE_DIR_TELEGRAM,
   MM2_LOC_SPEED_TELEGRAM,
+  MM2_LOC_AUXILIARY_TELEGRAM,
   MM2_LOC_F1_TELEGRAM,
   MM2_LOC_F2_TELEGRAM,
   MM2_LOC_F3_TELEGRAM,
@@ -97,7 +98,7 @@ typedef struct{
     uint8_t address;
     uint8_t magnet_sub_address;
     bool magnet_state;
-    uint8_t speed;
+    int8_t speed;
     bool function_on;
     bool auxiliary;
     uint32_t data;
