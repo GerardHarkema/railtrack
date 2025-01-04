@@ -39,4 +39,3 @@ cd ~/railtrack_ws/src/railtrack/linux_service
 ./install_railtrack_control_service.sh
 ```
 
-[Back](../README.md)

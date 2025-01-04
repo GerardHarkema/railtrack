@@ -10,4 +10,3 @@ Note: The following command tells the ip-address of the system:
 ```bash
 ifconfig | grep 'inet ' | awk '{print $2}'
 ```
-[Back](../README.md)

@@ -16,4 +16,3 @@ _Note: Every configuration in your system should have a unique node name, define
 
 [Example of implementation](./turnout_example.md)
 
-[Back](../README.md)

@@ -41,4 +41,3 @@ ___Connections to the Digital Connector Box PCB___
 
 [Programming instructions](instructions_programming_esp32.md)(Note: Select project ___ros2_marklin_canbus_controller___)
 
-[Back](../README.md)

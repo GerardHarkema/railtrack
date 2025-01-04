@@ -43,7 +43,6 @@ The files turnout_config_a.json and turnout_config_b.json in the config director
 
 _Note: Every controller should have an unique node name defined in de configuratuin file)_
 
-[Programming instructions](instructions_programming_esp32.md)(Note: Select project ___ros2_turnout_controller___)
+[Programming instructions](./instructions_programming_esp32.md)(Note: Select project ___ros2_turnout_controller___)
 
 
-[Back](../README.md)

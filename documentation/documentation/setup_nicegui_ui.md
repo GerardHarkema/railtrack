@@ -45,4 +45,3 @@ cd ~/railtrack_ws/src/railtrack/linux_service
 ./install_railtrack_gui_service.sh
 ```
 
-[Back](../README.md)
