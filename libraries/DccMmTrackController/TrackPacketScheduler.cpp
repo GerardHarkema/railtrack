@@ -477,8 +477,6 @@ bool TrackPacketScheduler::mm1ChangeDir(uint16_t address){
 }
 
 
-
-
 bool TrackPacketScheduler::mm2SetSpeed(uint16_t address, int8_t new_speed){
   Serial.printf("MM2 Set speed--> Address = %i, speed = %i\n" , address, new_speed);
   TrackPacket p(TRACK_PROTOCOL_MM);
@@ -489,12 +487,16 @@ bool TrackPacketScheduler::mm2SetSpeed(uint16_t address, int8_t new_speed){
   return packet_buffer.insertPacket(p);
 }
 
-bool TrackPacketScheduler::mmSetBasicAccessory(uint16_t address, uint8_t function){
-  return false; 
+bool TrackPacketScheduler::mmSetSolenoid(uint16_t address, bool state){
+  TrackPacket p(TRACK_PROTOCOL_MM);
+  p.mmSetKind(MM_SOLENOID_TELEGRAM);
+  p.mmSetAddress(address/8);
+  p.mmSetSolenoidSubaddress(address%8);
+  p.mmSetSolenoidState(state);
+  p.setRepeatCount(4);
+  return packet_buffer.insertPacket(p);
 }
-bool TrackPacketScheduler::mmUnsetBasicAccessory(uint16_t address, uint8_t function){
-  return false; 
-}
+
 
 #define MAX_NUMBER_OF_MM_FUNCTIONS     5
 
@@ -506,9 +508,9 @@ bool TrackPacketScheduler::mmSetFunctions(uint16_t address, uint8_t functions){
   for(int i = 0; i <= MAX_NUMBER_OF_MM_FUNCTIONS; i++){
     switch(i){
       case 0:
-        //p.mmSetKind(MM2_LOC_AUXILIARY_TELEGRAM);
-        //p.mmSetAddress(address);
-        //p.mmSetAuxiliary(functions & mask);
+        p.mmSetKind(MM_LOC_AUXILIARY_TELEGRAM);
+        p.mmSetAddress(address);
+        p.mmSetAuxiliary(functions & mask);
         break;
       case 1:
         p.mmSetKind(MM2_LOC_F1_TELEGRAM);

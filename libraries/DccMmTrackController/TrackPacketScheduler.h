@@ -66,8 +66,7 @@ class TrackPacketScheduler
     bool mm1SetSpeed(uint16_t address, int8_t new_speed); //new_speed: [0,28]
     bool mm1ChangeDir(uint16_t address);
     bool mm2SetSpeed(uint16_t address, int8_t new_speed); //new_speed: [0, 28]
-    bool mmSetBasicAccessory(uint16_t address, uint8_t function);
-    bool mmUnsetBasicAccessory(uint16_t address, uint8_t function);
+    bool mmSetSolenoid(uint16_t address, bool state);
     bool mmSetFunctions(uint16_t address, uint8_t function);
 
     //to be called periodically within loop()

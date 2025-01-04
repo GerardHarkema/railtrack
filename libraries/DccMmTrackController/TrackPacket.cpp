@@ -18,6 +18,7 @@ TrackPacket::TrackPacket(TRACK_PROTOCOL track_protocol):
 {
 	switch(track_protocol){
 		case TRACK_PROTOCOL_DCC:
+			this->track_protocol = TRACK_PROTOCOL_DCC;
 			dcc_data.address = 0;
 			dcc_data.address_kind = DCC_SHORT_ADDRESS;
 			dcc_data.kind = DCC_IDLE_PACKET_KIND;
@@ -25,19 +26,21 @@ TrackPacket::TrackPacket(TRACK_PROTOCOL track_protocol):
 			dcc_data.data[1] = 0x00;
 			dcc_data.data[2] = 0x00;
 			dcc_data.size  = 1;
-			this->track_protocol = TRACK_PROTOCOL_DCC;
 			break;
 		case TRACK_PROTOCOL_MM:
 			this->track_protocol = TRACK_PROTOCOL_MM;
+			memset(&mm_data, 0, sizeof(MM2_DATA));
+			mm_data.kind = MM2_LOC_SPEED_TELEGRAM;
+#if 0
 			mm_data.address = 0;
 			mm_data.auxiliary = false;
 			mm_data.function_on = false;
-			mm_data.kind = MM2_LOC_SPEED_TELEGRAM;
-			mm_data.magnet_state = false;
-			mm_data.magnet_sub_address = 0;
-			mm_data.magnet_sub_address = 0;
-			mm_data.magnet_state = false;
+			mm_data.solenoid_state = false;
+			mm_data.molenoid_sub_address = 0;
+			mm_data.molenoid_sub_address = 0;
+			mm_data.solenoid_state = false;
 			mm_data.kind_sequence_index = 0;
+#endif
 			break;
 		case TRACK_PROTOCOL_UNKNOWN:
 		break;
@@ -190,15 +193,15 @@ void TrackPacket::mm2GetBitstream(uint32_t *bitstream, bool *double_frequency){
 				speed_mask = speed_mask << 1;
 			}
 			break;
-		case MM2_MAGNET_TELEGRAM:
+		case MM_SOLENOID_TELEGRAM:
 			*double_frequency = true;
 
 			// Function tribit
 			bitstream_mask = mm_tribit_lookup[0] << 8;
 			*bitstream = *bitstream | bitstream_mask;			
 
-			// Magnet subaddress
-			div_value = mm_data.magnet_sub_address;
+			// Solenoid subaddress
+			div_value = mm_data.molenoid_sub_address;
 			for(int i = 0; i < 3; i++){
 				tri_value = div_value%3;
 				div_value = div_value/3;
@@ -206,8 +209,8 @@ void TrackPacket::mm2GetBitstream(uint32_t *bitstream, bool *double_frequency){
 				bitstream_mask = mm_tribit_lookup[tri_value] << (((3-i) * 2) + 8);
 				*bitstream = *bitstream | bitstream_mask;
 			}
-			// Magnet on/off
-			if(mm_data.magnet_state){
+			// Solenoid on/off
+			if(mm_data.solenoid_state){
 				bitstream_mask = mm_tribit_lookup[1] << 16;
 			}
 			else{
@@ -218,7 +221,7 @@ void TrackPacket::mm2GetBitstream(uint32_t *bitstream, bool *double_frequency){
 	}	
 #endif
 
-#if 0
+#if 1
 	switch(mm_data.kind){
 		case MM1_LOC_SPEED_TELEGRAM: 
 		case MM2_LOC_SPEED_TELEGRAM: 
@@ -266,6 +269,14 @@ void TrackPacket::mm2GetBitstream(uint32_t *bitstream, bool *double_frequency){
 
 	bitstream_mask = 0;
 #endif
+
+	switch(mm_data.kind){
+		case MM1_LOC_F_TELEGRAM:
+				*double_frequency = false;
+			break;
+	}
+
+
 #if 1
 	switch(mm_data.kind){
 		case MM2_LOC_SPEED_TELEGRAM:
@@ -290,19 +301,19 @@ void TrackPacket::mm2GetBitstream(uint32_t *bitstream, bool *double_frequency){
 			break;
 		case MM2_LOC_F1_TELEGRAM: 
 			bitstream_mask = MM_F1_MASK;
-			if(mm_data.function_on) bitstream_mask = bitstream_mask | (1 << 17);
+			if(mm_data.function_on_[0]) bitstream_mask = bitstream_mask | (1 << 17);
 			break;
 		case MM2_LOC_F2_TELEGRAM: 
 			bitstream_mask = MM_F2_MASK;
-			if(mm_data.function_on) bitstream_mask = bitstream_mask | (1 << 17);
+			if(mm_data.function_on_[1]) bitstream_mask = bitstream_mask | (1 << 17);
 			break;
 		case MM2_LOC_F3_TELEGRAM: 
 			bitstream_mask = MM_F3_MASK;
-			if(mm_data.function_on) bitstream_mask = bitstream_mask | (1 << 17);
+			if(mm_data.function_on_[2]) bitstream_mask = bitstream_mask | (1 << 17);
 			break;
 		case MM2_LOC_F4_TELEGRAM: 
 			bitstream_mask = MM_F4_MASK;
-			if(mm_data.function_on) bitstream_mask = bitstream_mask | (1 << 17);
+			if(mm_data.function_on_[3]) bitstream_mask = bitstream_mask | (1 << 17);
 			break;
 	}
 	*bitstream = *bitstream | bitstream_mask;

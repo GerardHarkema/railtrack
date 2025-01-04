@@ -44,6 +44,22 @@ void turnout_control_callback(const void * msgin)
   if(power_status.state){
     //ctrlsetTurnout(TURNOUT_BASE_ADDRESS + control->number - 1, straight);
     if(lookupTurnoutIndex(control->number, &index)){
+      switch(turnout_status[index].protocol){
+        case DCC:
+          if(straight){
+            //trackScheduler.dccSetBasicAccessory(index);
+          }
+          else{
+            //trackScheduler.dccUnsetBasicAccessory(index);
+          }
+          break;
+          break;
+        case MM1:
+        case MM2:           
+          trackScheduler.mmSetSolenoid(index, straight);
+          break;
+      }
+
       EEPROM.writeBool(index, straight);
       EEPROM.commit();
       turnout_status[index].state = straight;

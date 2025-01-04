@@ -71,12 +71,14 @@ typedef enum{
 typedef enum{
   MM1_LOC_SPEED_TELEGRAM,
   MM1_LOC_CHANGE_DIR_TELEGRAM,
+  MM1_LOC_F_TELEGRAM,
   MM2_LOC_SPEED_TELEGRAM,
+  MM_LOC_AUXILIARY_TELEGRAM, // Fake telegram
   MM2_LOC_F1_TELEGRAM,
   MM2_LOC_F2_TELEGRAM,
   MM2_LOC_F3_TELEGRAM,
   MM2_LOC_F4_TELEGRAM,
-  MM2_MAGNET_TELEGRAM
+  MM_SOLENOID_TELEGRAM
 }MM_KIND_TYPE;
 
 
@@ -97,10 +99,11 @@ typedef struct{
     MM_KIND_TYPE kind;
     int kind_sequence_index;
     uint8_t address;
-    uint8_t magnet_sub_address;
-    bool magnet_state;
+    uint8_t molenoid_sub_address;
+    bool solenoid_state;
     int8_t speed;
     bool function_on;
+    bool function_on_[4];
     bool auxiliary;
     uint32_t data;
 }MM2_DATA;
@@ -141,12 +144,16 @@ class TrackPacket
     inline uint8_t mmGetAddress(void) { return mm_data.address; }
     inline void mmSetSpeed(uint8_t new_speed) { mm_data.speed = new_speed; }
     inline uint8_t mmGetSpeed(void) { return mm_data.speed; }
-    inline void mmSetMagnetSubaddress(uint8_t magnet_sub_address) { mm_data.magnet_sub_address = magnet_sub_address; }
-    inline uint8_t mmgetMagnetSubaddress(void) { return mm_data.magnet_sub_address; }
+    inline void mmSetSolenoidSubaddress(uint8_t molenoid_sub_address) { mm_data.molenoid_sub_address = molenoid_sub_address; }
+    inline uint8_t mmgetSolenoidSubaddress(void) { return mm_data.molenoid_sub_address; }
+    inline void mmSetSolenoidState(bool solenoid_on) { mm_data.solenoid_state = solenoid_on; }
+    inline bool mmGetSolenoidState(void) { return mm_data.solenoid_state; }
     inline void mmSetAuxiliary(bool auxiliary) { mm_data.auxiliary = auxiliary; }
     inline bool mmGetAuxiliary(void) { return mm_data.auxiliary; }
     inline void mmSetFunction(bool function_on) { mm_data.function_on = function_on; }
     inline bool mmGetFunction(void) { return mm_data.function_on; }
+    inline void mmSetFunction(u_int8_t index, bool function_on) { mm_data.function_on_[index] = function_on; }
+    inline bool mmGetFunction(u_int8_t index) { return mm_data.function_on_[index]; }
 
     inline void setRepeatCount(uint8_t new_repeat_count) { repeat_count = new_repeat_count;}
     inline uint8_t getRepeatCount(void) { return repeat_count; }//return repeat

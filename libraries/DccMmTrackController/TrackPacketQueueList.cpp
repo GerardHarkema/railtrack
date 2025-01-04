@@ -73,8 +73,17 @@ bool TrackPacketQueue::insertPacket(TrackPacket &packet)
           {
             case MM1_LOC_SPEED_TELEGRAM:
               if(packet.mmGetKind() == MM1_LOC_SPEED_TELEGRAM)
-                queue_packet->mmSetSpeed(packet.mmGetSpeed());
-              if(queue_packet->mmGetKind() == packet.mmGetKind()) found = true;
+              found = true;
+              switch(packet.mmGetKind()){
+                case MM1_LOC_SPEED_TELEGRAM:
+                 queue_packet->mmSetSpeed(packet.mmGetSpeed());
+                  break;
+                case MM_LOC_AUXILIARY_TELEGRAM:
+                  queue_packet->mmSetAuxiliary(packet.mmGetAuxiliary());
+                  break;
+              }
+              break;
+            case MM1_LOC_F_TELEGRAM:
               break;
             case MM2_LOC_SPEED_TELEGRAM:
             case MM2_LOC_F1_TELEGRAM:
@@ -87,20 +96,27 @@ bool TrackPacketQueue::insertPacket(TrackPacket &packet)
                   queue_packet->mmSetSpeed(packet.mmGetSpeed());
                   break;
                 case MM2_LOC_F1_TELEGRAM:
+                  queue_packet->mmSetFunction(0, packet.mmGetFunction());
                   found = true;
                   break;
                 case MM2_LOC_F2_TELEGRAM:
-                  found = true;
+                  queue_packet->mmSetFunction(1, packet.mmGetFunction());
                   break;
                 case MM2_LOC_F3_TELEGRAM:
-                  found = true;
+                  queue_packet->mmSetFunction(2, packet.mmGetFunction());
                   break;
                 case MM2_LOC_F4_TELEGRAM:
-                  found = true;
+                  queue_packet->mmSetFunction(3, packet.mmGetFunction());
+                  break;
+                case MM_LOC_AUXILIARY_TELEGRAM:
+                  queue_packet->mmSetAuxiliary(packet.mmGetAuxiliary());
                   break;
               }
               break;
-            case MM2_MAGNET_TELEGRAM:
+            case MM_SOLENOID_TELEGRAM:
+              // telegram always added
+              break;
+            case MM1_LOC_F_TELEGRAM:
               // telegram always added
               break;
           }
@@ -110,15 +126,17 @@ bool TrackPacketQueue::insertPacket(TrackPacket &packet)
       }
       if(!found){
         Serial.printf("MM Telegram inserted\n");
-        try {
-          if(packet.isHighPriority())
-            queue.push_front(packet);
-          else
-            queue.push_back(packet);
-        }
-        catch (const std::exception& e){
-          queue_full = true;
-          result = false;
+        if(packet.mmGetKind() != MM_LOC_AUXILIARY_TELEGRAM){ // skip this fake telegram
+          try {
+            if(packet.isHighPriority())
+              queue.push_front(packet);
+            else
+              queue.push_back(packet);
+          }
+          catch (const std::exception& e){
+            queue_full = true;
+            result = false;
+          }
         }
       }
       break;
