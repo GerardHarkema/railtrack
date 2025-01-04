@@ -6,4 +6,4 @@ Welcome to this modular model railway control system. This system makes it possi
 
 
 ## [Documentation](https://gerardharkema.github.io/railtrack/index.html)
-[Licentie](licence.md)
+[Licentie](licence.md) 
