@@ -162,10 +162,11 @@ bool TrackPacketScheduler::dccSetSpeed14(uint16_t address, ADDRESS_KIND dcc_addr
   }
   if(abs_speed > 14)abs_speed = 14;
 
-  if(!new_speed) //dcc_eStop!
-    return dcc_eStop(address, DCC_SHORT_ADDRESS);//speed_data_uint8_ts[0] |= 0x01; //dcc_eStop
+  //if(!new_speed) //dcc_eStop!
+  //  return dcc_eStop(address, DCC_SHORT_ADDRESS);//speed_data_uint8_ts[0] |= 0x01; //dcc_eStop
     
-  else if (abs_speed == 1) //regular stop!
+  if (abs_speed == 1) //regular stop!
+//  else if (abs_speed == 1) //regular stop!
     speed_data_uint8_ts[0] |= 0x00; //stop
   else //movement
     speed_data_uint8_ts[0] |= abs_speed;
@@ -200,11 +201,11 @@ bool TrackPacketScheduler::dccSetSpeed28(uint16_t address, ADDRESS_KIND dcc_addr
 
 //  DEBUG_PRINTLN(speed);
 //  DEBUG_PRINTLN(dir);
-  if(new_speed == 0) //dcc_eStop!
-    return dcc_eStop(address, DCC_SHORT_ADDRESS);//speed_data_uint8_ts[0] |= 0x01; //dcc_eStop
-  else if (abs_speed == 1) //regular stop!
-    speed_data_uint8_ts[0] |= 0x00; //stop
-  else //movement
+  //if(new_speed == 0) //dcc_eStop!
+  //  return dcc_eStop(address, DCC_SHORT_ADDRESS);//speed_data_uint8_ts[0] |= 0x01; //dcc_eStop
+  //else if (abs_speed == 1) //regular stop!
+  //  speed_data_uint8_ts[0] |= 0x00; //stop
+  //else //movement
   {
     speed_data_uint8_ts[0] |= abs_speed;
     //most least significant bit has to be shufled around
@@ -245,10 +246,10 @@ bool TrackPacketScheduler::dccSetSpeed128(uint16_t address, ADDRESS_KIND dcc_add
 
   if(abs_speed > 0x7f)abs_speed = 0x7f;
 
-  if(!new_speed){
-    return dcc_eStop(address, DCC_SHORT_ADDRESS);//speed_data_uint8_ts[0] |= 0x01; //dcc_eStop
-  }
-  else 
+  //if(!new_speed){
+  //  return dcc_eStop(address, DCC_SHORT_ADDRESS);//speed_data_uint8_ts[0] |= 0x01; //dcc_eStop
+  //}
+  //else 
   if (abs_speed == 1) //regular stop!
     speed_data_uint8_ts[1] = 0x00; //stop
   else //movement
@@ -491,14 +492,13 @@ bool TrackPacketScheduler::mmSetSolenoid(uint16_t port, bool state){
   //Serial.printf("set solenoid\n");
   TrackPacket p(TRACK_PROTOCOL_MM);
   p.mmSetKind(MM_SOLENOID_TELEGRAM);
-  address += 3; // Address 0 does not excists
-  p.mmSetAddress(address/4);
+  port += 3; // Port 0 does not excists
+  p.mmSetAddress(port/4);
   //Serial.printf("State %i\n", state);
-  //Serial.printf("set solenoid address = %i\n", (address/4) + 1);
-  u_int8_t sub_address = ((address%4) * 2) + (state?1:0); // her gaat nog iets mis
+  //Serial.printf("set solenoid address = %i\n", (port/4) + 1);
+  u_int8_t sub_address = ((port%4) * 2) + (state?1:0); 
   p.mmSetSolenoidSubaddress(sub_address);
-  //Serial.printf("set solenoid sub address = %i\n", sub_address); // begrijp dit nog niet bool schijnt int te zijn
-  p.mmSetSolenoidState(state);
+  //Serial.printf("set solenoid sub address = %i\n", sub_address); 
   p.setRepeatCount(4);
   return packet_buffer.insertPacket(p);
 }

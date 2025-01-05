@@ -31,16 +31,6 @@ TrackPacket::TrackPacket(TRACK_PROTOCOL track_protocol):
 			this->track_protocol = TRACK_PROTOCOL_MM;
 			memset(&mm_data, 0, sizeof(MM2_DATA));
 			mm_data.kind = MM2_LOC_SPEED_TELEGRAM;
-#if 0
-			mm_data.address = 0;
-			mm_data.auxiliary = false;
-			mm_data.function_on = false;
-			mm_data.solenoid_state = false;
-			mm_data.solenoid_sub_address = 0;
-			mm_data.solenoid_sub_address = 0;
-			mm_data.solenoid_state = false;
-			mm_data.kind_sequence_index = 0;
-#endif
 			break;
 		case TRACK_PROTOCOL_UNKNOWN:
 		break;

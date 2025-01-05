@@ -42,15 +42,15 @@ void loop() {
   mm.Parse();
   MaerklinMotorolaData* Data = mm.GetData();
   if(Data) {
+  #if 0
     if(Data->Address != 80){
-  #if 1
       for(int i=0;i<9;i++) {
         Serial.print(Data->Trits[i]);
         Serial.print(" ");
       }
       Serial.print("\n");
-  #endif
     }
+  #endif
 
     
     //if(1){
@@ -62,15 +62,15 @@ void loop() {
       wissel = (port_number / 2) + 1;
       groen = port_number % 2;
       Serial.print("MM Solenoid -->");
-      Serial.print("; Address = "); Serial.print(Data->Address);
+      //Serial.print("; Address = "); Serial.print(Data->Address);
       //Serial.print(" Speed= "); Serial.print(Data->Speed);
       //Serial.print(" Step= "); Serial.print(Data->Step);
       //Serial.print(" MM2FunctionIndex= "); Serial.print(Data->MM2FunctionIndex);
-      Serial.print("; SubAddress = "); Serial.print(Data->SubAddress);
+      //Serial.print("; SubAddress = "); Serial.print(Data->SubAddress);
       Serial.print("; PortAddress = "); Serial.print(Data->PortAddress);
-      Serial.print("; PortNumber = "); Serial.print(port_number);
-      Serial.print("; Keyboard = "); Serial.print(keyboard);
-      Serial.print("; Wissel = "); Serial.print(wissel);
+      //Serial.print("; PortNumber = "); Serial.print(port_number);
+      //Serial.print("; Keyboard = "); Serial.print(keyboard);
+      Serial.print("; Turnout = "); Serial.print(wissel);
       Serial.print("; MagnetState = " + String(groen ? "groen" : "rood"));
       //Serial.print(" Function= "); Serial.print(Data->Function);
       //Serial.print(" Stop= "); Serial.print(Data->Stop);
@@ -87,9 +87,20 @@ void loop() {
           Serial.print("MM2 -->");
           Serial.print(" Address = "); Serial.print(Data->Address);
           Serial.print("; Speed = "); Serial.print(Data->Speed);
+          switch(Data->MM2Direction){
+            case MM2DirectionState_Unavailable:
+              Serial.print("; Direction = Unavailable");
+              break;
+            case MM2DirectionState_Forward:
+              Serial.print("; Direction = Forward     ");
+              break;
+            case MM2DirectionState_Backward:
+              Serial.print("; Direction = Backward    ");
+              break;
+          }
           Serial.print("; Auxilary = " + String(Data->Function ? "On" : "Off"));
           //Serial.print(" Step= "); Serial.print(Data->Step);
-          Serial.print("; MM2FunctionIndex= "); Serial.print(Data->MM2FunctionIndex);
+          Serial.print("; FunctionIndex= "); Serial.print(Data->MM2FunctionIndex);
           //Serial.print(" SubAddress= "); Serial.print(Data->SubAddress);
           //Serial.print(" PortAddress= "); Serial.print(Data->PortAddress);
           //Serial.print(" PortNumber= "); Serial.print(port_number);
@@ -101,7 +112,7 @@ void loop() {
           //Serial.print(" MagnetState= " + String(Data->MagnetState ? "yes" : "no"));
           //Serial.print(" IsMagnet= " + String(Data->IsMagnet ? "yes" : "no"));
           //Serial.print(" IsMM2= " + String(Data->IsMM2 ? "yes" : "no"));
-          Serial.print("; IsMM2Function = " + String(Data->IsMM2FunctionOn ? "On" : "Off"));
+          Serial.print("; Function = " + String(Data->IsMM2FunctionOn ? "On" : "Off"));
           Serial.println();
         }
       }

@@ -123,7 +123,7 @@ bool TrackPacketQueue::insertPacket(TrackPacket &packet)
         }
       }
       if(!found){
-        Serial.printf("MM Telegram inserted\n");
+        //Serial.printf("MM Telegram inserted\n");
         if(packet.mmGetKind() != MM_LOC_AUXILIARY_TELEGRAM){ // skip this fake telegram
           try {
             if(packet.isHighPriority())

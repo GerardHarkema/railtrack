@@ -2,8 +2,7 @@
 #include "support.h"
 #include "locomotives.h"
 
-#define DEBUG
-
+//#define DEBUG
 #ifdef DEBUG
 #define DEBUG_PRINT(fmt, ...) \
     do { \
