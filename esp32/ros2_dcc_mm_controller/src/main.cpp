@@ -146,6 +146,7 @@ void setup() {
 
   for(int i = 0; i < NUMBER_OF_ACTIVE_TURNOUTS_MM; i++){
     turnout_status[i].number = active_turnouts_mm[i];
+    turnout_status[i].protocol = MM2;
     turnout_status[i].state = EEPROM.readBool(i);
   }
 

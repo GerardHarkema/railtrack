@@ -44,8 +44,11 @@ void turnout_control_callback(const void * msgin)
   if(power_status.state){
     //ctrlsetTurnout(TURNOUT_BASE_ADDRESS + control->number - 1, straight);
     if(lookupTurnoutIndex(control->number, &index)){
+      //Serial.printf("Solenoid found\n");
+      //Serial.printf("State = %i\n", straight);
       switch(turnout_status[index].protocol){
         case DCC:
+          Serial.printf("Solenoid DCC\n");
           if(straight){
             //trackScheduler.dccSetBasicAccessory(index);
           }
@@ -53,16 +56,22 @@ void turnout_control_callback(const void * msgin)
             //trackScheduler.dccUnsetBasicAccessory(index);
           }
           break;
-          break;
         case MM1:
         case MM2:           
-          trackScheduler.mmSetSolenoid(index, straight);
+          //Serial.printf("Solenoid MM\n");
+          trackScheduler.mmSetSolenoid(control->number, straight);
+          break;
+        default:
+          Serial.printf("Solenoid not known\n");
           break;
       }
 
       EEPROM.writeBool(index, straight);
       EEPROM.commit();
       turnout_status[index].state = straight;
+    }
+    else{
+      Serial.printf("Solenoid not found\n");
     }
     tft_printf(ST77XX_GREEN, "ROS msg\nTurnout\nNumber: %i\nSet: %s\n",
             control->number, straight ? "Green" : "Red");

@@ -99,7 +99,7 @@ typedef struct{
     MM_KIND_TYPE kind;
     int kind_sequence_index;
     uint8_t address;
-    uint8_t molenoid_sub_address;
+    uint8_t solenoid_sub_address;
     bool solenoid_state;
     int8_t speed;
     bool function_on;
@@ -144,8 +144,8 @@ class TrackPacket
     inline uint8_t mmGetAddress(void) { return mm_data.address; }
     inline void mmSetSpeed(uint8_t new_speed) { mm_data.speed = new_speed; }
     inline uint8_t mmGetSpeed(void) { return mm_data.speed; }
-    inline void mmSetSolenoidSubaddress(uint8_t molenoid_sub_address) { mm_data.molenoid_sub_address = molenoid_sub_address; }
-    inline uint8_t mmgetSolenoidSubaddress(void) { return mm_data.molenoid_sub_address; }
+    inline void mmSetSolenoidSubaddress(uint8_t solenoid_sub_address) { mm_data.solenoid_sub_address = solenoid_sub_address; }
+    inline uint8_t mmgetSolenoidSubaddress(void) { return mm_data.solenoid_sub_address; }
     inline void mmSetSolenoidState(bool solenoid_on) { mm_data.solenoid_state = solenoid_on; }
     inline bool mmGetSolenoidState(void) { return mm_data.solenoid_state; }
     inline void mmSetAuxiliary(bool auxiliary) { mm_data.auxiliary = auxiliary; }

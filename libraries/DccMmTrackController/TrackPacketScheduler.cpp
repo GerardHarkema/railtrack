@@ -488,10 +488,15 @@ bool TrackPacketScheduler::mm2SetSpeed(uint16_t address, int8_t new_speed){
 }
 
 bool TrackPacketScheduler::mmSetSolenoid(uint16_t address, bool state){
+  //Serial.printf("set solenoid\n");
   TrackPacket p(TRACK_PROTOCOL_MM);
   p.mmSetKind(MM_SOLENOID_TELEGRAM);
-  p.mmSetAddress(address/8);
-  p.mmSetSolenoidSubaddress(address%8);
+  p.mmSetAddress((address/4) + 1);
+  //Serial.printf("State %i\n", state);
+  //Serial.printf("set solenoid address = %i\n", (address/4) + 1);
+  u_int8_t sub_address = ((address%4) * 2) + (state?1:0); // her gaat nog iets mis
+  p.mmSetSolenoidSubaddress(sub_address);
+  //Serial.printf("set solenoid sub address = %i\n", sub_address); // begrijp dit nog niet bool schijnt int te zijn
   p.mmSetSolenoidState(state);
   p.setRepeatCount(4);
   return packet_buffer.insertPacket(p);

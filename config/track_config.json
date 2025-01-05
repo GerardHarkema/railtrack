@@ -181,6 +181,11 @@
           "number": 0,
           "title" : "Shunting light",
           "icon" : "lightbulb"
+        },
+        {
+          "number": 1,
+          "title" : "Test",
+          "icon" : "double_arrow"
         }
       ] 
     },
@@ -203,7 +208,19 @@
       "address": 50,
       "max_speed" : 1000,
       "decrement_speed_step" : 71,
-      "increment_speed_step" : 71
+      "increment_speed_step" : 71,
+      "functions":[
+        {
+          "number": 0,
+          "title" : "Shunting light",
+          "icon" : "lightbulb"
+        },
+        {
+          "number": 1,
+          "title" : "Test",
+          "icon" : "double_arrow"
+        }
+      ] 
 
     },
     {

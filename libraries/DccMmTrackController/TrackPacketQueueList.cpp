@@ -114,9 +114,7 @@ bool TrackPacketQueue::insertPacket(TrackPacket &packet)
               }
               break;
             case MM_SOLENOID_TELEGRAM:
-              // telegram always added
-              break;
-            case MM1_LOC_F_TELEGRAM:
+              
               // telegram always added
               break;
           }

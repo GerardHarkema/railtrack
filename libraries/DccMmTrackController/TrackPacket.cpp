@@ -36,8 +36,8 @@ TrackPacket::TrackPacket(TRACK_PROTOCOL track_protocol):
 			mm_data.auxiliary = false;
 			mm_data.function_on = false;
 			mm_data.solenoid_state = false;
-			mm_data.molenoid_sub_address = 0;
-			mm_data.molenoid_sub_address = 0;
+			mm_data.solenoid_sub_address = 0;
+			mm_data.solenoid_sub_address = 0;
 			mm_data.solenoid_state = false;
 			mm_data.kind_sequence_index = 0;
 #endif
@@ -148,17 +148,14 @@ void TrackPacket::mm2GetBitstream(uint32_t *bitstream, bool *double_frequency){
 	int div_value = mm_data.address;
 	for(int i = 0; i < 4; i++){
 		tri_value = div_value%3;
-		//Serial.printf("%i ", tri_value);
 		div_value = div_value/3;
-		//bitstream_mask = mm_tribit_lookup[tri_value] << (((4-i) * 2) - 2);
 		bitstream_mask = mm_tribit_lookup[tri_value] << (i * 2);
 		*bitstream = *bitstream | bitstream_mask;
 	}
-	//Serial.printf("\n");
 
-#if 1
 	uint8_t speed;
 	uint8_t speed_mask;
+	uint8_t port_mask;
 	int8_t operating_level_speed;
 	
 	switch(mm_data.kind){
@@ -196,32 +193,23 @@ void TrackPacket::mm2GetBitstream(uint32_t *bitstream, bool *double_frequency){
 		case MM_SOLENOID_TELEGRAM:
 			*double_frequency = true;
 
-			// Function tribit
-			bitstream_mask = mm_tribit_lookup[0] << 8;
-			*bitstream = *bitstream | bitstream_mask;			
-
-			// Solenoid subaddress
-			div_value = mm_data.molenoid_sub_address;
+			port_mask = 0b1;
+											// 111111110000000000
+											// 765432109876543210	
+			bitstream_mask = 0b000000110000000000; // LSB D0
 			for(int i = 0; i < 3; i++){
-				tri_value = div_value%3;
-				div_value = div_value/3;
-				// reverse value off address
-				bitstream_mask = mm_tribit_lookup[tri_value] << (((3-i) * 2) + 8);
-				*bitstream = *bitstream | bitstream_mask;
+				if(mm_data.solenoid_sub_address & port_mask)
+					*bitstream = *bitstream | bitstream_mask;
+				bitstream_mask = bitstream_mask << 2;
+				port_mask = port_mask << 1;
 			}
-			// Solenoid on/off
-			if(mm_data.solenoid_state){
-				bitstream_mask = mm_tribit_lookup[1] << 16;
-			}
-			else{
-				bitstream_mask = mm_tribit_lookup[0] << 16;
-			}
-			*bitstream = *bitstream | bitstream_mask;	
-		break;
-	}	
-#endif
+											// 111111110000000000
+											// 765432109876543210	
+			bitstream_mask = 0b110000000000000000; // auxiliary On
 
-#if 1
+			*bitstream = *bitstream | bitstream_mask;	
+			break;
+	}	
 	switch(mm_data.kind){
 		case MM1_LOC_SPEED_TELEGRAM: 
 		case MM2_LOC_SPEED_TELEGRAM: 
@@ -238,7 +226,7 @@ void TrackPacket::mm2GetBitstream(uint32_t *bitstream, bool *double_frequency){
 			}
 		break;
 	}
-#endif
+
 	switch(mm_data.kind){
 		case MM1_LOC_SPEED_TELEGRAM:
 			div_value = mm_data.speed;
@@ -255,7 +243,6 @@ void TrackPacket::mm2GetBitstream(uint32_t *bitstream, bool *double_frequency){
 	}
 
 
-#if 1
 
 	switch(mm_data.kind){
 		case MM1_LOC_CHANGE_DIR_TELEGRAM:
@@ -268,7 +255,6 @@ void TrackPacket::mm2GetBitstream(uint32_t *bitstream, bool *double_frequency){
 	}
 
 	bitstream_mask = 0;
-#endif
 
 	switch(mm_data.kind){
 		case MM1_LOC_F_TELEGRAM:
@@ -277,7 +263,6 @@ void TrackPacket::mm2GetBitstream(uint32_t *bitstream, bool *double_frequency){
 	}
 
 
-#if 1
 	switch(mm_data.kind){
 		case MM2_LOC_SPEED_TELEGRAM:
 			//Function Index
@@ -317,7 +302,6 @@ void TrackPacket::mm2GetBitstream(uint32_t *bitstream, bool *double_frequency){
 			break;
 	}
 	*bitstream = *bitstream | bitstream_mask;
-#endif
 }
 
 MM_KIND_TYPE mm2_loc_kind_seqence[] = {MM2_LOC_SPEED_TELEGRAM,
