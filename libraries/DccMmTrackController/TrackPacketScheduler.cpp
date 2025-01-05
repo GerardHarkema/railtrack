@@ -487,11 +487,12 @@ bool TrackPacketScheduler::mm2SetSpeed(uint16_t address, int8_t new_speed){
   return packet_buffer.insertPacket(p);
 }
 
-bool TrackPacketScheduler::mmSetSolenoid(uint16_t address, bool state){
+bool TrackPacketScheduler::mmSetSolenoid(uint16_t port, bool state){
   //Serial.printf("set solenoid\n");
   TrackPacket p(TRACK_PROTOCOL_MM);
   p.mmSetKind(MM_SOLENOID_TELEGRAM);
-  p.mmSetAddress((address/4) + 1);
+  address += 3; // Address 0 does not excists
+  p.mmSetAddress(address/4);
   //Serial.printf("State %i\n", state);
   //Serial.printf("set solenoid address = %i\n", (address/4) + 1);
   u_int8_t sub_address = ((address%4) * 2) + (state?1:0); // her gaat nog iets mis
