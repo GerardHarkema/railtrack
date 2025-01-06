@@ -57,9 +57,12 @@ struct MaerklinMotorolaData {
   bool ChangeDir;
   bool MagnetState; //with off normally all are switched off
   MM2DecoderState DecoderState; // red (false) or green (true)
+  bool IsSpeed;
   bool IsMagnet;
+  bool IsAdditionalFunction;
   bool IsMM2;
   bool IsMM2FunctionOn;
+  uint8_t IsMM1FunctionOn;
 };
 
 class MaerklinMotorola {

@@ -112,7 +112,7 @@ void MaerklinMotorola::Parse() {
 			  {
 				//convert MM2 bits to one number
 				unsigned char sMM2 = Bits[17] + Bits[15] * 2 + Bits[13] * 4 + Bits[11] * 8;
-				
+				DataQueue[QueuePos].IsSpeed = false; 
 				switch(sMM2)
 				{
 					case 2:
@@ -124,6 +124,7 @@ void MaerklinMotorola::Parse() {
 					case 4:
 					case 5:
 					DataQueue[QueuePos].MM2Direction = MM2DirectionState_Forward;
+					DataQueue[QueuePos].IsSpeed = true;
 					break;
 
 					case 6:
@@ -135,6 +136,7 @@ void MaerklinMotorola::Parse() {
 					case 10:
 					case 11:
 					DataQueue[QueuePos].MM2Direction = MM2DirectionState_Backward;
+					DataQueue[QueuePos].IsSpeed = true;
 					break;
 
 					case 12:
@@ -157,15 +159,20 @@ void MaerklinMotorola::Parse() {
 			  parsed=true;
 			} else { //magnet telegram
 			  if(DataQueue[QueuePos].Trits[4]==0) {
-				unsigned char s = Bits[10] + Bits[12] * 2 + Bits[14] * 4;
-				DataQueue[QueuePos].SubAddress = s;				
-				DataQueue[QueuePos].PortAddress = (( DataQueue[QueuePos].Address - 1) * 4) + (s >> 1) + 1;
-				if (Bits[16]==1) {
-					DataQueue[QueuePos].MagnetState = true;
-					DataQueue[QueuePos].DecoderState = Bits[10] ? MM2DecoderState_Green : MM2DecoderState_Red;				    
+					DataQueue[QueuePos].IsAdditionalFunction = false;
+					unsigned char s = Bits[10] + Bits[12] * 2 + Bits[14] * 4;
+					DataQueue[QueuePos].SubAddress = s;				
+					DataQueue[QueuePos].PortAddress = (( DataQueue[QueuePos].Address - 1) * 4) + (s >> 1) + 1;
+					if (Bits[16]==1) {
+						DataQueue[QueuePos].MagnetState = true;
+						DataQueue[QueuePos].DecoderState = Bits[10] ? MM2DecoderState_Green : MM2DecoderState_Red;				    
+					}
+			  }
+				else{
+					DataQueue[QueuePos].IsAdditionalFunction = true;
+					DataQueue[QueuePos].IsMM1FunctionOn = Bits[10] + Bits[12] * 2 + Bits[14] * 4  + Bits[16] * 8;
 				}
 				parsed=true;
-			  }
 			}  
 		  }	
 		  if(parsed) {

@@ -164,9 +164,21 @@ void locomotive_control_callback(const void * msgin)
             trackScheduler.dccSetFunctions(control->address, DCC_SHORT_ADDRESS, functions);
             break;
           case MM1:
+            DEBUG_PRINT("Protocol MM1: Function switch\n"); 
+            if(control->function_index > MAX_NUMBER_OF_MM_FUNCTIONS){
+              DEBUG_PRINT("Invalid function\n");
+              return;
+            }
+            locomotive_status[locomotive_index].function_state.data[control->function_index] = control->function_state;
+            for(int i = 0; i <= MAX_NUMBER_OF_MM_FUNCTIONS; i++){
+                functions = functions << 1;
+                functions |= locomotive_status[locomotive_index].function_state.data[MAX_NUMBER_OF_MM_FUNCTIONS - i] ? 0x01 : 0x00;
+            }
+            trackScheduler.mm1SetFunctions(control->address, functions);
+            DEBUG_PRINT("Protocol MM1\n"); 
             break;
           case MM2:
-            DEBUG_PRINT("Protocol MM: Function switch\n"); 
+            DEBUG_PRINT("Protocol MM2: Function switch\n"); 
             if(control->function_index > MAX_NUMBER_OF_MM_FUNCTIONS){
               DEBUG_PRINT("Invalid function\n");
               return;
@@ -177,8 +189,8 @@ void locomotive_control_callback(const void * msgin)
                 functions = functions << 1;
                 functions |= locomotive_status[locomotive_index].function_state.data[MAX_NUMBER_OF_MM_FUNCTIONS - i] ? 0x01 : 0x00;
             }
-            trackScheduler.mmSetFunctions(control->address, functions);
-            DEBUG_PRINT("Protocol MM\n"); 
+            trackScheduler.mm2SetFunctions(control->address, functions);
+            DEBUG_PRINT("Protocol MM2\n"); 
             break;
           default:
             DEBUG_PRINT("Unknomwn protocol\n"); 

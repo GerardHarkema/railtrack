@@ -507,7 +507,7 @@ bool TrackPacketScheduler::mmSetSolenoid(uint16_t port, bool state){
 #define MAX_NUMBER_OF_MM_FUNCTIONS     5
 
 
-bool TrackPacketScheduler::mmSetFunctions(uint16_t address, uint8_t functions){
+bool TrackPacketScheduler::mm2SetFunctions(uint16_t address, uint8_t functions){
   uint8_t mask = 1;
   TrackPacket p(TRACK_PROTOCOL_MM);
 
@@ -546,6 +546,34 @@ bool TrackPacketScheduler::mmSetFunctions(uint16_t address, uint8_t functions){
   }
   return false; 
 }
+
+
+bool TrackPacketScheduler::mm1SetFunctions(uint16_t address, uint8_t functions){
+  uint8_t mask = 1;
+  TrackPacket p(TRACK_PROTOCOL_MM);
+
+  Serial.printf("Setfunction: %i\n", functions);
+
+  if(functions & mask){
+      p.mmSetKind(MM_LOC_AUXILIARY_TELEGRAM);
+      p.mmSetAddress(address);
+      p.mmSetAuxiliary(functions & mask);
+      p.setRepeatCount(REPEAT_COUNT_CONTINOUS);
+      packet_buffer.insertPacket(p);
+  }
+  mask = mask << 1;
+
+  for(int i = 0; i <= MAX_NUMBER_OF_MM_FUNCTIONS - 1; i++){
+    p.mmSetKind(MM1_LOC_F_TELEGRAM);
+    p.mmSetAddress(address);
+    p.mmSetFunction(i, functions & mask);
+    mask = mask << 1;
+  }
+  p.setRepeatCount(REPEAT_COUNT_CONTINOUS);
+  packet_buffer.insertPacket(p);
+  return false; 
+}
+
 
 //to be called periodically within loop()
 void TrackPacketScheduler::update() //checks queues, puts whatever's pending on the rails via global dcc_bitstream. easy-peasy

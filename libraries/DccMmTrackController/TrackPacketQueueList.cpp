@@ -73,10 +73,10 @@ bool TrackPacketQueue::insertPacket(TrackPacket &packet)
           {
             case MM1_LOC_SPEED_TELEGRAM:
               if(packet.mmGetKind() == MM1_LOC_SPEED_TELEGRAM)
-              found = true;
+                found = true;
               switch(packet.mmGetKind()){
                 case MM1_LOC_SPEED_TELEGRAM:
-                 queue_packet->mmSetSpeed(packet.mmGetSpeed());
+                  queue_packet->mmSetSpeed(packet.mmGetSpeed());
                   break;
                 case MM_LOC_AUXILIARY_TELEGRAM:
                   queue_packet->mmSetAuxiliary(packet.mmGetAuxiliary());
@@ -84,6 +84,9 @@ bool TrackPacketQueue::insertPacket(TrackPacket &packet)
               }
               break;
             case MM1_LOC_F_TELEGRAM:
+              found = true;
+              for(int i = 0; i < 4; i++)
+                queue_packet->mmSetFunction(i, packet.mmGetFunction(i));
               break;
             case MM2_LOC_SPEED_TELEGRAM:
             case MM2_LOC_F1_TELEGRAM:

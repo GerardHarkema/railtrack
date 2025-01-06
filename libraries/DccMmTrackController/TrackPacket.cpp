@@ -238,7 +238,7 @@ void TrackPacket::mm2GetBitstream(uint32_t *bitstream, bool *double_frequency){
 		case MM1_LOC_CHANGE_DIR_TELEGRAM:
 											// 111111110000000000
 											// 765432109876543210	
-			bitstream_mask = 0b000000110000000000; // auxiliary On
+			bitstream_mask = 0b000000110000000000; // Change direction
 
 			*bitstream = *bitstream | bitstream_mask;	
 			break;
@@ -248,7 +248,23 @@ void TrackPacket::mm2GetBitstream(uint32_t *bitstream, bool *double_frequency){
 
 	switch(mm_data.kind){
 		case MM1_LOC_F_TELEGRAM:
-				*double_frequency = false;
+			*double_frequency = true;
+											// 111111110000000000
+											// 765432109876543210	
+			bitstream_mask = 0b000000001100000000; 
+
+			*bitstream = *bitstream | bitstream_mask;	
+
+											// 111111110000000000
+											// 765432109876543210	
+			bitstream_mask = 0b000000110000000000; 
+			for(int i = 0; i < 4; i++){
+				if(mm_data.function_on_[i]){
+					Serial.printf("Index: %i\n", i);
+					*bitstream = *bitstream | bitstream_mask;	
+				}
+				bitstream_mask = bitstream_mask << 2;
+			}
 			break;
 	}
 

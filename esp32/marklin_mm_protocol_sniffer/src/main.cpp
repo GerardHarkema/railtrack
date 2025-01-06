@@ -14,30 +14,69 @@ void mm_isr() {
   mm.PinChange();
 }
 
+bool display_speed = true;
+bool display_solenoids = true;
+bool display_mm2_functions = true;
+bool display_additional_functions = true;
+
+
+void display_menu(){
+  Serial.println("Toggle display function by pressing:");
+  Serial.print("  1. Speed messages, current ");
+  Serial.println(display_speed ? "On" : "Off");
+  Serial.print("  2. Function messages, current ");
+  Serial.println(display_mm2_functions ? "On" : "Off");
+  Serial.print("  3. Solenoid messages, current ");
+  Serial.println(display_solenoids ? "On" : "Off");
+  Serial.print("  4. Additional Function messages, current ");
+  Serial.println(display_additional_functions ? "On" : "Off");
+}
+
 void setup() {
   pinMode(INPUT_PIN, INPUT);
   attachInterrupt(digitalPinToInterrupt(INPUT_PIN), mm_isr, CHANGE);
 
   pinMode(LED_BUILTIN, OUTPUT);
 
-
   Serial.begin(115200);
-  Serial.println("MM/MM2 protocolsniffer started");
+  Serial.println("MM/MM2 protocol-sniffer started");
+  display_menu();
 }
+
 
 unsigned int i = 0;
 void loop() {
 
   int port_number;
-  int keyboard;
   int wissel;
   int groen;
   int address;
+
   int input = digitalRead(INPUT_PIN);
   //Serial.println(input);
   digitalWrite(LED_BUILTIN, input);  
 
+  if (Serial.available() > 0) {
+    // Lees het eerste teken dat is ontvangen
+    char input = Serial.read();
 
+    Serial.println(input);
+    switch(input){
+      case '1':
+        display_speed = !display_speed;
+        break;
+      case '2':
+        display_mm2_functions = !display_mm2_functions;
+        break;
+      case '3':
+        display_solenoids = !display_solenoids;
+        break;
+      case '4':
+        display_additional_functions = !display_additional_functions;
+        break;
+    }
+    display_menu();
+  }
 
   mm.Parse();
   MaerklinMotorolaData* Data = mm.GetData();
@@ -55,88 +94,68 @@ void loop() {
     
     //if(1){
     //if(Data->Address == 1 && Data->MagnetState){
-    if(Data->IsMagnet && Data->MagnetState){
+    if(Data->IsMagnet && Data->MagnetState && !Data->IsAdditionalFunction && display_solenoids){
       address = Data->Address ? Data->Address : 80; // Correct address 0 to 80
       port_number = ((int)address - 1) * 8 + (int)Data->SubAddress;
-      keyboard = (port_number/32) + 1;
       wissel = (port_number / 2) + 1;
       groen = port_number % 2;
       Serial.print("MM Solenoid -->");
-      //Serial.print("; Address = "); Serial.print(Data->Address);
-      //Serial.print(" Speed= "); Serial.print(Data->Speed);
-      //Serial.print(" Step= "); Serial.print(Data->Step);
-      //Serial.print(" MM2FunctionIndex= "); Serial.print(Data->MM2FunctionIndex);
-      //Serial.print("; SubAddress = "); Serial.print(Data->SubAddress);
       Serial.print("; PortAddress = "); Serial.print(Data->PortAddress);
-      //Serial.print("; PortNumber = "); Serial.print(port_number);
-      //Serial.print("; Keyboard = "); Serial.print(keyboard);
       Serial.print("; Turnout = "); Serial.print(wissel);
       Serial.print("; MagnetState = " + String(groen ? "groen" : "rood"));
-      //Serial.print(" Function= "); Serial.print(Data->Function);
-      //Serial.print(" Stop= "); Serial.print(Data->Stop);
-      //Serial.print(" ChangeDir= "); Serial.print(Data->ChangeDir);
-      //Serial.print(" MagnetState= " + String(Data->MagnetState ? "yes" : "no"));
-      //Serial.print(" IsMagnet= " + String(Data->IsMagnet ? "yes" : "no"));
-      //Serial.print(" IsMM2= " + String(Data->IsMM2 ? "yes" : "no"));
-      //Serial.print(" IsMM2FunctionOn= " + String(Data->IsMM2FunctionOn ? "yes" : "no"));
       Serial.println();
     }
-    if(!Data->IsMagnet) {
+
+    if(Data->IsMagnet && Data->IsAdditionalFunction && display_additional_functions){
+      address = Data->Address ? Data->Address : 80; // Correct address 0 to 80
+      port_number = ((int)address - 1) * 8 + (int)Data->SubAddress;
+      wissel = (port_number / 2) + 1;
+      groen = port_number % 2;
+      uint8_t mask = 0b1;
+      for(int i = 0; i < 4; i++){
+        Serial.print("MM1 Additional Function -->");
+        Serial.print(" Address = "); Serial.print(Data->Address);
+        Serial.print("; Function("+ String(i+1) + ") = "  + String(Data->IsMM1FunctionOn & mask ? "On" : "Off"));
+        Serial.println();
+        mask = mask << 1;
+      }
+    }
+    if(!Data->IsMagnet && display_speed) {
       if(Data->IsMM2){
-        if(Data->Address != 80){
-          Serial.print("MM2 -->");
-          Serial.print(" Address = "); Serial.print(Data->Address);
-          Serial.print("; Speed = "); Serial.print(Data->Speed);
-          switch(Data->MM2Direction){
-            case MM2DirectionState_Unavailable:
-              Serial.print("; Direction = Unavailable");
-              break;
-            case MM2DirectionState_Forward:
-              Serial.print("; Direction = Forward     ");
-              break;
-            case MM2DirectionState_Backward:
-              Serial.print("; Direction = Backward    ");
-              break;
+        if(Data->IsSpeed || display_mm2_functions){
+          if(Data->Address != 80){
+            Serial.print("MM2 -->");
+            Serial.print(" Address = "); Serial.print(Data->Address);
+            Serial.print("; Speed = "); Serial.print(Data->Speed);
+            switch(Data->MM2Direction){
+              case MM2DirectionState_Unavailable:
+                Serial.print("; Direction = Unavailable");
+                break;
+              case MM2DirectionState_Forward:
+                Serial.print("; Direction = Forward     ");
+                break;
+              case MM2DirectionState_Backward:
+                Serial.print("; Direction = Backward    ");
+                break;
+            }
+            Serial.print("; Auxilary = " + String(Data->Function ? "On" : "Off"));
+            if(!Data->IsSpeed){
+              Serial.print("; FunctionIndex= "); Serial.print(Data->MM2FunctionIndex);
+              Serial.print("; Function = " + String(Data->IsMM2FunctionOn ? "On" : "Off"));
+            }
+            Serial.println();
           }
-          Serial.print("; Auxilary = " + String(Data->Function ? "On" : "Off"));
-          //Serial.print(" Step= "); Serial.print(Data->Step);
-          Serial.print("; FunctionIndex= "); Serial.print(Data->MM2FunctionIndex);
-          //Serial.print(" SubAddress= "); Serial.print(Data->SubAddress);
-          //Serial.print(" PortAddress= "); Serial.print(Data->PortAddress);
-          //Serial.print(" PortNumber= "); Serial.print(port_number);
-          //Serial.print(" Keyboard= "); Serial.print(keyboard);
-          //Serial.print(" Wissel= "); Serial.print(wissel);
-          //Serial.print(" MagnetState= " + String(groen ? "groen" : "rood"));
-          //Serial.print(" Stop= "); Serial.print(Data->Stop);
-          //Serial.print(" ChangeDir= "); Serial.print(Data->ChangeDir);
-          //Serial.print(" MagnetState= " + String(Data->MagnetState ? "yes" : "no"));
-          //Serial.print(" IsMagnet= " + String(Data->IsMagnet ? "yes" : "no"));
-          //Serial.print(" IsMM2= " + String(Data->IsMM2 ? "yes" : "no"));
-          Serial.print("; Function = " + String(Data->IsMM2FunctionOn ? "On" : "Off"));
-          Serial.println();
         }
       }
       else{
-        Serial.print("MM1 -->");
-        Serial.print(" Address = "); Serial.print(Data->Address);
-        Serial.print("; Speed = "); Serial.print(Data->Speed);
-        Serial.print("; Auxilary = " + String(Data->Function ? "On" : "Off"));
-        //Serial.print(" Step= "); Serial.print(Data->Step);
-        //Serial.print(" MM2FunctionIndex= "); Serial.print(Data->MM2FunctionIndex);
-        //Serial.print(" SubAddress= "); Serial.print(Data->SubAddress);
-        //Serial.print(" PortAddress= "); Serial.print(Data->PortAddress);
-        //Serial.print(" PortNumber= "); Serial.print(port_number);
-        //Serial.print(" Keyboard= "); Serial.print(keyboard);
-        //Serial.print(" Wissel= "); Serial.print(wissel);
-        //Serial.print(" MagnetState= " + String(groen ? "groen" : "rood"));
-        //Serial.print(" Function= "); Serial.print(Data->Function);
-        //Serial.print(" Stop= "); Serial.print(Data->Stop);
-        Serial.print("; ChangeDir = "); Serial.print(Data->ChangeDir);
-        //Serial.print(" MagnetState= " + String(Data->MagnetState ? "yes" : "no"));
-        //Serial.print(" IsMagnet= " + String(Data->IsMagnet ? "yes" : "no"));
-        //Serial.print(" IsMM2= " + String(Data->IsMM2 ? "yes" : "no"));
-        //Serial.print(" IsMM2FunctionOn= " + String(Data->IsMM2FunctionOn ? "yes" : "no"));
-        Serial.println();
+        if(Data->Address != 80){
+          Serial.print("MM1 -->");
+          Serial.print(" Address = "); Serial.print(Data->Address);
+          Serial.print("; Speed = "); Serial.print(Data->Speed);
+          Serial.print("; Auxilary = " + String(Data->Function ? "On" : "Off"));
+          Serial.print("; ChangeDir = "); Serial.print(Data->ChangeDir);
+          Serial.println();
+        }
       }
     }
   }
