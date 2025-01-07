@@ -16,11 +16,11 @@
 #define RST_PIN 17//21
 
 typedef enum{
-    ROS = railway_interfaces__msg__LocomotiveControl__PROTOCOL_ROS, 
-    MM1 = railway_interfaces__msg__LocomotiveControl__PROTOCOL_MM1, 
-    MM2 = railway_interfaces__msg__LocomotiveControl__PROTOCOL_MM2, 
-    DCC = railway_interfaces__msg__LocomotiveControl__PROTOCOL_DCC, 
-    MFX = railway_interfaces__msg__LocomotiveControl__PROTOCOL_MFX
+    ROS = railway_interfaces__msg__TrackProtocolDefine__PROTOCOL_ROS, 
+    MM1 = railway_interfaces__msg__TrackProtocolDefine__PROTOCOL_MM1, 
+    MM2 = railway_interfaces__msg__TrackProtocolDefine__PROTOCOL_MM2, 
+    DCC = railway_interfaces__msg__TrackProtocolDefine__PROTOCOL_DCC, 
+    MFX = railway_interfaces__msg__TrackProtocolDefine__PROTOCOL_MFX
 }PROTOCOL;
 
 typedef enum{

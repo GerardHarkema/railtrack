@@ -15,6 +15,7 @@
 #include <railway_interfaces/msg/locomotive_state.h>
 #include <railway_interfaces/msg/power_control.h>
 #include <railway_interfaces/msg/power_state.h>
+#include <railway_interfaces/msg/track_protocol_define.h>
 
 #include <Adafruit_GFX.h> // Core graphics library
 #include <Fonts/FreeSansBold9pt7b.h>
@@ -59,11 +60,11 @@ railway_interfaces__msg__PowerControl power_control;
 Adafruit_ST7735 *tft;
 
 typedef enum{
-    ROS = railway_interfaces__msg__LocomotiveControl__PROTOCOL_ROS, 
-    MM1 = railway_interfaces__msg__LocomotiveControl__PROTOCOL_MM1, 
-    MM2 = railway_interfaces__msg__LocomotiveControl__PROTOCOL_MM2, 
-    DCC = railway_interfaces__msg__LocomotiveControl__PROTOCOL_DCC, 
-    MFX = railway_interfaces__msg__LocomotiveControl__PROTOCOL_MFX
+    ROS = railway_interfaces__msg__TrackProtocolDefine__PROTOCOL_ROS, 
+    MM1 = railway_interfaces__msg__TrackProtocolDefine__PROTOCOL_MM1, 
+    MM2 = railway_interfaces__msg__TrackProtocolDefine__PROTOCOL_MM2, 
+    DCC = railway_interfaces__msg__TrackProtocolDefine__PROTOCOL_DCC, 
+    MFX = railway_interfaces__msg__TrackProtocolDefine__PROTOCOL_MFX
 }PROTOCOL;
 
 typedef struct{
@@ -378,7 +379,7 @@ void setup() {
   for(int i = 0; i < NUMBER_OF_ACTIVE_TURNOUTS_MM; i++){
     turnout_status[i].number = active_turnouts_mm[i];
     turnout_status[i].state = EEPROM.readBool(i);
-    turnout_status[i].protocol = railway_interfaces__msg__TurnoutControl__PROTOCOL_MM1;
+    turnout_status[i].protocol = railway_interfaces__msg__TrackProtocolDefine__PROTOCOL_MM1;
     //ctrl->getTurnout(turnout_status[i].number, &turnout_status[i].state);
   }
 

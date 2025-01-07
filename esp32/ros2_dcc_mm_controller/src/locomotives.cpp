@@ -55,8 +55,8 @@ void locomotive_control_callback(const void * msgin)
         switch(active_locomotives[locomotive_index].protocol){
           case DCC:
             DEBUG_PRINT("Protocol DCC\n");         
-            switch(active_locomotives[locomotive_index].speed_steps){
-              case SS_128:
+            switch(control->dcc_speed_step){
+              case railway_interfaces__msg__LocomotiveControl__DCC_SPEED_STEP_128:
                 speed = (uint8_t)(control->speed / SPEED_STEP_RESOLUTION_128);
                 if(locomotive_status[locomotive_index].direction ==
                   railway_interfaces__msg__LocomotiveControl__DIRECTION_REVERSE)
@@ -64,13 +64,13 @@ void locomotive_control_callback(const void * msgin)
                 DEBUG_PRINT("DCC: Set Speed 128: %i\n", speed);
                 trackScheduler.dccSetSpeed128(control->address, DCC_SHORT_ADDRESS, speed); //This should be in the call backs of the ROS subscribers
                 break;
-              case SS_28:
+              case railway_interfaces__msg__LocomotiveControl__DCC_SPEED_STEP_28:
                 speed = (uint8_t)(control->speed / SPEED_STEP_RESOLUTION_28);
                 speed = locomotive_status[locomotive_index].direction ? speed * -1 : speed;
                 DEBUG_PRINT("DCC: Set Speed 28: %i\n", speed);
                 trackScheduler.dccSetSpeed28(control->address, DCC_SHORT_ADDRESS,speed); //This should be in the call backs of the ROS subscribers
                 break;
-              case SS_14:
+              case railway_interfaces__msg__LocomotiveControl__DCC_SPEED_STEP_14:
                 speed = (uint8_t)(control->speed / SPEED_STEP_RESOLUTION_14);
                 speed = locomotive_status[locomotive_index].direction ? speed * -1 : speed;
                 DEBUG_PRINT("DCC: Set Speed 14: %i\n", speed);

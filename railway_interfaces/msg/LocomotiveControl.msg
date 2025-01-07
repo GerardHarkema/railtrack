@@ -10,16 +10,17 @@ uint8 DIRECTION_TOGGLE = 3
 uint8 FUNCTION_STATE_FALSE = 0
 uint8 FUNCTION_STATE_TRUE = 1
 
-uint8 PROTOCOL_UNKNOWN = 0
-uint8 PROTOCOL_ROS = 1
-uint8 PROTOCOL_MM1 = 2
-uint8 PROTOCOL_MM2 = 3
-uint8 PROTOCOL_DCC = 4
-uint8 PROTOCOL_MFX = 5
+uint8 DCC_SPEED_STEP_UNKNOWN = 0
+uint8 DCC_SPEED_STEP_128 = 1
+uint8 DCC_SPEED_STEP_28 = 2
+uint8 DCC_SPEED_STEP_14 = 3
+
+railway_interfaces/TrackProtocolDefine protocols
 
 uint8 command
 uint8 track_index  # Not used, for future implementation
 uint8 protocol
+uint8 dcc_speed_step
 int32 address
 int16 speed
 uint8 direction

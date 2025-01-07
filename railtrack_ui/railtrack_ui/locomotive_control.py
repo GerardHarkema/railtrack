@@ -17,7 +17,9 @@ from rclpy.qos import QoSProfile, QoSReliabilityPolicy, QoSHistoryPolicy
 
 from std_msgs.msg import Bool;
 from railway_interfaces.msg import LocomotiveControl  
-from railway_interfaces.msg import LocomotiveState  
+from railway_interfaces.msg import LocomotiveState
+from railway_interfaces.msg import TrackProtocolDefine 
+
 
 
 class locomotive_control(Node):
@@ -31,26 +33,36 @@ class locomotive_control(Node):
         match locomotive_descr['protocol']:
             case "ROS":
                 self.locomotive_msg.address = locomotive_descr['address']
-                self.locomotive_msg.protocol = LocomotiveControl().__class__.PROTOCOL_ROS
+                self.locomotive_msg.protocol = TrackProtocolDefine().__class__.PROTOCOL_ROS
                 self.number_of_functions = 4
             case "MM1":
                 self.locomotive_msg.address = locomotive_descr['address']
-                self.locomotive_msg.protocol = LocomotiveControl().__class__.PROTOCOL_MM1
+                self.locomotive_msg.protocol = TrackProtocolDefine().__class__.PROTOCOL_MM1
                 self.number_of_functions = 4
             case "MM2":    
                 self.locomotive_msg.address = locomotive_descr['address']
-                self.locomotive_msg.protocol = LocomotiveControl().__class__.PROTOCOL_MM2
+                self.locomotive_msg.protocol = TrackProtocolDefine().__class__.PROTOCOL_MM2
                 self.number_of_functions = 4
             case "DCC":
                 self.locomotive_msg.address = locomotive_descr['address']
-                self.locomotive_msg.protocol = LocomotiveControl().__class__.PROTOCOL_DCC
+                self.locomotive_msg.protocol = TrackProtocolDefine().__class__.PROTOCOL_DCC
                 self.number_of_functions = 16
+                match locomotive_descr['speed_steps']:
+                    case 128:
+                        self.locomotive_msg.dcc_speed_step = LocomotiveControl().__class__.DCC_SPEED_STEP_128
+                    case 28:
+                        self.locomotive_msg.dcc_speed_step = LocomotiveControl().__class__.DCC_SPEED_STEP_28
+                    case 14:
+                        self.locomotive_msg.dcc_speed_step = LocomotiveControl().__class__.DCC_SPEED_STEP_14
+                    case _:
+                        self.locomotive_msg.dcc_speed_step = LocomotiveControl().__class__.DCC_SPEED_STEP_128 # default
             case "MFX":
                 self.locomotive_msg.address = locomotive_descr['address']
-                self.locomotive_msg.protocol = LocomotiveControl().__class__.PROTOCOL_MFX
+                self.locomotive_msg.protocol = TrackProtocolDefine().__class__.PROTOCOL_MFX
                 self.number_of_functions = 32
             case _:
                 pass
+
         self.speed = 0
         self.max_speed = 1000;
         self.max_speed = locomotive_descr['max_speed']

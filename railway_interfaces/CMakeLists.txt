@@ -28,6 +28,7 @@ find_package(rosidl_default_generators REQUIRED)
 
 
 rosidl_generate_interfaces(${PROJECT_NAME}
+  "msg/TrackProtocolDefine.msg"
   "msg/LocomotiveControl.msg"
   "msg/LocomotiveState.msg"
   "msg/TurnoutControl.msg"
@@ -35,6 +36,8 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/PowerControl.msg"
   "msg/PowerState.msg"
   "msg/DccCvWrite.msg"
+  "msg/TrackObjectConfig.msg"
+  "msg/TrackConfig.msg"
   "msg/ColorRGB.msg"
   "msg/SceneryControl.msg"
   "msg/SceneryState.msg"
