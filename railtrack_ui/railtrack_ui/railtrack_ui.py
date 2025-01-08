@@ -24,6 +24,7 @@ from railway_interfaces.msg import PowerControl
 from railway_interfaces.msg import PowerState 
 from railway_interfaces.msg import SceneryControl  
 from railway_interfaces.msg import SceneryState   
+from railway_interfaces.msg import TrackConfig   
 
 from turnout_control import turnout_control
 from locomotive_control import locomotive_control
@@ -31,25 +32,52 @@ from railtracklayout_control import railtracklayout_control
 from scenery_control import scenery_control
 from maintenance_control import maintenance_control
 
+import re
+
 class RailTrackNode(Node):
 
     def __init__(self) -> None:
         super().__init__('railtrack_gui')
-        
+
+        # Declare the 'package_directory' parameter with a default value (empty string)
+        self.declare_parameter('package_directory', '')
+
+        # Retrieve the 'package_directory' parameter value
+        self.package_directory = self.get_parameter('package_directory').get_parameter_value().string_value
+
+        #self.get_logger().info(f"Package directory: {self.package_directory}")
+
+        workspace_root = Path(self.package_directory).parents[3]  # Go up three levels (install/ -> workspace/)
+        #self.get_logger().info(f"workspace_root directory: {workspace_root}")
+
+        self.package_directory = str(workspace_root / 'src' / 'railtrack')
+
         self.declare_parameter("config_file", "");
         self.config_file = self.get_parameter("config_file").get_parameter_value().string_value
+        self.config_file = self.package_directory + '/' + self.config_file
+
+        #self.get_logger().info(f"Config file: {self.config_file}")
         self.declare_parameter("locomotive_images_path", "");
         self.locomotive_images_path = self.get_parameter("locomotive_images_path").get_parameter_value().string_value
+        self.locomotive_images_path = self.package_directory + '/' + self.locomotive_images_path
         self.declare_parameter("railtracklayout_images_path", "");
         self.railtracklayout_images_path = self.get_parameter("railtracklayout_images_path").get_parameter_value().string_value
+        self.railtracklayout_images_path = self.package_directory + '/' + self.railtracklayout_images_path
 
-        with open(self.config_file, 'r', encoding='utf-8') as f:
-            self.track_config = json.load(f)
+
+        print("Current working directory:", os.getcwd())
+        if os.path.exists(self.config_file):
+            with open(self.config_file, 'r', encoding='utf-8') as f:
+                self.track_config = json.load(f)
+
+        else:
+            print(f"File {self.config_file} does not exist.")
+            return
 
         self.qos_profile = QoSProfile(
-            reliability=QoSReliabilityPolicy.BEST_EFFORT,
-            history=QoSHistoryPolicy.KEEP_LAST,
-            depth=1)
+                reliability=QoSReliabilityPolicy.BEST_EFFORT,
+                history=QoSHistoryPolicy.KEEP_LAST,
+                depth=1)
 
         topic = "/railtrack/turnout/status"
         self.turnout_status_subscription = self.create_subscription(TurnoutState, topic, self.turnout_status_callback, qos_profile=self.qos_profile)
@@ -69,8 +97,8 @@ class RailTrackNode(Node):
         topic = "/railtrack/power_control"
         self.power_control_publisher = self.create_publisher(PowerControl, topic,  1)
 
-        self.power_msg = PowerControl()
-        self.power_msg.enable = False
+        topic = "/railtrack/track_config"
+        self.track_config_publisher = self.create_publisher(TrackConfig, topic,  1)
 
         topic = "/railtrack/scenery/status"
         self.scenery_status_subscription = self.create_subscription(SceneryState, topic,  self.scenery_status_callback, qos_profile=self.qos_profile)
@@ -78,6 +106,8 @@ class RailTrackNode(Node):
         topic = "/railtrack/scenery/control"
         self.scenery_control_publisher = self.create_publisher(SceneryControl, topic,  1)
 
+        self.power_msg = PowerControl()
+        self.power_msg.enable = False
 
         self.turnoutsui= []
         self.locomotivesui = []
@@ -170,7 +200,7 @@ class RailTrackNode(Node):
                     pass
 
                 with ui.tab_panel(self.maintenance_tab):
-                    self.maintenance_control = maintenance_control()
+                    self.maintenance_control = maintenance_control(self.track_config  ,self.track_config_publisher)
             with ui.grid(columns=3):
                 with ui.card():
                     ui.label("Control")
@@ -279,9 +309,9 @@ def main() -> None:
     pass
 
 
-def ros_main() -> None:
+def ros_main(args=None) -> None:
 
-    rclpy.init()
+    rclpy.init(args=args)
 
     node = RailTrackNode()
     try:

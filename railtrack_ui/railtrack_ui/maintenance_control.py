@@ -18,17 +18,22 @@ from rclpy.qos import QoSProfile, QoSReliabilityPolicy, QoSHistoryPolicy
 from std_msgs.msg import Bool;
 from railway_interfaces.msg import LocomotiveControl  
 from railway_interfaces.msg import LocomotiveState  
+from railway_interfaces.msg import TrackConfig, TrackObjectConfig, TrackProtocolDefine
 
 
 class maintenance_control(Node):
-    def __init__(self):
-        with ui.card():
-            ui.label("Track maintenance")
-            self.maintenance_button = ui.button('ENABLE', on_click=lambda:self.maintenance()).classes('drop-shadow bg-red')
+    def __init__(self, track_config, track_config_publisher):
+        self.track_config = track_config
+        self.track_config_publisher = track_config_publisher
+        #with ui.card():
+        #    ui.label("Track maintenance")
+        #    self.maintenance_button = ui.button('ENABLE', on_click=lambda:self.maintenance()).classes('drop-shadow bg-red')
         with ui.tabs().classes('w-full') as tabs:
             self.locomotive_tab = ui.tab('Locomotive')
             self.turnout_tab = ui.tab('Turnout')
             self.cv_programming_tab = ui.tab('cv Programing')
+            self.controller = ui.tab('Controller')
+            self.settings = ui.tab('Settings')
 
         with ui.tab_panels(tabs, value=self.locomotive_tab).classes('w-full'):
             with ui.tab_panel(self.turnout_tab):
@@ -63,19 +68,64 @@ class maintenance_control(Node):
                                     # see icons https://fonts.google.com/icons
                             ui.button('Close', on_click=dialog.close)
                         ui.button('Functions', on_click=dialog.open)
+            with ui.tab_panel(self.controller):
+                self.update_controller_button = ui.button('Update Controller', on_click=lambda: self.update_controller()).classes('drop-shadow bg-green')
+            with ui.tab_panel(self.settings):
+                pass
 
 
         pass
 
-    def set_speed():
+    def set_speed(self):
         pass
-    def set_decrement_speed():
+    def set_decrement_speed(self):
         pass
-    def set_increment_speed():
+    def set_increment_speed(self):
         pass
-    def stop():
+    def stop(self):
         pass
-    def set_direction():
+    def set_direction(self):
+        pass
+
+    def update_controller(self):
+        config_msg = TrackConfig()
+
+        for turnout in self.track_config["Turnouts"]:
+            track_obj = TrackObjectConfig()
+            track_obj.config_type = TrackObjectConfig.CONFIG_TYPE_TURNOUT
+            match turnout["protocol"]:
+                case "DCC":
+                    track_obj.protocol = TrackProtocolDefine.PROTOCOL_DCC 
+                case "MM1":
+                    track_obj.protocol = TrackProtocolDefine.PROTOCOL_MM1
+                case "MM2":
+                    track_obj.protocol = TrackProtocolDefine.PROTOCOL_MM2
+                case "MFX":
+                    track_obj.protocol = TrackProtocolDefine.PROTOCOL_MFX
+            track_obj.address = turnout["number"]
+            config_msg.track_objects.append(track_obj)
+            #print(turnout)
+            pass
+        for locomotive in self.track_config["Locomotives"]:
+            track_obj = TrackObjectConfig()
+            track_obj.config_type = TrackObjectConfig.CONFIG_TYPE_LOCOMOITVE
+            match locomotive["protocol"]:
+                case "DCC":
+                    track_obj.protocol = TrackProtocolDefine.PROTOCOL_DCC 
+                case "MM1":
+                    track_obj.protocol = TrackProtocolDefine.PROTOCOL_MM1
+                case "MM2":
+                    track_obj.protocol = TrackProtocolDefine.PROTOCOL_MM2
+                case "MFX":
+                    track_obj.protocol = TrackProtocolDefine.PROTOCOL_MFX
+            track_obj.address = locomotive["address"]
+            config_msg.track_objects.append(track_obj)
+            #print(locomotive)
+            pass
+
+        self.track_config_publisher.publish(config_msg)
+
+        ui.notify("Update Controller")                 
         pass
 
     def maintenance(self):

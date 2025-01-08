@@ -1,5 +1,6 @@
 {
-  "railtrack_layout_image" : "railtrack_layout.jpg",
+  "locomotive_images_path" : "locomotive_images",
+  "railtrack_layout_image" : "railtracklayout_images/railtrack_layout.jpg",
   "display_maintenance_tab" : true,
   "Locomotives": [
     {
