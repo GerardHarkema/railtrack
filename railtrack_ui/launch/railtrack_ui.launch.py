@@ -10,9 +10,9 @@ def generate_launch_description():
 
     # Get the path to the package's share directory
     package_share_directory = get_package_share_directory('railtrack_ui')
-    config_file = "config/track_config.json"
-    locomotive_images_path = "config/locomotive_images"
-    railtracklayout_images_path = "config/railtracklayout_images"
+    #config_file = "track_config.json"
+    #locomotive_images_path = "config/locomotive_images"
+    #railtracklayout_images_path = "config/railtracklayout_images"
 
     # Declare a launch argument to pass the package directory
     return LaunchDescription([
@@ -27,8 +27,9 @@ def generate_launch_description():
             executable='railtrack_ui.py',
             output='screen',
             parameters=[{'package_directory': LaunchConfiguration('package_directory')},
-                        {'config_file': config_file},
-                        {"locomotive_images_path": locomotive_images_path},
-                        {"railtracklayout_images_path": railtracklayout_images_path}],
+    #                    {'config_file': config_file},
+    #                    {"locomotive_images_path": locomotive_images_path},
+    #                    {"railtracklayout_images_path": railtracklayout_images_path}
+           ],
         ),
     ])

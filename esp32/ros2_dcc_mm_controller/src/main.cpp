@@ -319,18 +319,33 @@ void setup() {
 
 int old_display_measurents_switch = HIGH;
 
+int counter = 0;
+bool configurartion_flag = false;
+
 void loop() {
 
-#if 1
   int new_display_measurents_switch = digitalRead(MEASUREMENT_SWITCH_PIN);
-  if((old_display_measurents_switch != new_display_measurents_switch) && (new_display_measurents_switch == LOW)){
-    display_measurents = display_measurents ? false : true;
-    //Serial.println("Toggle");
-    //Serial.println(display_measurents);
-    tft_printf(ST77XX_GREEN,"");
+  if(!configurartion_flag){
+    if(new_display_measurents_switch == LOW){
+      counter++;
+      if(counter > 100){
+        configurartion_flag = true;
+        display_measurents = false;
+        tft_printf(ST77XX_MAGENTA, "Ready\nto receive\nnew track\nconfiguration");
+      }
+    }
+    else
+      counter = 0;
   }
-  old_display_measurents_switch = new_display_measurents_switch;
-#endif
+  if(!configurartion_flag){
+    if((old_display_measurents_switch != new_display_measurents_switch) && (new_display_measurents_switch == LOW)){
+      display_measurents = display_measurents ? false : true;
+      //Serial.println("Toggle");
+      //Serial.println(display_measurents);
+      tft_printf(ST77XX_GREEN,"");
+    }
+    old_display_measurents_switch = new_display_measurents_switch;
+  }
 
   vTaskDelay(20);
 

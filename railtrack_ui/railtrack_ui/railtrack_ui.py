@@ -44,28 +44,18 @@ class RailTrackNode(Node):
 
         # Retrieve the 'package_directory' parameter value
         self.package_directory = self.get_parameter('package_directory').get_parameter_value().string_value
-
-        #self.get_logger().info(f"Package directory: {self.package_directory}")
-
         workspace_root = Path(self.package_directory).parents[3]  # Go up three levels (install/ -> workspace/)
-        #self.get_logger().info(f"workspace_root directory: {workspace_root}")
+        self.config_directory = str(workspace_root / 'src' / 'railtrack' / 'config')
 
-        self.package_directory = str(workspace_root / 'src' / 'railtrack')
+        self.railtrack_ui_directory = str(workspace_root / 'src' / 'railtrack' / 'railtrack_ui' )
+        self.program_settings_file = self.railtrack_ui_directory + '/' + 'settings.json'
 
-        self.declare_parameter("config_file", "");
-        self.config_file = self.get_parameter("config_file").get_parameter_value().string_value
-        self.config_file = self.package_directory + '/' + self.config_file
+        # Read programm settings
+        with open(self.program_settings_file, 'r', encoding='utf-8') as f:
+            self.program_settings = json.load(f)
 
-        #self.get_logger().info(f"Config file: {self.config_file}")
-        self.declare_parameter("locomotive_images_path", "");
-        self.locomotive_images_path = self.get_parameter("locomotive_images_path").get_parameter_value().string_value
-        self.locomotive_images_path = self.package_directory + '/' + self.locomotive_images_path
-        self.declare_parameter("railtracklayout_images_path", "");
-        self.railtracklayout_images_path = self.get_parameter("railtracklayout_images_path").get_parameter_value().string_value
-        self.railtracklayout_images_path = self.package_directory + '/' + self.railtracklayout_images_path
-
-
-        print("Current working directory:", os.getcwd())
+        # Read track configuration
+        self.config_file =  self.railtrack_ui_directory + "/" + self.program_settings["config_file"]           
         if os.path.exists(self.config_file):
             with open(self.config_file, 'r', encoding='utf-8') as f:
                 self.track_config = json.load(f)
@@ -73,6 +63,12 @@ class RailTrackNode(Node):
         else:
             print(f"File {self.config_file} does not exist.")
             return
+
+        self.locomotive_images_path = self.config_directory + '/' + self.track_config["locomotive_images_path"]
+        #self.get_logger().info(f"Loc path {self.locomotive_images_path}")
+
+        self.railtracklayout_images_path = self.config_directory + '/' + self.track_config["railtrack_layout_image"]
+        #self.get_logger().info(f"railtracklayout_images_path {self.railtracklayout_images_path}")
 
         self.qos_profile = QoSProfile(
                 reliability=QoSReliabilityPolicy.BEST_EFFORT,
@@ -193,8 +189,8 @@ class RailTrackNode(Node):
                 try:
                     tmp = self.track_config["railtrack_layout_image"]
                     with ui.tab_panel(self.tracklayouts_tab):
-                        railtracklayout_image_file = self.railtracklayout_images_path + "/"+ self.track_config["railtrack_layout_image"]
-                        self.track_control = railtracklayout_control(self.track_config["Turnouts"], railtracklayout_image_file, self.turnout_control_publisher)
+                        #railtracklayout_image_file = self.locomotive_images_path + "/"+ self.track_config["railtrack_layout_image"]
+                        self.track_control = railtracklayout_control(self.track_config["Turnouts"], self.railtracklayout_images_path, self.turnout_control_publisher)
                         pass
                 except KeyError:
                     pass
