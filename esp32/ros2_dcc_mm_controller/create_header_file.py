@@ -119,6 +119,6 @@ else:
 line = "#endif //_TRACK_CONFIG_\n"
 header = header + line
 
-with open('include/track_config.h', 'w', encoding='utf-8') as f:
+with open('include/track_config_old.h', 'w', encoding='utf-8') as f:
     f.write(header)
 

@@ -34,7 +34,7 @@
 #include <TrackManager.h>
 
 #include "defines.h"
-#include "track_config.h"
+#include "track_config_old.h"
 #include "network_config.h"
 #include "support.h"
 
@@ -42,6 +42,7 @@
 #include "locomotives.h"
 #include "turnouts.h"
 #include "measurements.h"
+#include "track_config.h"
 
 int number_of_active_mm_turnouts = NUMBER_OF_ACTIVE_TURNOUTS_MM;
 int number_of_active_turnouts_ros = NUMBER_OF_ACTIVE_TURNOUTS_ROS;
@@ -58,11 +59,14 @@ rcl_subscription_t locomotive_control_subscriber;
 rcl_publisher_t power_status_publisher;
 rcl_subscription_t power_control_subscriber;
 
+rcl_subscription_t track_config_subscriber;
+
 rclc_executor_t executor;
 
 railway_interfaces__msg__TurnoutControl turnout_control;
 railway_interfaces__msg__LocomotiveControl locomotive_control;
 railway_interfaces__msg__PowerControl power_control;
+railway_interfaces__msg__TrackConfig track_config;
 
 Adafruit_ST7735 *tft;
 
@@ -99,101 +103,9 @@ Measurements measurements;
 #define MEASUREMENT_SWITCH_PIN    27
 bool display_measurents = false;
 
-void setup() {
-  protect_motor_driver_outputs();
-  Serial.begin(115200);
-  while (!Serial);
-  delay(2000);
-  Serial.printf("DCC/MM controller started\n");
-#if 0
-  Serial.print("MOSI: ");Serial.println(MOSI);
-  Serial.print("MISO: ");Serial.println(MISO);
-  Serial.print("SCK: ");Serial.println(SCK);
-  Serial.print("SS: ");Serial.println(SS);  
-#endif
 
-
-  tft = new Adafruit_ST7735(CS_PIN, DC_PIN, RST_PIN);
-  tft_prinft_begin(tft);
-
-  tft->initR(INITR_GREENTAB);
-  tft->fillScreen(ST77XX_BLACK);
-  tft->setRotation(3);
-  tft->setFont(&FreeSansBold9pt7b);
-  //tft->setFont(&Tiny3x3a2pt7b);
-  tft->fillScreen(ST77XX_BLACK);
-  tft->setTextColor(ST77XX_CYAN);
-  tft->setTextSize(1);
-  tft->setCursor(1, 22);
-  tft->println("DCC/MM Control");
-#ifdef ARDUINO_MOTOR_SHIELD_L298
-  tft_printf(ST77XX_MAGENTA, "Controller\nStarted\n\nL298 Version");
-#elif IBT_2_MOTOR_DRIVER
-  tft_printf(ST77XX_MAGENTA, "Controller\nStarted\n\nIBT_2 Version");
-#elif DCC_EX_MOTOR_SHIELD_8874
-  tft_printf(ST77XX_MAGENTA, "Controller\nStarted\n\n8874 Version");
-#else
-  tft_printf(ST77XX_MAGENTA, "Controller\nStarted\n\nUnknown Version");
-#endif
-
-
-  EEPROM.begin(NUMBER_OF_ACTIVE_TURNOUTS_MM);
-
-  power_status.state = false;
-  power_status.current = 0;
-  power_status.operating_mode = railway_interfaces__msg__PowerControl__OPERTING_MODE_NORMAL;
-  power_status.controller_type = railway_interfaces__msg__PowerState__CONTROLLER_DCC_MM;
-
-  for(int i = 0; i < NUMBER_OF_ACTIVE_TURNOUTS_MM; i++){
-    turnout_status[i].number = active_turnouts_mm[i];
-    turnout_status[i].protocol = MM2;
-    turnout_status[i].state = EEPROM.readBool(i);
-  }
-
-  for(int i = 0; i < NUMBER_OF_ACTIVE_LOCOMOTIVES; i++){
-    locomotive_status[i].protocol = active_locomotives[i].protocol;
-    locomotive_status[i].address = active_locomotives[i].address;
-    locomotive_status[i].direction = railway_interfaces__msg__LocomotiveState__DIRECTION_FORWARD;
-    word speed;
-    //ctrlgetLocoSpeed(locomotive_status[i].address, &speed);
-    locomotive_status[i].speed = speed;
-    byte direction;
-    //ctrlgetLocoDirection(locomotive_status[i].address, &direction);
-    locomotive_status[i].direction = direction;
-
-
-    locomotive_status[i].function_state.capacity = MAX_NUMBER_OF_FUNCTION;
-    locomotive_status[i].function_state.data = (bool*) malloc(locomotive_status[i].function_state.capacity * sizeof(bool));
-    locomotive_status[i].function_state.size = MAX_NUMBER_OF_FUNCTION;
-
-    for(int j = 0; j < MAX_NUMBER_OF_FUNCTION; j++){
-      byte power;
-      //ctrlgetLocoFunction(locomotive_status[i].address, j, &power);
-      locomotive_status[i].function_state.data[j] = power ? true : false;
-    }
-  }
-  WiFi.setHostname("DccMMController");
-  set_microros_wifi_transports(WIFI_SSID, PASSWORD, agent_ip, (size_t)PORT);
-
-  pinMode(LED_BUILTIN, OUTPUT);
-  digitalWrite(LED_BUILTIN, HIGH);
-
-#ifdef ARDUINO_MOTOR_SHIELD_L298
-  tft_printf(ST77XX_MAGENTA, "WiFi Connected\n\n\nL298 Version");
-#elif IBT_2_MOTOR_DRIVER
-  tft_printf(ST77XX_MAGENTA, "WiFi Connected\n\n\nIBT_2 Version");
-#elif DCC_EX_MOTOR_SHIELD_8874
-  tft_printf(ST77XX_MAGENTA, "WiFi Connected\n\n\n8874 Version");
-#else
-  tft_printf(ST77XX_MAGENTA, "WiFi Connected\n\n\nUnknown Version");
-#endif
-
-
-  Serial.printf("DCC/MM WiFi Connected\n");
-
-  delay(2000);
-
-  allocator = rcl_get_default_allocator();
+void init_ros(){
+    allocator = rcl_get_default_allocator();
   //create init_options
   RCCHECK(rclc_support_init(&support, 0, NULL, &allocator));
 
@@ -209,16 +121,15 @@ void setup() {
     ROSIDL_GET_MSG_TYPE_SUPPORT(railway_interfaces, msg, TurnoutState),
     topic_name));
 
-
-  // create turnout_control_subscriber
-  sprintf(topic_name, "railtrack/turnout/control");
+  sprintf(topic_name, "railtrack/turnout/status");
   // create turnout_status_publisher
-
   RCCHECK(rclc_publisher_init_default(
     &turnout_control_publisher,
     &node,
-    ROSIDL_GET_MSG_TYPE_SUPPORT(railway_interfaces, msg, TurnoutControl),
+    ROSIDL_GET_MSG_TYPE_SUPPORT(railway_interfaces, msg, TurnoutState),
     topic_name));
+  sprintf(topic_name, "railtrack/turnout/control");
+  // create turnout_status_publisher
   RCCHECK(rclc_subscription_init_default(
     &turnout_control_subscriber,
     &node,
@@ -257,6 +168,15 @@ void setup() {
     ROSIDL_GET_MSG_TYPE_SUPPORT(railway_interfaces, msg, PowerControl),
     topic_name));
 
+  sprintf(topic_name, "railtrack/track_config");
+  // create track_config_subscriber
+  RCCHECK(rclc_subscription_init_default(
+    &track_config_subscriber,
+    &node,
+    ROSIDL_GET_MSG_TYPE_SUPPORT(railway_interfaces, msg, TrackConfig),
+    topic_name));
+
+
   // create timer,
 #define CYCLE_TIME    500
   // prevent division by zero
@@ -286,20 +206,192 @@ void setup() {
 
   // create executor
 
-  int number_of_executors = 6;
+  int number_of_executors = 7;
   
   RCCHECK(rclc_executor_init(&executor, &support.context, number_of_executors, &allocator));
 
   RCCHECK(rclc_executor_add_timer(&executor, &turnout_state_publisher_timer));
-
   RCCHECK(rclc_executor_add_subscription(&executor, &turnout_control_subscriber, &turnout_control, &turnout_control_callback, ON_NEW_DATA));
 
   RCCHECK(rclc_executor_add_timer(&executor, &locomotive_state_publisher_timer));
   RCCHECK(rclc_executor_add_subscription(&executor, &locomotive_control_subscriber, &locomotive_control, &locomotive_control_callback, ON_NEW_DATA));
 
-
   RCCHECK(rclc_executor_add_timer(&executor, &power_state_publisher_timer));
   RCCHECK(rclc_executor_add_subscription(&executor, &power_control_subscriber, &power_control, &power_control_callback, ON_NEW_DATA));
+
+  RCCHECK(rclc_executor_add_subscription(&executor, &track_config_subscriber, &track_config, &track_config_callback, ON_NEW_DATA));
+
+}
+
+void init_display(){
+  tft = new Adafruit_ST7735(CS_PIN, DC_PIN, RST_PIN);
+  tft_prinft_begin(tft);
+
+  tft->initR(INITR_GREENTAB);
+  tft->fillScreen(ST77XX_BLACK);
+  tft->setRotation(3);
+  tft->setFont(&FreeSansBold9pt7b);
+  //tft->setFont(&Tiny3x3a2pt7b);
+  tft->fillScreen(ST77XX_BLACK);
+  tft->setTextColor(ST77XX_CYAN);
+  tft->setTextSize(1);
+  tft->setCursor(1, 22);
+  tft->println("DCC/MM Control");
+
+}
+
+uint16_t *p_eeprom_programmed;
+uint16_t *p_number_of_turnouts;
+uint16_t *p_number_of_locomotives;
+bool *p_turnout_status;
+TRACK_OBJECT *p_turnouts;
+TRACK_OBJECT *p_locomtives;
+
+uint16_t t_number_of_turnout = 10;
+uint16_t t_number_of_locomotive = 20;
+
+#define EEPROM_PROGRAMMED_TAG     0xAA55
+
+void init_eeprom(){
+
+  int needed_eeprom_size = 0;
+
+  EEPROM.begin(EEPROM_SIZE);
+  // assagne variables
+  p_eeprom_programmed = (uint16_t *)EEPROM.getDataPtr();
+  if(*p_eeprom_programmed != EEPROM_PROGRAMMED_TAG){
+    Serial.printf("\nEEPROM not programmed\n");
+  }
+  else
+    Serial.printf("\nEEPROM programmed\n");
+
+  p_number_of_turnouts = p_eeprom_programmed + 1;
+  p_number_of_locomotives = p_number_of_turnouts + 1;
+
+
+  needed_eeprom_size += sizeof(uint16_t); // eeprom programmed
+  needed_eeprom_size += sizeof(uint16_t); // number_of_turnouts
+  needed_eeprom_size += sizeof(uint16_t); // numbet_of_locomotive
+  needed_eeprom_size += sizeof(bool) * t_number_of_turnout; // needed_eeprom_size of turnout_status
+  needed_eeprom_size += sizeof(TRACK_OBJECT) * t_number_of_turnout; // needed_eeprom_size of turnout objects
+  needed_eeprom_size += sizeof(TRACK_OBJECT) * t_number_of_locomotive; // needed_eeprom_size of locomotive objects
+  Serial.printf("needed_eeprom_size = %i\n", needed_eeprom_size);
+
+  if(needed_eeprom_size > EEPROM_SIZE){
+    Serial.printf("needed_eeprom_size = %i\n", needed_eeprom_size);
+
+  }
+
+  // assign array's
+  p_turnout_status = (bool *)(p_number_of_locomotives + 1);
+  p_turnouts = (TRACK_OBJECT *)(p_turnout_status + t_number_of_turnout);
+  p_locomtives = p_turnouts + t_number_of_turnout;
+
+  Serial.printf("p_eeprom_programmed     = 0x%08i\n", p_eeprom_programmed);
+  Serial.printf("p_number_of_turnouts    = 0x%08i\n", p_number_of_turnouts);
+  Serial.printf("p_number_of_locomotives = 0x%08i\n", p_number_of_locomotives);
+  Serial.printf("p_turnout_status        = 0x%08i\n", p_turnout_status);
+  Serial.printf("p_turnouts              = 0x%08i\n", p_turnouts);
+  Serial.printf("p_locomtives            = 0x%08i\n", p_locomtives);
+
+}
+
+void init_power(){
+  power_status.state = false;
+  power_status.current = 0;
+  power_status.operating_mode = railway_interfaces__msg__PowerControl__OPERTING_MODE_NORMAL;
+  power_status.controller_type = railway_interfaces__msg__PowerState__CONTROLLER_DCC_MM;
+
+}
+
+void init_turnouts(){
+  for(int i = 0; i < NUMBER_OF_ACTIVE_TURNOUTS_MM; i++){
+    turnout_status[i].number = active_turnouts_mm[i];
+    turnout_status[i].protocol = MM2;
+    turnout_status[i].state = EEPROM.readBool(i);
+  }
+}
+
+void init_locomotives(){
+  for(int i = 0; i < NUMBER_OF_ACTIVE_LOCOMOTIVES; i++){
+    locomotive_status[i].protocol = active_locomotives[i].protocol;
+    locomotive_status[i].address = active_locomotives[i].address;
+    locomotive_status[i].direction = railway_interfaces__msg__LocomotiveState__DIRECTION_FORWARD;
+    word speed;
+    //ctrlgetLocoSpeed(locomotive_status[i].address, &speed);
+    locomotive_status[i].speed = speed;
+    byte direction;
+    //ctrlgetLocoDirection(locomotive_status[i].address, &direction);
+    locomotive_status[i].direction = direction;
+
+
+    locomotive_status[i].function_state.capacity = MAX_NUMBER_OF_FUNCTION;
+    locomotive_status[i].function_state.data = (bool*) malloc(locomotive_status[i].function_state.capacity * sizeof(bool));
+    locomotive_status[i].function_state.size = MAX_NUMBER_OF_FUNCTION;
+
+    for(int j = 0; j < MAX_NUMBER_OF_FUNCTION; j++){
+      byte power;
+      //ctrlgetLocoFunction(locomotive_status[i].address, j, &power);
+      locomotive_status[i].function_state.data[j] = power ? true : false;
+    }
+  }
+}
+
+void setup() {
+  protect_motor_driver_outputs();
+  Serial.begin(115200);
+  while (!Serial);
+  delay(2000);
+  Serial.printf("DCC/MM controller started\n");
+#if 0
+  Serial.print("MOSI: ");Serial.println(MOSI);
+  Serial.print("MISO: ");Serial.println(MISO);
+  Serial.print("SCK: ");Serial.println(SCK);
+  Serial.print("SS: ");Serial.println(SS);  
+#endif
+
+init_display();
+
+#ifdef ARDUINO_MOTOR_SHIELD_L298
+  tft_printf(ST77XX_MAGENTA, "Controller\nStarted\n\nL298 Version");
+#elif IBT_2_MOTOR_DRIVER
+  tft_printf(ST77XX_MAGENTA, "Controller\nStarted\n\nIBT_2 Version");
+#elif DCC_EX_MOTOR_SHIELD_8874
+  tft_printf(ST77XX_MAGENTA, "Controller\nStarted\n\n8874 Version");
+#else
+  tft_printf(ST77XX_MAGENTA, "Controller\nStarted\n\nUnknown Version");
+#endif
+
+  init_eeprom();
+
+  init_power();
+
+  init_turnouts();
+
+  init_locomotives();
+
+  WiFi.setHostname("DccMMController");
+  set_microros_wifi_transports(WIFI_SSID, PASSWORD, agent_ip, (size_t)PORT);
+
+  pinMode(LED_BUILTIN, OUTPUT);
+  digitalWrite(LED_BUILTIN, HIGH);
+
+#ifdef ARDUINO_MOTOR_SHIELD_L298
+  tft_printf(ST77XX_MAGENTA, "WiFi Connected\n\n\nL298 Version");
+#elif IBT_2_MOTOR_DRIVER
+  tft_printf(ST77XX_MAGENTA, "WiFi Connected\n\n\nIBT_2 Version");
+#elif DCC_EX_MOTOR_SHIELD_8874
+  tft_printf(ST77XX_MAGENTA, "WiFi Connected\n\n\n8874 Version");
+#else
+  tft_printf(ST77XX_MAGENTA, "WiFi Connected\n\n\nUnknown Version");
+#endif
+
+
+  Serial.printf("DCC/MM WiFi Connected\n");
+
+  delay(2000);
+
+  init_ros();
 
   pinMode(MEASUREMENT_SWITCH_PIN, INPUT_PULLUP);
 
@@ -319,25 +411,25 @@ void setup() {
 
 int old_display_measurents_switch = HIGH;
 
-int counter = 0;
-bool configurartion_flag = false;
+int track_config_enable_cnt = 0;
+bool track_config_enable_flag = false;
 
 void loop() {
 
   int new_display_measurents_switch = digitalRead(MEASUREMENT_SWITCH_PIN);
-  if(!configurartion_flag){
+  if(!track_config_enable_flag){
     if(new_display_measurents_switch == LOW){
-      counter++;
-      if(counter > 100){
-        configurartion_flag = true;
+      track_config_enable_cnt++;
+      if(track_config_enable_cnt > 100){
+        track_config_enable_flag = true;
         display_measurents = false;
         tft_printf(ST77XX_MAGENTA, "Ready\nto receive\nnew track\nconfiguration");
       }
     }
     else
-      counter = 0;
+      track_config_enable_cnt = 0;
   }
-  if(!configurartion_flag){
+  if(!track_config_enable_flag){
     if((old_display_measurents_switch != new_display_measurents_switch) && (new_display_measurents_switch == LOW)){
       display_measurents = display_measurents ? false : true;
       //Serial.println("Toggle");
