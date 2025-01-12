@@ -18,7 +18,7 @@ from rclpy.qos import QoSProfile, QoSReliabilityPolicy, QoSHistoryPolicy
 from std_msgs.msg import Bool;
 from railway_interfaces.msg import LocomotiveControl  
 from railway_interfaces.msg import LocomotiveState  
-from railway_interfaces.msg import TrackConfig, TrackObjectConfig, TrackProtocolDefine
+from railway_interfaces.msg import TrackConfig, TrackObjectConfig, TrackProtocolDefines
 
 
 class maintenance_control(Node):
@@ -89,40 +89,46 @@ class maintenance_control(Node):
 
     def update_controller(self):
         config_msg = TrackConfig()
+        #config_msg.track_objects
+        track_objs = []
 
-        for turnout in self.track_config["Turnouts"]:
-            track_obj = TrackObjectConfig()
-            track_obj.config_type = TrackObjectConfig.CONFIG_TYPE_TURNOUT
-            match turnout["protocol"]:
-                case "DCC":
-                    track_obj.protocol = TrackProtocolDefine.PROTOCOL_DCC 
-                case "MM1":
-                    track_obj.protocol = TrackProtocolDefine.PROTOCOL_MM1
-                case "MM2":
-                    track_obj.protocol = TrackProtocolDefine.PROTOCOL_MM2
-                case "MFX":
-                    track_obj.protocol = TrackProtocolDefine.PROTOCOL_MFX
-            track_obj.address = turnout["number"]
-            config_msg.track_objects.append(track_obj)
-            #print(turnout)
-            pass
-        for locomotive in self.track_config["Locomotives"]:
-            track_obj = TrackObjectConfig()
-            track_obj.config_type = TrackObjectConfig.CONFIG_TYPE_LOCOMOITVE
-            match locomotive["protocol"]:
-                case "DCC":
-                    track_obj.protocol = TrackProtocolDefine.PROTOCOL_DCC 
-                case "MM1":
-                    track_obj.protocol = TrackProtocolDefine.PROTOCOL_MM1
-                case "MM2":
-                    track_obj.protocol = TrackProtocolDefine.PROTOCOL_MM2
-                case "MFX":
-                    track_obj.protocol = TrackProtocolDefine.PROTOCOL_MFX
-            track_obj.address = locomotive["address"]
-            config_msg.track_objects.append(track_obj)
-            #print(locomotive)
-            pass
+        if 1:
+            for turnout in self.track_config["Turnouts"]:
+                track_obj = TrackObjectConfig()
+                track_obj.config_type = TrackObjectConfig.CONFIG_TYPE_TURNOUT
+                match turnout["protocol"]:
+                    case "DCC":
+                        track_obj.protocol = TrackProtocolDefines.PROTOCOL_DCC 
+                    case "MM1":
+                        track_obj.protocol = TrackProtocolDefines.PROTOCOL_MM1
+                    case "MM2":
+                        track_obj.protocol = TrackProtocolDefines.PROTOCOL_MM2
+                    case "MFX":
+                        track_obj.protocol = TrackProtocolDefines.PROTOCOL_MFX
+                track_obj.address = turnout["number"]
+                track_objs.append(track_obj)
+                #config_msg.track_objects.append(track_obj)
+                #print(turnout)
+                pass
+            for locomotive in self.track_config["Locomotives"]:
+                track_obj = TrackObjectConfig()
+                track_obj.config_type = TrackObjectConfig.CONFIG_TYPE_LOCOMOTIVE
+                match locomotive["protocol"]:
+                    case "DCC":
+                        track_obj.protocol = TrackProtocolDefines.PROTOCOL_DCC 
+                    case "MM1":
+                        track_obj.protocol = TrackProtocolDefines.PROTOCOL_MM1
+                    case "MM2":
+                        track_obj.protocol = TrackProtocolDefines.PROTOCOL_MM2
+                    case "MFX":
+                        track_obj.protocol = TrackProtocolDefines.PROTOCOL_MFX
+                track_obj.address = locomotive["address"]
+                track_objs.append(track_obj)
+                #config_msg.track_objects.append(track_obj)
+                #print(locomotive)
+                pass
 
+        config_msg.track_objects = track_objs
         self.track_config_publisher.publish(config_msg)
 
         ui.notify("Update Controller")                 
@@ -170,7 +176,7 @@ class maintenance_control(Node):
                 self.function_buttons[index].classes('drop-shadow bg-green', remove='bg-red')
 
             notify_text = "Set Function " + str(function_index) + ": " + str(self.function_status[index])
-            self.locomotive_msg.command = LocomotiveControl().__class__.SET_FUNCTION;
+            self.locomotive_msg.command = LocomotiveControl.SET_FUNCTION;
             self.locomotive_msg.function_index = function_index;
             self.locomotive_msg.function_state = self.function_status[index];
             self.control_publisher.publish(self.locomotive_msg);

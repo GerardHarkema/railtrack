@@ -13,18 +13,14 @@ def generate_launch_description():
     # wijzig niet de python file, maar de template
 
 
-    config_file = <config_file>
-    locomotive_images_path = <locomotive_images_path>
-    railtracklayout_images_path = <railtracklayout_images_path>
+    railtrack_ui_path = <railtrack_ui_path>
 
     return LaunchDescription([
         Node(
             package='railtrack_ui',
             executable='railtrack_emulator.py',
             output='screen',
-            parameters=[{'config_file': config_file},
-                        {"locomotive_images_path": locomotive_images_path},
-                        {"railtracklayout_images_path": railtracklayout_images_path}
+            parameters=[{"railtrack_ui_path": railtrack_ui_path}
                         ],
         ),
     ])

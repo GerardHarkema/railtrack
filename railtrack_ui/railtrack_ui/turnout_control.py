@@ -18,7 +18,7 @@ from rclpy.qos import QoSProfile, QoSReliabilityPolicy, QoSHistoryPolicy
 from std_msgs.msg import Bool;
 from railway_interfaces.msg import TurnoutControl  
 from railway_interfaces.msg import TurnoutState
-from railway_interfaces.msg import TrackProtocolDefine 
+from railway_interfaces.msg import TrackProtocolDefines 
 
 
 class turnout_control(Node):
@@ -30,15 +30,15 @@ class turnout_control(Node):
 
         match turnout_descr['protocol']:
             case "ROS":
-                self.turnout_msg.protocol = TrackProtocolDefine().__class__.PROTOCOL_ROS
+                self.turnout_msg.protocol = TrackProtocolDefines.PROTOCOL_ROS
             case "MM1":
-                self.turnout_msg.protocol = TrackProtocolDefine().__class__.PROTOCOL_MM1
+                self.turnout_msg.protocol = TrackProtocolDefines.PROTOCOL_MM1
             case "MM2":    
-                self.turnout_msg.protocol = TrackProtocolDefine().__class__.PROTOCOL_MM2
+                self.turnout_msg.protocol = TrackProtocolDefines.PROTOCOL_MM2
             case "DCC":
-                self.turnout_msg.protocol = TrackProtocolDefine().__class__.PROTOCOL_DCC
+                self.turnout_msg.protocol = TrackProtocolDefines.PROTOCOL_DCC
             case "MFX":
-                self.turnout_msg.protocol = TrackProtocolDefine().__class__.PROTOCOL_MFX
+                self.turnout_msg.protocol = TrackProtocolDefines.PROTOCOL_MFX
             case _:
                 pass
 

@@ -39,36 +39,40 @@ class RailTrackNode(Node):
     def __init__(self) -> None:
         super().__init__('railtrack_gui')
 
-        # Declare the 'package_directory' parameter with a default value (empty string)
-        self.declare_parameter('package_directory', '')
+        self.declare_parameter("railtrack_ui_path", "");
+        self.railtrack_ui_path = self.get_parameter("railtrack_ui_path").get_parameter_value().string_value
+        self.get_logger().info(f"railtrack_ui_path {self.railtrack_ui_path}")
 
-        # Retrieve the 'package_directory' parameter value
-        self.package_directory = self.get_parameter('package_directory').get_parameter_value().string_value
-        workspace_root = Path(self.package_directory).parents[3]  # Go up three levels (install/ -> workspace/)
-        self.config_directory = str(workspace_root / 'src' / 'railtrack' / 'config')
-
-        self.railtrack_ui_directory = str(workspace_root / 'src' / 'railtrack' / 'railtrack_ui' )
-        self.program_settings_file = self.railtrack_ui_directory + '/' + 'settings.json'
-
+ 
+        self.program_settings_file = self.railtrack_ui_path  + '/settings.json'
         # Read programm settings
         with open(self.program_settings_file, 'r', encoding='utf-8') as f:
             self.program_settings = json.load(f)
 
-        # Read track configuration
-        self.config_file =  self.railtrack_ui_directory + "/" + self.program_settings["config_file"]           
+        self.get_logger().info(f"program_settings {self.program_settings}")
+        
+        self.config_file = self.program_settings["config_file"]
+        if not os.path.exists(self.config_file):
+            self.config_file = self.railtrack_ui_path + "/" + self.program_settings["config_file"]
+
+        self.get_logger().info(f"config_file {self.config_file}")
+
         if os.path.exists(self.config_file):
             with open(self.config_file, 'r', encoding='utf-8') as f:
                 self.track_config = json.load(f)
-
         else:
-            print(f"File {self.config_file} does not exist.")
+            self.get_logger().info(f"File {self.config_file} does not exist.")
             return
+        
 
-        self.locomotive_images_path = self.config_directory + '/' + self.track_config["locomotive_images_path"]
-        #self.get_logger().info(f"Loc path {self.locomotive_images_path}")
+        self.config_file_path = os.path.dirname(os.path.abspath(self.config_file))
+        self.get_logger().info(f"config_file_path {self.config_file_path}")
 
-        self.railtracklayout_images_path = self.config_directory + '/' + self.track_config["railtrack_layout_image"]
-        #self.get_logger().info(f"railtracklayout_images_path {self.railtracklayout_images_path}")
+        self.locomotive_images_path = self.config_file_path + '/' + self.track_config["locomotive_images_path"]
+        self.get_logger().info(f"locomotive_images_path {self.locomotive_images_path}")
+
+        self.railtracklayout_images_path = self.config_file_path + '/' + self.track_config["railtrack_layout_image"]
+        self.get_logger().info(f"railtracklayout_images_path {self.railtracklayout_images_path}")
 
         self.qos_profile = QoSProfile(
                 reliability=QoSReliabilityPolicy.BEST_EFFORT,
@@ -100,7 +104,7 @@ class RailTrackNode(Node):
         self.scenery_status_subscription = self.create_subscription(SceneryState, topic,  self.scenery_status_callback, qos_profile=self.qos_profile)
 
         topic = "/railtrack/scenery/control"
-        self.scenery_control_publisher = self.create_publisher(SceneryControl, topic,  1)
+        self.scenery_control_publisher = self.create_publisher(SceneryControl, topic,  self.qos_profile)
 
         self.power_msg = PowerControl()
         self.power_msg.enable = False

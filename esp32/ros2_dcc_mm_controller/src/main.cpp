@@ -50,7 +50,6 @@ int number_of_active_locomotives = NUMBER_OF_ACTIVE_LOCOMOTIVES;
 
 
 rcl_publisher_t turnout_status_publisher;
-rcl_publisher_t turnout_control_publisher;
 rcl_subscription_t turnout_control_subscriber;
 
 rcl_publisher_t locomoitive_status_publisher;
@@ -112,73 +111,56 @@ void init_ros(){
   // create node
   RCCHECK(rclc_node_init_default(&node, "railtrack_dcc_mm_controller", "", &support));
 
-  char topic_name[40];
-  sprintf(topic_name, "railtrack/turnout/status");
   // create turnout_status_publisher
   RCCHECK(rclc_publisher_init_best_effort(
     &turnout_status_publisher,
     &node,
     ROSIDL_GET_MSG_TYPE_SUPPORT(railway_interfaces, msg, TurnoutState),
-    topic_name));
+    "railtrack/turnout/status"));
 
-  sprintf(topic_name, "railtrack/turnout/status");
-  // create turnout_status_publisher
-  RCCHECK(rclc_publisher_init_default(
-    &turnout_control_publisher,
-    &node,
-    ROSIDL_GET_MSG_TYPE_SUPPORT(railway_interfaces, msg, TurnoutState),
-    topic_name));
-  sprintf(topic_name, "railtrack/turnout/control");
   // create turnout_status_publisher
   RCCHECK(rclc_subscription_init_default(
     &turnout_control_subscriber,
     &node,
     ROSIDL_GET_MSG_TYPE_SUPPORT(railway_interfaces, msg, TurnoutControl),
-    topic_name));
+    "railtrack/turnout/control"));
 
-  sprintf(topic_name, "railtrack/locomotive/status");
   // create locomotive_status_publisher
   RCCHECK(rclc_publisher_init_best_effort(
     &locomoitive_status_publisher,
     &node,
     ROSIDL_GET_MSG_TYPE_SUPPORT(railway_interfaces, msg, LocomotiveState),
-    topic_name));
-
-  sprintf(topic_name, "railtrack/locomotive/control");
+    "railtrack/locomotive/status"));
   // create locomotive_control_subscriber
   RCCHECK(rclc_subscription_init_default(
     &locomotive_control_subscriber,
     &node,
     ROSIDL_GET_MSG_TYPE_SUPPORT(railway_interfaces, msg, LocomotiveControl),
-    topic_name));
+    "railtrack/locomotive/control"));
 
-  sprintf(topic_name, "railtrack/power_status");
   // create power_status_publisher
   RCCHECK(rclc_publisher_init_best_effort(
     &power_status_publisher,
     &node,
     ROSIDL_GET_MSG_TYPE_SUPPORT(railway_interfaces, msg, PowerState),
-    topic_name));
-
-  sprintf(topic_name, "railtrack/power_control");
+    "railtrack/power_status"));
   // create power_control_subscriber
   RCCHECK(rclc_subscription_init_default(
     &power_control_subscriber,
     &node,
     ROSIDL_GET_MSG_TYPE_SUPPORT(railway_interfaces, msg, PowerControl),
-    topic_name));
+    "railtrack/power_control"));
 
-  sprintf(topic_name, "railtrack/track_config");
   // create track_config_subscriber
-  RCCHECK(rclc_subscription_init_default(
+  RCCHECK(rclc_subscription_init_best_effort(
     &track_config_subscriber,
     &node,
     ROSIDL_GET_MSG_TYPE_SUPPORT(railway_interfaces, msg, TrackConfig),
-    topic_name));
+    "railtrack/track_config"));
 
 
   // create timer,
-#define CYCLE_TIME    500
+  #define CYCLE_TIME    500
   // prevent division by zero
   unsigned int timer_timeout = CYCLE_TIME / (NUMBER_OF_ACTIVE_TURNOUTS_MM + 1);
   RCCHECK(rclc_timer_init_default(
@@ -237,18 +219,17 @@ void init_display(){
   tft->setTextSize(1);
   tft->setCursor(1, 22);
   tft->println("DCC/MM Control");
-
 }
 
 uint16_t *p_eeprom_programmed;
-uint16_t *p_number_of_turnouts;
-uint16_t *p_number_of_locomotives;
-bool *p_turnout_status;
+uint16_t *p_number_of_active_turnouts;
+uint16_t *p_number_of_active_locomotives;
 TRACK_OBJECT *p_turnouts;
 TRACK_OBJECT *p_locomtives;
+bool *p_turnout_status;
 
-uint16_t t_number_of_turnout = 10;
-uint16_t t_number_of_locomotive = 20;
+uint16_t t_number_of_turnout = 0x10;
+uint16_t t_number_of_locomotive = 0x20;
 
 #define EEPROM_PROGRAMMED_TAG     0xAA55
 
@@ -257,42 +238,44 @@ void init_eeprom(){
   int needed_eeprom_size = 0;
 
   EEPROM.begin(EEPROM_SIZE);
-  // assagne variables
+  // asign variables
   p_eeprom_programmed = (uint16_t *)EEPROM.getDataPtr();
+  
+  p_number_of_active_turnouts = p_eeprom_programmed + 1;
+  *p_number_of_active_turnouts = 0;
+  p_number_of_active_locomotives = p_number_of_active_turnouts + 1;
+  *p_number_of_active_locomotives = 0;
+
+
   if(*p_eeprom_programmed != EEPROM_PROGRAMMED_TAG){
     Serial.printf("\nEEPROM not programmed\n");
   }
   else
     Serial.printf("\nEEPROM programmed\n");
 
-  p_number_of_turnouts = p_eeprom_programmed + 1;
-  p_number_of_locomotives = p_number_of_turnouts + 1;
-
-
   needed_eeprom_size += sizeof(uint16_t); // eeprom programmed
   needed_eeprom_size += sizeof(uint16_t); // number_of_turnouts
-  needed_eeprom_size += sizeof(uint16_t); // numbet_of_locomotive
-  needed_eeprom_size += sizeof(bool) * t_number_of_turnout; // needed_eeprom_size of turnout_status
+  needed_eeprom_size += sizeof(uint16_t); // number_of_locomotive
   needed_eeprom_size += sizeof(TRACK_OBJECT) * t_number_of_turnout; // needed_eeprom_size of turnout objects
   needed_eeprom_size += sizeof(TRACK_OBJECT) * t_number_of_locomotive; // needed_eeprom_size of locomotive objects
+  needed_eeprom_size += sizeof(bool) * t_number_of_turnout; // needed_eeprom_size of turnout_status
   Serial.printf("needed_eeprom_size = %i\n", needed_eeprom_size);
 
   if(needed_eeprom_size > EEPROM_SIZE){
     Serial.printf("needed_eeprom_size = %i\n", needed_eeprom_size);
-
   }
 
   // assign array's
-  p_turnout_status = (bool *)(p_number_of_locomotives + 1);
-  p_turnouts = (TRACK_OBJECT *)(p_turnout_status + t_number_of_turnout);
+  p_turnouts = (TRACK_OBJECT *)(p_number_of_active_locomotives + 1);
   p_locomtives = p_turnouts + t_number_of_turnout;
+  p_turnout_status = (bool *)(p_locomtives + t_number_of_turnout);
 
-  Serial.printf("p_eeprom_programmed     = 0x%08i\n", p_eeprom_programmed);
-  Serial.printf("p_number_of_turnouts    = 0x%08i\n", p_number_of_turnouts);
-  Serial.printf("p_number_of_locomotives = 0x%08i\n", p_number_of_locomotives);
-  Serial.printf("p_turnout_status        = 0x%08i\n", p_turnout_status);
-  Serial.printf("p_turnouts              = 0x%08i\n", p_turnouts);
-  Serial.printf("p_locomtives            = 0x%08i\n", p_locomtives);
+  Serial.printf("p_eeprom_programmed            = 0x%08x\n", p_eeprom_programmed);
+  Serial.printf("p_number_of_active_turnouts    = 0x%08x\n", p_number_of_active_turnouts);
+  Serial.printf("p_number_of_active_locomotives = 0x%08x\n", p_number_of_active_locomotives);
+  Serial.printf("p_turnouts                     = 0x%08x\n", p_turnouts);
+  Serial.printf("p_locomtives                   = 0x%08x\n", p_locomtives);
+  Serial.printf("p_turnout_status               = 0x%08x\n", p_turnout_status);
 
 }
 
@@ -317,10 +300,10 @@ void init_locomotives(){
     locomotive_status[i].protocol = active_locomotives[i].protocol;
     locomotive_status[i].address = active_locomotives[i].address;
     locomotive_status[i].direction = railway_interfaces__msg__LocomotiveState__DIRECTION_FORWARD;
-    word speed;
+    word speed; //?
     //ctrlgetLocoSpeed(locomotive_status[i].address, &speed);
     locomotive_status[i].speed = speed;
-    byte direction;
+    byte direction; //?
     //ctrlgetLocoDirection(locomotive_status[i].address, &direction);
     locomotive_status[i].direction = direction;
 
@@ -342,7 +325,7 @@ void setup() {
   Serial.begin(115200);
   while (!Serial);
   delay(2000);
-  Serial.printf("DCC/MM controller started\n");
+  Serial.printf("\nDCC/MM controller started\n");
 #if 0
   Serial.print("MOSI: ");Serial.println(MOSI);
   Serial.print("MISO: ");Serial.println(MISO);

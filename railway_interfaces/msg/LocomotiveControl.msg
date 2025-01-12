@@ -15,8 +15,6 @@ uint8 DCC_SPEED_STEP_128 = 1
 uint8 DCC_SPEED_STEP_28 = 2
 uint8 DCC_SPEED_STEP_14 = 3
 
-railway_interfaces/TrackProtocolDefine protocols
-
 uint8 command
 uint8 track_index  # Not used, for future implementation
 uint8 protocol

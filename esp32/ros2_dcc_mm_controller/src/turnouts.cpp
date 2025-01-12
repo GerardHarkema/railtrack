@@ -27,6 +27,7 @@ int turnout_state_index = 0;
 void turnout_state_publisher_timer_callback(rcl_timer_t * timer, int64_t last_call_time) {
 
   RCLC_UNUSED(last_call_time);
+  //Serial.print(".");
 
   if ((timer != NULL) && number_of_active_mm_turnouts) {
     RCSOFTCHECK(rcl_publish(&turnout_status_publisher, &turnout_status[turnout_state_index], NULL));
@@ -58,23 +59,22 @@ void turnout_control_callback(const void * msgin)
           break;
         case MM1:
         case MM2:           
-          //Serial.printf("Solenoid MM\n");
+          Serial.printf("Solenoid MM\n");
           trackScheduler.mmSetSolenoid(control->number, straight);
           break;
         default:
           Serial.printf("Solenoid not known\n");
           break;
       }
-
       EEPROM.writeBool(index, straight);
       EEPROM.commit();
       turnout_status[index].state = straight;
+      tft_printf(ST77XX_GREEN, "ROS msg\nTurnout\nNumber: %i\nSet: %s\n",
+              control->number, straight ? "Green" : "Red");
     }
     else{
       Serial.printf("Solenoid not found\n");
     }
-    tft_printf(ST77XX_GREEN, "ROS msg\nTurnout\nNumber: %i\nSet: %s\n",
-            control->number, straight ? "Green" : "Red");
   }
 
 }

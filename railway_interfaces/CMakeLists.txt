@@ -28,7 +28,7 @@ find_package(rosidl_default_generators REQUIRED)
 
 
 rosidl_generate_interfaces(${PROJECT_NAME}
-  "msg/TrackProtocolDefine.msg"
+  "msg/TrackProtocolDefines.msg"
   "msg/LocomotiveControl.msg"
   "msg/LocomotiveState.msg"
   "msg/TurnoutControl.msg"

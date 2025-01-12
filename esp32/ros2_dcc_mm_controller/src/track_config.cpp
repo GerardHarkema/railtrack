@@ -15,9 +15,16 @@
 #endif
 
 extern bool track_config_enable_flag;
+extern uint16_t *p_eeprom_programmed;
+extern uint16_t *p_number_of_active_turnouts;
+extern uint16_t *p_number_of_active_locomotives;
+extern TRACK_OBJECT *p_turnouts;
+extern TRACK_OBJECT *p_locomtives;
+extern bool *p_turnout_status;
 
 void track_config_callback(const void * msgin){
-  
+  Serial.printf("!!!!!!!!!!!!!!!!!!!\n");
+#if 0  
   const railway_interfaces__msg__TrackConfig * track_config = (const railway_interfaces__msg__TrackConfig *)msgin;
 
 // Check if the message contains track objects
@@ -41,5 +48,5 @@ void track_config_callback(const void * msgin){
   if(track_config_enable_flag){
     Serial.printf("Configuration accepted\n");
   }
-
+#endif
 }

@@ -16,11 +16,11 @@
 #define RST_PIN 17//21
 
 typedef enum{
-    ROS = railway_interfaces__msg__TrackProtocolDefine__PROTOCOL_ROS, 
-    MM1 = railway_interfaces__msg__TrackProtocolDefine__PROTOCOL_MM1, 
-    MM2 = railway_interfaces__msg__TrackProtocolDefine__PROTOCOL_MM2, 
-    DCC = railway_interfaces__msg__TrackProtocolDefine__PROTOCOL_DCC, 
-    MFX = railway_interfaces__msg__TrackProtocolDefine__PROTOCOL_MFX
+    ROS = railway_interfaces__msg__TrackProtocolDefines__PROTOCOL_ROS, 
+    MM1 = railway_interfaces__msg__TrackProtocolDefines__PROTOCOL_MM1, 
+    MM2 = railway_interfaces__msg__TrackProtocolDefines__PROTOCOL_MM2, 
+    DCC = railway_interfaces__msg__TrackProtocolDefines__PROTOCOL_DCC, 
+    MFX = railway_interfaces__msg__TrackProtocolDefines__PROTOCOL_MFX
 }PROTOCOL;
 
 typedef enum{
@@ -51,6 +51,6 @@ typedef struct{
 
 
 #define RCCHECK(fn) { rcl_ret_t temp_rc = fn; if((temp_rc != RCL_RET_OK)){error_loop();}}
-#define RCSOFTCHECK(fn) { rcl_ret_t temp_rc = fn; if((temp_rc != RCL_RET_OK)){}}
+#define RCSOFTCHECK(fn) { rcl_ret_t temp_rc = fn; if((temp_rc != RCL_RET_OK)){Serial.printf("RCL-error %i\n", temp_rc);}}
 
 #endif
