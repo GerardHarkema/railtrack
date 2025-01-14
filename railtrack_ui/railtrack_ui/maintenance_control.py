@@ -89,8 +89,6 @@ class maintenance_control(Node):
 
     def update_controller(self):
         config_msg = TrackConfig()
-        #config_msg.track_objects
-        track_objs = []
 
         if 1:
             for turnout in self.track_config["Turnouts"]:
@@ -106,10 +104,8 @@ class maintenance_control(Node):
                     case "MFX":
                         track_obj.protocol = TrackProtocolDefines.PROTOCOL_MFX
                 track_obj.address = turnout["number"]
-                track_objs.append(track_obj)
-                #config_msg.track_objects.append(track_obj)
+                config_msg.track_objects.append(track_obj)
                 #print(turnout)
-                pass
             for locomotive in self.track_config["Locomotives"]:
                 track_obj = TrackObjectConfig()
                 track_obj.config_type = TrackObjectConfig.CONFIG_TYPE_LOCOMOTIVE
@@ -123,12 +119,8 @@ class maintenance_control(Node):
                     case "MFX":
                         track_obj.protocol = TrackProtocolDefines.PROTOCOL_MFX
                 track_obj.address = locomotive["address"]
-                track_objs.append(track_obj)
-                #config_msg.track_objects.append(track_obj)
-                #print(locomotive)
-                pass
+                config_msg.track_objects.append(track_obj)
 
-        config_msg.track_objects = track_objs
         self.track_config_publisher.publish(config_msg)
 
         ui.notify("Update Controller")                 

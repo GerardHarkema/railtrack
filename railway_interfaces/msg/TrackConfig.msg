@@ -1,2 +1,1 @@
-uint32 dummy
 railway_interfaces/TrackObjectConfig[] track_objects

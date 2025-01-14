@@ -50,7 +50,27 @@ typedef struct{
 }TRACK_OBJECT;
 
 
-#define RCCHECK(fn) { rcl_ret_t temp_rc = fn; if((temp_rc != RCL_RET_OK)){error_loop();}}
-#define RCSOFTCHECK(fn) { rcl_ret_t temp_rc = fn; if((temp_rc != RCL_RET_OK)){Serial.printf("RCL-error %i\n", temp_rc);}}
+//#define RCCHECK(fn) { rcl_ret_t temp_rc = fn; if((temp_rc != RCL_RET_OK)){error_loop();}}
+//#define RCSOFTCHECK(fn) { rcl_ret_t temp_rc = fn; if((temp_rc != RCL_RET_OK)){Serial.printf("RCL-error %i\n", temp_rc);}}
+
+#define RCCHECK(fn)                                                                                \
+    {                                                                                              \
+        rcl_ret_t temp_rc = fn;                                                                    \
+        if ((temp_rc != RCL_RET_OK))                                                               \
+        {                                                                                          \
+            Serial.printf("%s: Failed ros_client status on line %d: %d, Stopping!\n", __FILE__,  __LINE__, (int)temp_rc); \
+            error_loop();                                                                        \
+        }                                                                                          \
+    }
+
+#define RCSOFTCHECK(fn)                                                                             \
+    {                                                                                               \
+        rcl_ret_t temp_rc = fn;                                                                     \
+        if ((temp_rc != RCL_RET_OK))                                                                \
+        {                                                                                           \
+            Serial.printf("%s: Failed ros_client status on line %d: %d, Continuing\n", __FILE__, __LINE__, (int)temp_rc); \
+        }                                                                                           \
+    }
+
 
 #endif

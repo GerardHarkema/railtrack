@@ -151,6 +151,8 @@ void init_ros(){
     ROSIDL_GET_MSG_TYPE_SUPPORT(railway_interfaces, msg, PowerControl),
     "railtrack/power_control"));
 
+  int size = sizeof(TRACK_OBJECT) * EEPROM_SIZE;
+
   // create track_config_subscriber
   RCCHECK(rclc_subscription_init_best_effort(
     &track_config_subscriber,
@@ -158,6 +160,20 @@ void init_ros(){
     ROSIDL_GET_MSG_TYPE_SUPPORT(railway_interfaces, msg, TrackConfig),
     "railtrack/track_config"));
 
+  // allocate dynamic msg memory
+  static micro_ros_utilities_memory_conf_t conf = {0};
+  //conf.max_string_capacity = 20;
+  conf.max_ros2_type_sequence_capacity = size;
+  //conf.max_basic_type_sequence_capacity = 10;
+  bool success = micro_ros_utilities_create_message_memory(
+      ROSIDL_GET_MSG_TYPE_SUPPORT(railway_interfaces, msg, TrackConfig),
+      &track_config,
+      conf
+  );
+
+  if(!success){
+    Serial.printf("Unable to allocate memory for configuration message");
+  }
 
   // create timer,
   #define CYCLE_TIME    500
@@ -192,14 +208,14 @@ void init_ros(){
   
   RCCHECK(rclc_executor_init(&executor, &support.context, number_of_executors, &allocator));
 
-  RCCHECK(rclc_executor_add_timer(&executor, &turnout_state_publisher_timer));
-  RCCHECK(rclc_executor_add_subscription(&executor, &turnout_control_subscriber, &turnout_control, &turnout_control_callback, ON_NEW_DATA));
+  //RCCHECK(rclc_executor_add_timer(&executor, &turnout_state_publisher_timer));
+  //RCCHECK(rclc_executor_add_subscription(&executor, &turnout_control_subscriber, &turnout_control, &turnout_control_callback, ON_NEW_DATA));
 
-  RCCHECK(rclc_executor_add_timer(&executor, &locomotive_state_publisher_timer));
-  RCCHECK(rclc_executor_add_subscription(&executor, &locomotive_control_subscriber, &locomotive_control, &locomotive_control_callback, ON_NEW_DATA));
+  //RCCHECK(rclc_executor_add_timer(&executor, &locomotive_state_publisher_timer));
+  //RCCHECK(rclc_executor_add_subscription(&executor, &locomotive_control_subscriber, &locomotive_control, &locomotive_control_callback, ON_NEW_DATA));
 
-  RCCHECK(rclc_executor_add_timer(&executor, &power_state_publisher_timer));
-  RCCHECK(rclc_executor_add_subscription(&executor, &power_control_subscriber, &power_control, &power_control_callback, ON_NEW_DATA));
+  //RCCHECK(rclc_executor_add_timer(&executor, &power_state_publisher_timer));
+  //RCCHECK(rclc_executor_add_subscription(&executor, &power_control_subscriber, &power_control, &power_control_callback, ON_NEW_DATA));
 
   RCCHECK(rclc_executor_add_subscription(&executor, &track_config_subscriber, &track_config, &track_config_callback, ON_NEW_DATA));
 
@@ -241,10 +257,10 @@ void init_eeprom(){
   // asign variables
   p_eeprom_programmed = (uint16_t *)EEPROM.getDataPtr();
   
-  p_number_of_active_turnouts = p_eeprom_programmed + 1;
-  *p_number_of_active_turnouts = 0;
-  p_number_of_active_locomotives = p_number_of_active_turnouts + 1;
+  p_number_of_active_locomotives = p_eeprom_programmed + 1;
   *p_number_of_active_locomotives = 0;
+  p_number_of_active_turnouts = p_number_of_active_locomotives + 1;
+  *p_number_of_active_turnouts = 0;
 
 
   if(*p_eeprom_programmed != EEPROM_PROGRAMMED_TAG){
@@ -253,28 +269,22 @@ void init_eeprom(){
   else
     Serial.printf("\nEEPROM programmed\n");
 
-  needed_eeprom_size += sizeof(uint16_t); // eeprom programmed
-  needed_eeprom_size += sizeof(uint16_t); // number_of_turnouts
-  needed_eeprom_size += sizeof(uint16_t); // number_of_locomotive
-  needed_eeprom_size += sizeof(TRACK_OBJECT) * t_number_of_turnout; // needed_eeprom_size of turnout objects
-  needed_eeprom_size += sizeof(TRACK_OBJECT) * t_number_of_locomotive; // needed_eeprom_size of locomotive objects
-  needed_eeprom_size += sizeof(bool) * t_number_of_turnout; // needed_eeprom_size of turnout_status
-  Serial.printf("needed_eeprom_size = %i\n", needed_eeprom_size);
-
-  if(needed_eeprom_size > EEPROM_SIZE){
-    Serial.printf("needed_eeprom_size = %i\n", needed_eeprom_size);
+  if(!enoughNeededEeprom(t_number_of_locomotive, t_number_of_turnout)){
+    Serial.printf("needed_eeprom_size out of range\n");
   }
 
+
   // assign array's
-  p_turnouts = (TRACK_OBJECT *)(p_number_of_active_locomotives + 1);
-  p_locomtives = p_turnouts + t_number_of_turnout;
-  p_turnout_status = (bool *)(p_locomtives + t_number_of_turnout);
+  p_locomtives = (TRACK_OBJECT *)(p_number_of_active_locomotives + 1);
+
+  p_turnouts = p_locomtives + t_number_of_locomotive;
+  p_turnout_status = (bool *)(p_turnouts + t_number_of_turnout);
 
   Serial.printf("p_eeprom_programmed            = 0x%08x\n", p_eeprom_programmed);
-  Serial.printf("p_number_of_active_turnouts    = 0x%08x\n", p_number_of_active_turnouts);
   Serial.printf("p_number_of_active_locomotives = 0x%08x\n", p_number_of_active_locomotives);
-  Serial.printf("p_turnouts                     = 0x%08x\n", p_turnouts);
+  Serial.printf("p_number_of_active_turnouts    = 0x%08x\n", p_number_of_active_turnouts);
   Serial.printf("p_locomtives                   = 0x%08x\n", p_locomtives);
+  Serial.printf("p_turnouts                     = 0x%08x\n", p_turnouts);
   Serial.printf("p_turnout_status               = 0x%08x\n", p_turnout_status);
 
 }
