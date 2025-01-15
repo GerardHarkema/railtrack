@@ -30,21 +30,21 @@ extern unsigned short int active_turnouts_ros[];
 extern int number_of_active_mm_turnouts;
 extern int number_of_active_locomotives;
 
-void lookupLocomotiveProtocol(PROTOCOL protocol, char *protocol_txt){
+void lookupLocomotiveProtocol(uint8_t protocol, char *protocol_txt){
   switch(protocol){
-    case ROS:
+    case railway_interfaces__msg__TrackProtocolDefines__PROTOCOL_ROS:
       strcpy(protocol_txt, "ROS");
       break;
-    case MM1:
+    case railway_interfaces__msg__TrackProtocolDefines__PROTOCOL_MM1:
       strcpy(protocol_txt, "MM1");
       break;    
-    case MM2:
+    case railway_interfaces__msg__TrackProtocolDefines__PROTOCOL_MM2:
       strcpy(protocol_txt, "MM2");
       break;    
-    case DCC:
+    case railway_interfaces__msg__TrackProtocolDefines__PROTOCOL_DCC:
       strcpy(protocol_txt, "DCC");
       break;
-    case MFX:
+    case railway_interfaces__msg__TrackProtocolDefines__PROTOCOL_MFX:
       strcpy(protocol_txt, "MFX");
       break;
     default:
@@ -86,7 +86,7 @@ bool lookupTurnoutIndex(int turnout_number, int *turnout_index){
   return true;
 }
 
-bool lookupLocomotiveIndex(int locomotive_address, PROTOCOL protocol, int *locomotive_index){
+bool lookupLocomotiveIndex(int locomotive_address, uint8_t protocol, int *locomotive_index){
   int i;
 
   //Serial.printf("locomotive_address = %i\n", locomotive_address);

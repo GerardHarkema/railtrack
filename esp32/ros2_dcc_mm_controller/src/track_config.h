@@ -7,6 +7,7 @@
 #include <TrackPacket.h>
 
 bool enoughNeededEeprom(int number_of_locomotives, int number_of_turnouts);
+void dumpConfiguration();
 void track_config_callback(const void * msgin);
 
 #endif

@@ -41,6 +41,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/ColorRGB.msg"
   "msg/SceneryControl.msg"
   "msg/SceneryState.msg"
+  "msg/DccSpeedstepsDefines.msg"
    DEPENDENCIES std_msgs
  )
 

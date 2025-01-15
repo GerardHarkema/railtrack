@@ -247,7 +247,7 @@ bool *p_turnout_status;
 uint16_t t_number_of_turnout = 0x10;
 uint16_t t_number_of_locomotive = 0x20;
 
-#define EEPROM_PROGRAMMED_TAG     0xAA55
+
 
 void init_eeprom(){
 
@@ -258,35 +258,26 @@ void init_eeprom(){
   p_eeprom_programmed = (uint16_t *)EEPROM.getDataPtr();
   
   p_number_of_active_locomotives = p_eeprom_programmed + 1;
-  *p_number_of_active_locomotives = 0;
   p_number_of_active_turnouts = p_number_of_active_locomotives + 1;
-  *p_number_of_active_turnouts = 0;
 
 
-  if(*p_eeprom_programmed != EEPROM_PROGRAMMED_TAG){
-    Serial.printf("\nEEPROM not programmed\n");
-  }
-  else
+  if(*p_eeprom_programmed == EEPROM_PROGRAMMED_TAG){
     Serial.printf("\nEEPROM programmed\n");
 
-  if(!enoughNeededEeprom(t_number_of_locomotive, t_number_of_turnout)){
-    Serial.printf("needed_eeprom_size out of range\n");
+    if(!enoughNeededEeprom(t_number_of_locomotive, t_number_of_turnout)){
+      Serial.printf("needed_eeprom_size out of range\n");
+    }
+
+    // assign array's
+    p_locomtives = (TRACK_OBJECT *)(p_number_of_active_turnouts + 1);
+
+    p_turnouts = p_locomtives + *p_number_of_active_locomotives;
+    p_turnout_status = (bool *)(p_turnouts + *p_number_of_active_turnouts);
+
+    dumpConfiguration();
   }
-
-
-  // assign array's
-  p_locomtives = (TRACK_OBJECT *)(p_number_of_active_locomotives + 1);
-
-  p_turnouts = p_locomtives + t_number_of_locomotive;
-  p_turnout_status = (bool *)(p_turnouts + t_number_of_turnout);
-
-  Serial.printf("p_eeprom_programmed            = 0x%08x\n", p_eeprom_programmed);
-  Serial.printf("p_number_of_active_locomotives = 0x%08x\n", p_number_of_active_locomotives);
-  Serial.printf("p_number_of_active_turnouts    = 0x%08x\n", p_number_of_active_turnouts);
-  Serial.printf("p_locomtives                   = 0x%08x\n", p_locomtives);
-  Serial.printf("p_turnouts                     = 0x%08x\n", p_turnouts);
-  Serial.printf("p_turnout_status               = 0x%08x\n", p_turnout_status);
-
+  else
+      Serial.printf("\nEEPROM not programmed\n");
 }
 
 void init_power(){
@@ -300,7 +291,7 @@ void init_power(){
 void init_turnouts(){
   for(int i = 0; i < NUMBER_OF_ACTIVE_TURNOUTS_MM; i++){
     turnout_status[i].number = active_turnouts_mm[i];
-    turnout_status[i].protocol = MM2;
+    turnout_status[i].protocol = railway_interfaces__msg__TrackProtocolDefines__PROTOCOL_MM2;
     turnout_status[i].state = EEPROM.readBool(i);
   }
 }
@@ -413,7 +404,8 @@ void loop() {
   if(!track_config_enable_flag){
     if(new_display_measurents_switch == LOW){
       track_config_enable_cnt++;
-      if(track_config_enable_cnt > 100){
+      Serial.printf("%i\n", track_config_enable_cnt);
+      if(track_config_enable_cnt > 30){
         track_config_enable_flag = true;
         display_measurents = false;
         tft_printf(ST77XX_MAGENTA, "Ready\nto receive\nnew track\nconfiguration");
@@ -425,8 +417,8 @@ void loop() {
   if(!track_config_enable_flag){
     if((old_display_measurents_switch != new_display_measurents_switch) && (new_display_measurents_switch == LOW)){
       display_measurents = display_measurents ? false : true;
-      //Serial.println("Toggle");
-      //Serial.println(display_measurents);
+      Serial.println("Toggle");
+      Serial.println(display_measurents);
       tft_printf(ST77XX_GREEN,"");
     }
     old_display_measurents_switch = new_display_measurents_switch;

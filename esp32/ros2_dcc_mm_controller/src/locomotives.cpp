@@ -49,11 +49,11 @@ void locomotive_control_callback(const void * msgin)
 
   switch(control->command){
     case railway_interfaces__msg__LocomotiveControl__SET_SPEED:
-      if(lookupLocomotiveIndex(control->address, (PROTOCOL)control->protocol, &locomotive_index)){
+      if(lookupLocomotiveIndex(control->address, control->protocol, &locomotive_index)){
         DEBUG_PRINT("Found locomotive for setting speed\n");
         int8_t speed;
         switch(active_locomotives[locomotive_index].protocol){
-          case DCC:
+          case railway_interfaces__msg__TrackProtocolDefines__PROTOCOL_DCC:
             DEBUG_PRINT("Protocol DCC\n");         
             switch(control->dcc_speed_step){
               case railway_interfaces__msg__LocomotiveControl__DCC_SPEED_STEP_128:
@@ -80,7 +80,7 @@ void locomotive_control_callback(const void * msgin)
                 break;
             }
             break;
-          case MM1:
+          case railway_interfaces__msg__TrackProtocolDefines__PROTOCOL_MM1:
             speed = (uint8_t)(control->speed / SPEED_STEP_RESOLUTION_14);
             if(locomotive_status[locomotive_index].direction ==
               railway_interfaces__msg__LocomotiveControl__DIRECTION_REVERSE)
@@ -88,7 +88,7 @@ void locomotive_control_callback(const void * msgin)
             DEBUG_PRINT("MM1: Set Speed: %i\n", speed);
             trackScheduler.mm1SetSpeed(control->address, speed); //This should be in the call backs of the ROS subscribers
             break;
-          case MM2:
+          case railway_interfaces__msg__TrackProtocolDefines__PROTOCOL_MM2:
             speed = (uint8_t)(control->speed / SPEED_STEP_RESOLUTION_14);
             if(locomotive_status[locomotive_index].direction ==
               railway_interfaces__msg__LocomotiveControl__DIRECTION_REVERSE)
@@ -102,16 +102,16 @@ void locomotive_control_callback(const void * msgin)
         }
         locomotive_status[locomotive_index].speed = control->speed;
       }
-      lookupLocomotiveProtocol((PROTOCOL)control->protocol, protocol_txt);
+      lookupLocomotiveProtocol(control->protocol, protocol_txt);
       tft_printf(ST77XX_GREEN, "ROS msg\nLocomotive\nAddress(%s): %i\nSet speed: %i\n",
             protocol_txt, control->address, control->speed);
       break;
     case railway_interfaces__msg__LocomotiveControl__SET_DIRECTION:
 
-      if(lookupLocomotiveIndex(control->address, (PROTOCOL)control->protocol, &locomotive_index)){
+      if(lookupLocomotiveIndex(control->address, control->protocol, &locomotive_index)){
         DEBUG_PRINT("Found locomotive for setting direction\n");
         switch(active_locomotives[locomotive_index].protocol){
-          case DCC:
+          case railway_interfaces__msg__TrackProtocolDefines__PROTOCOL_DCC:
             DEBUG_PRINT("Protocol DCC\n");         
             switch(active_locomotives[locomotive_index].speed_steps){
               case SS_128:
@@ -127,11 +127,11 @@ void locomotive_control_callback(const void * msgin)
                 break;
             }
             break;
-          case MM1:
+          case railway_interfaces__msg__TrackProtocolDefines__PROTOCOL_MM1:
             trackScheduler.mm1ChangeDir(control->address);
             trackScheduler.mm1SetSpeed(control->address, 0); //This should be in the call backs of the ROS subscribers
             break;
-          case MM2:
+          case railway_interfaces__msg__TrackProtocolDefines__PROTOCOL_MM2:
             trackScheduler.mm2SetSpeed(control->address, 0); //This should be in the call backs of the ROS subscribers
             break;
           default:
@@ -142,15 +142,15 @@ void locomotive_control_callback(const void * msgin)
         locomotive_status[locomotive_index].speed = 0;
       }
       direction_txt = getDirectionTxt(control->direction);
-      lookupLocomotiveProtocol((PROTOCOL)control->protocol, protocol_txt);
+      lookupLocomotiveProtocol(control->protocol, protocol_txt);
       tft_printf(ST77XX_GREEN, "ROS msg\nLocomotive\nAddress(%s): %i\nSet dir: %s\n",
             protocol_txt, control->address, direction_txt);      
       break;
     case railway_interfaces__msg__LocomotiveControl__SET_FUNCTION:
-      if(lookupLocomotiveIndex(control->address, (PROTOCOL)control->protocol, &locomotive_index)){
+      if(lookupLocomotiveIndex(control->address, control->protocol, &locomotive_index)){
         DEBUG_PRINT("Found locomotive for setting function\n");
         switch(active_locomotives[locomotive_index].protocol){
-          case DCC:
+          case railway_interfaces__msg__TrackProtocolDefines__PROTOCOL_DCC:
             DEBUG_PRINT("Protocol DCC: Function switch\n"); 
             if(control->function_index > MAX_NUMBER_OF_DCC_FUNCTIONS){
               DEBUG_PRINT("Invalid function\n");
@@ -163,7 +163,7 @@ void locomotive_control_callback(const void * msgin)
             }
             trackScheduler.dccSetFunctions(control->address, DCC_SHORT_ADDRESS, functions);
             break;
-          case MM1:
+          case railway_interfaces__msg__TrackProtocolDefines__PROTOCOL_MM1:
             DEBUG_PRINT("Protocol MM1: Function switch\n"); 
             if(control->function_index > MAX_NUMBER_OF_MM_FUNCTIONS){
               DEBUG_PRINT("Invalid function\n");
@@ -177,7 +177,7 @@ void locomotive_control_callback(const void * msgin)
             trackScheduler.mm1SetFunctions(control->address, functions);
             DEBUG_PRINT("Protocol MM1\n"); 
             break;
-          case MM2:
+          case railway_interfaces__msg__TrackProtocolDefines__PROTOCOL_MM2:
             DEBUG_PRINT("Protocol MM2: Function switch\n"); 
             if(control->function_index > MAX_NUMBER_OF_MM_FUNCTIONS){
               DEBUG_PRINT("Invalid function\n");
@@ -197,7 +197,7 @@ void locomotive_control_callback(const void * msgin)
             break;
         }
       }
-      lookupLocomotiveProtocol((PROTOCOL)control->protocol, protocol_txt);
+      lookupLocomotiveProtocol(control->protocol, protocol_txt);
       tft_printf(ST77XX_GREEN, "ROS msg\nLocomotive\nAddress(%s): %i\nSet Func. %i: %s\n",
             protocol_txt, control->address, control->function_index, control->function_state ? "True" : "False");
       break;

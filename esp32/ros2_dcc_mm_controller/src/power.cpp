@@ -57,7 +57,7 @@ void power_control_callback(const void * msgin)
     for(int i = 0 ; i < number_of_active_locomotives; i++){
 
       switch(active_locomotives[i].protocol){
-        case DCC:
+        case railway_interfaces__msg__TrackProtocolDefines__PROTOCOL_DCC:
           DEBUG_PRINT("Protocol DCC\n");         
           switch(active_locomotives[i].speed_steps){
             case SS_128:
@@ -73,10 +73,10 @@ void power_control_callback(const void * msgin)
               break;
           }
           break;
-        case MM1:
+        case railway_interfaces__msg__TrackProtocolDefines__PROTOCOL_MM1:
           //trackScheduler.mm1SetSpeed(active_locomotives[i].address, 0); //This should be in the call backs of the ROS subscribers
           break;
-        case MM2:
+        case railway_interfaces__msg__TrackProtocolDefines__PROTOCOL_MM2:
           //trackScheduler.mm2SetSpeed(active_locomotives[i].address, 0); //This should be in the call backs of the ROS subscribers
           break;
         default:

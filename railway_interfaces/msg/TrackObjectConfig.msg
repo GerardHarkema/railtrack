@@ -6,4 +6,5 @@ uint8 CONFIG_TYPE_TURNOUT     = 2
 
 uint8 config_type
 uint8 protocol
-int32 address
+uint32 address
+uint8 speed_steps

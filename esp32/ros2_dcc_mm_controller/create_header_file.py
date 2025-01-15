@@ -28,7 +28,7 @@ try:
     line = "LOCOMOTIVE active_locomotives[] = {"
     for i in range(len(locomotives) - 1):
         line = line + "{" + str(locomotives[i]["address"]) + ', '
-        line = line + str(locomotives[i]["protocol"]) + ', '
+        line = line + "railway_interfaces__msg__TrackProtocolDefines__PROTOCOL_" + str(locomotives[i]["protocol"]) + ', '
         if str(locomotives[i]["protocol"]) == "DCC":
             speed_steps = locomotives[i]["speed_steps"]
             if speed_steps == 128:
@@ -44,7 +44,7 @@ try:
         #line = line + "0},"
 
     line = line + "{" + str(locomotives[len(locomotives) - 1]["address"]) + ', '
-    line = line + str(locomotives[len(locomotives) - 1]["protocol"]) + ', '
+    line = line + "railway_interfaces__msg__TrackProtocolDefines__PROTOCOL_" + str(locomotives[len(locomotives) - 1]["protocol"]) + ', '
     if str(locomotives[len(locomotives) - 1]["protocol"]) == "DCC":
         speed_steps = locomotives[len(locomotives) - 1]["speed_steps"]
         if speed_steps == 128:

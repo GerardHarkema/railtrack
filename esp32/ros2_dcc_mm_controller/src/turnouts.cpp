@@ -48,7 +48,7 @@ void turnout_control_callback(const void * msgin)
       //Serial.printf("Solenoid found\n");
       //Serial.printf("State = %i\n", straight);
       switch(turnout_status[index].protocol){
-        case DCC:
+        case railway_interfaces__msg__TrackProtocolDefines__PROTOCOL_DCC:
           Serial.printf("Solenoid DCC\n");
           if(straight){
             //trackScheduler.dccSetBasicAccessory(index);
@@ -57,8 +57,8 @@ void turnout_control_callback(const void * msgin)
             //trackScheduler.dccUnsetBasicAccessory(index);
           }
           break;
-        case MM1:
-        case MM2:           
+        case railway_interfaces__msg__TrackProtocolDefines__PROTOCOL_MM1:
+        case railway_interfaces__msg__TrackProtocolDefines__PROTOCOL_MM2:           
           Serial.printf("Solenoid MM\n");
           trackScheduler.mmSetSolenoid(control->number, straight);
           break;

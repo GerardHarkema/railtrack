@@ -19,6 +19,7 @@ from std_msgs.msg import Bool;
 from railway_interfaces.msg import LocomotiveControl  
 from railway_interfaces.msg import LocomotiveState
 from railway_interfaces.msg import TrackProtocolDefines 
+from railway_interfaces.msg import DccSpeedstepsDefines
 
 
 
@@ -49,13 +50,13 @@ class locomotive_control(Node):
                 self.number_of_functions = 16
                 match locomotive_descr['speed_steps']:
                     case 128:
-                        self.locomotive_msg.dcc_speed_step = LocomotiveControl.DCC_SPEED_STEP_128
+                        self.locomotive_msg.dcc_speed_step = DccSpeedstepsDefines.DCC_SPEED_STEP_128
                     case 28:
-                        self.locomotive_msg.dcc_speed_step = LocomotiveControl.DCC_SPEED_STEP_28
+                        self.locomotive_msg.dcc_speed_step = DccSpeedstepsDefines.DCC_SPEED_STEP_28
                     case 14:
-                        self.locomotive_msg.dcc_speed_step = LocomotiveControl.DCC_SPEED_STEP_14
+                        self.locomotive_msg.dcc_speed_step = DccSpeedstepsDefines.DCC_SPEED_STEP_14
                     case _:
-                        self.locomotive_msg.dcc_speed_step = LocomotiveControl.DCC_SPEED_STEP_128 # default
+                        self.locomotive_msg.dcc_speed_step = DccSpeedstepsDefines.DCC_SPEED_STEP_128 # default
             case "MFX":
                 self.locomotive_msg.address = locomotive_descr['address']
                 self.locomotive_msg.protocol = TrackProtocolDefines.PROTOCOL_MFX

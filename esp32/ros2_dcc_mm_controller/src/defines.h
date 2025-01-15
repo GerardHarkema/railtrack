@@ -15,6 +15,7 @@
 #define DC_PIN  21//17
 #define RST_PIN 17//21
 
+#if 0
 typedef enum{
     ROS = railway_interfaces__msg__TrackProtocolDefines__PROTOCOL_ROS, 
     MM1 = railway_interfaces__msg__TrackProtocolDefines__PROTOCOL_MM1, 
@@ -22,12 +23,15 @@ typedef enum{
     DCC = railway_interfaces__msg__TrackProtocolDefines__PROTOCOL_DCC, 
     MFX = railway_interfaces__msg__TrackProtocolDefines__PROTOCOL_MFX
 }PROTOCOL;
+#endif
 
 typedef enum{
     SS_128, SS_28, SS_14, SS_INVALID, SS_NOT_USED
 }DCC_SPEED_STEPS;
 
 #define MAX_NUMBER_OF_FUNCTION      32
+
+#define EEPROM_PROGRAMMED_TAG     0xAA55
 
 #define LED_RED     0
 #define LED_GREEN   2
@@ -38,15 +42,15 @@ typedef enum{
 #endif
 
 typedef struct{
-    unsigned int address;
-    PROTOCOL protocol;
+    uint32_t address;
+    uint8_t protocol;
     DCC_SPEED_STEPS speed_steps;
 }LOCOMOTIVE;
 
 
 typedef struct{
-    unsigned int address;
-    PROTOCOL protocol;
+    uint32_t address;
+    uint8_t protocol;
 }TRACK_OBJECT;
 
 

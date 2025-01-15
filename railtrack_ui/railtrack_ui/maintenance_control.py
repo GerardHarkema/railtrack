@@ -19,6 +19,7 @@ from std_msgs.msg import Bool;
 from railway_interfaces.msg import LocomotiveControl  
 from railway_interfaces.msg import LocomotiveState  
 from railway_interfaces.msg import TrackConfig, TrackObjectConfig, TrackProtocolDefines
+from railway_interfaces.msg import DccSpeedstepsDefines
 
 
 class maintenance_control(Node):
@@ -70,6 +71,7 @@ class maintenance_control(Node):
                         ui.button('Functions', on_click=dialog.open)
             with ui.tab_panel(self.controller):
                 self.update_controller_button = ui.button('Update Controller', on_click=lambda: self.update_controller()).classes('drop-shadow bg-green')
+                self.factory_reset_controller_button = ui.button('Factory Reset Controller', on_click=lambda: self.factory_reset_controller()).classes('drop-shadow bg-green')
             with ui.tab_panel(self.settings):
                 pass
 
@@ -90,41 +92,52 @@ class maintenance_control(Node):
     def update_controller(self):
         config_msg = TrackConfig()
 
-        if 1:
-            for turnout in self.track_config["Turnouts"]:
-                track_obj = TrackObjectConfig()
-                track_obj.config_type = TrackObjectConfig.CONFIG_TYPE_TURNOUT
-                match turnout["protocol"]:
-                    case "DCC":
-                        track_obj.protocol = TrackProtocolDefines.PROTOCOL_DCC 
-                    case "MM1":
-                        track_obj.protocol = TrackProtocolDefines.PROTOCOL_MM1
-                    case "MM2":
-                        track_obj.protocol = TrackProtocolDefines.PROTOCOL_MM2
-                    case "MFX":
-                        track_obj.protocol = TrackProtocolDefines.PROTOCOL_MFX
-                track_obj.address = turnout["number"]
-                config_msg.track_objects.append(track_obj)
-                #print(turnout)
-            for locomotive in self.track_config["Locomotives"]:
-                track_obj = TrackObjectConfig()
-                track_obj.config_type = TrackObjectConfig.CONFIG_TYPE_LOCOMOTIVE
-                match locomotive["protocol"]:
-                    case "DCC":
-                        track_obj.protocol = TrackProtocolDefines.PROTOCOL_DCC 
-                    case "MM1":
-                        track_obj.protocol = TrackProtocolDefines.PROTOCOL_MM1
-                    case "MM2":
-                        track_obj.protocol = TrackProtocolDefines.PROTOCOL_MM2
-                    case "MFX":
-                        track_obj.protocol = TrackProtocolDefines.PROTOCOL_MFX
-                track_obj.address = locomotive["address"]
-                config_msg.track_objects.append(track_obj)
+        for turnout in self.track_config["Turnouts"]:
+            track_obj = TrackObjectConfig()
+            track_obj.config_type = TrackObjectConfig.CONFIG_TYPE_TURNOUT
+            match turnout["protocol"]:
+                case "DCC":
+                    track_obj.protocol = TrackProtocolDefines.PROTOCOL_DCC 
+                case "MM1":
+                    track_obj.protocol = TrackProtocolDefines.PROTOCOL_MM1
+                case "MM2":
+                    track_obj.protocol = TrackProtocolDefines.PROTOCOL_MM2
+                case "MFX":
+                    track_obj.protocol = TrackProtocolDefines.PROTOCOL_MFX
+            track_obj.address = turnout["number"]
+            config_msg.track_objects.append(track_obj)
+            #print(turnout)
+        for locomotive in self.track_config["Locomotives"]:
+            track_obj = TrackObjectConfig()
+            track_obj.config_type = TrackObjectConfig.CONFIG_TYPE_LOCOMOTIVE
+            match locomotive["protocol"]:
+                case "DCC":
+                    track_obj.protocol = TrackProtocolDefines.PROTOCOL_DCC
+                    match locomotive["speed_steps"]:
+                        case 14:
+                            track_obj.speed_steps =  DccSpeedstepsDefines.SPEEDSTEP_SS_14
+                        case 28:
+                            track_obj.speed_steps =  DccSpeedstepsDefines.SPEEDSTEP_SS_28
+                        case 128:
+                            track_obj.speed_steps =  DccSpeedstepsDefines.SPEEDSTEP_SS_128
+                case "MM1":
+                    track_obj.protocol = TrackProtocolDefines.PROTOCOL_MM1
+                case "MM2":
+                    track_obj.protocol = TrackProtocolDefines.PROTOCOL_MM2
+                case "MFX":
+                    track_obj.protocol = TrackProtocolDefines.PROTOCOL_MFX
+            track_obj.address = locomotive["address"]
+            config_msg.track_objects.append(track_obj)
 
         self.track_config_publisher.publish(config_msg)
 
         ui.notify("Update Controller")                 
-        pass
+
+    def factory_reset_controller(self):
+        config_msg = TrackConfig()
+        self.track_config_publisher.publish(config_msg)
+
+        ui.notify("Fectory reset Controller")                 
 
     def maintenance(self):
         #ui.notify(self.maintenance_button.text)
