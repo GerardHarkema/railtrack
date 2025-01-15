@@ -121,7 +121,8 @@ void track_config_callback(const void * msgin){
               case railway_interfaces__msg__TrackProtocolDefines__PROTOCOL_MM2:
               case railway_interfaces__msg__TrackProtocolDefines__PROTOCOL_DCC:
 //                case railway_interfaces__msg__TrackProtocolDefines__PROTOCOL_MFX:
-                p_iterator->address = track_object->address;
+// hier gaat het fout? Waarom                p_iterator->address = track_object->address;
+//                p_iterator->dcc_loc_speedsteps = track_object->speed_steps; 
 //                p_iterator->protocol = track_object->protocol;
                 p_iterator++;
                 break;

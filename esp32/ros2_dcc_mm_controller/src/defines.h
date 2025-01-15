@@ -25,9 +25,11 @@ typedef enum{
 }PROTOCOL;
 #endif
 
+#if 0
 typedef enum{
     SS_128, SS_28, SS_14, SS_INVALID, SS_NOT_USED
 }DCC_SPEED_STEPS;
+#endif
 
 #define MAX_NUMBER_OF_FUNCTION      32
 
@@ -44,13 +46,14 @@ typedef enum{
 typedef struct{
     uint32_t address;
     uint8_t protocol;
-    DCC_SPEED_STEPS speed_steps;
+    uint8_t speed_steps;
 }LOCOMOTIVE;
 
 
 typedef struct{
     uint32_t address;
     uint8_t protocol;
+    uint8_t dcc_loc_speedsteps;
 }TRACK_OBJECT;
 
 

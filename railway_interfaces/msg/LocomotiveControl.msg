@@ -10,6 +10,12 @@ uint8 DIRECTION_TOGGLE = 3
 uint8 FUNCTION_STATE_FALSE = 0
 uint8 FUNCTION_STATE_TRUE = 1
 
+uint8 DCC_SPEEDSTEP_UNKNOWN = 0
+uint8 DCC_SPEEDSTEP_14 = 1
+uint8 DCC_SPEEDSTEP_28 = 2
+uint8 DCC_SPEEDSTEP_128 = 3
+
+
 uint8 command
 uint8 track_index  # Not used, for future implementation
 uint8 protocol

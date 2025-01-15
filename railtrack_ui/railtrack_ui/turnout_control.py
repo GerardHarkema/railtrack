@@ -30,7 +30,8 @@ class turnout_control(Node):
 
         match turnout_descr['protocol']:
             case "ROS":
-                self.turnout_msg.protocol = TrackProtocolDefines.PROTOCOL_ROS
+                if 0:
+                    self.turnout_msg.protocol = TrackProtocolDefines.PROTOCOL_ROS
             case "MM1":
                 self.turnout_msg.protocol = TrackProtocolDefines.PROTOCOL_MM1
             case "MM2":    
@@ -38,7 +39,8 @@ class turnout_control(Node):
             case "DCC":
                 self.turnout_msg.protocol = TrackProtocolDefines.PROTOCOL_DCC
             case "MFX":
-                self.turnout_msg.protocol = TrackProtocolDefines.PROTOCOL_MFX
+                if 0:
+                    self.turnout_msg.protocol = TrackProtocolDefines.PROTOCOL_MFX
             case _:
                 pass
 

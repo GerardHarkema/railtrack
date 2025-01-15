@@ -404,7 +404,7 @@ void loop() {
   if(!track_config_enable_flag){
     if(new_display_measurents_switch == LOW){
       track_config_enable_cnt++;
-      Serial.printf("%i\n", track_config_enable_cnt);
+      //Serial.printf("%i\n", track_config_enable_cnt);
       if(track_config_enable_cnt > 30){
         track_config_enable_flag = true;
         display_measurents = false;

@@ -19,7 +19,6 @@ from std_msgs.msg import Bool;
 from railway_interfaces.msg import LocomotiveControl  
 from railway_interfaces.msg import LocomotiveState  
 from railway_interfaces.msg import TrackConfig, TrackObjectConfig, TrackProtocolDefines
-from railway_interfaces.msg import DccSpeedstepsDefines
 
 
 class maintenance_control(Node):
@@ -115,11 +114,13 @@ class maintenance_control(Node):
                     track_obj.protocol = TrackProtocolDefines.PROTOCOL_DCC
                     match locomotive["speed_steps"]:
                         case 14:
-                            track_obj.speed_steps =  DccSpeedstepsDefines.SPEEDSTEP_SS_14
+                            track_obj.speed_steps =  LocomotiveControl.DCC_SPEEDSTEP_14
                         case 28:
-                            track_obj.speed_steps =  DccSpeedstepsDefines.SPEEDSTEP_SS_28
+                            track_obj.speed_steps =  LocomotiveControl.DCC_SPEEDSTEP_28
                         case 128:
-                            track_obj.speed_steps =  DccSpeedstepsDefines.SPEEDSTEP_SS_128
+                            track_obj.speed_steps =  LocomotiveControl.DCC_SPEEDSTEP_128
+                        case _:
+                            track_obj.speed_steps =  LocomotiveControl.DCC_SPEEDSTEP_128
                 case "MM1":
                     track_obj.protocol = TrackProtocolDefines.PROTOCOL_MM1
                 case "MM2":
