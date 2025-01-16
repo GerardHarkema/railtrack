@@ -91,24 +91,10 @@ class maintenance_control(Node):
     def update_controller(self):
         config_msg = TrackConfig()
 
-        for turnout in self.track_config["Turnouts"]:
-            track_obj = TrackObjectConfig()
-            track_obj.config_type = TrackObjectConfig.CONFIG_TYPE_TURNOUT
-            match turnout["protocol"]:
-                case "DCC":
-                    track_obj.protocol = TrackProtocolDefines.PROTOCOL_DCC 
-                case "MM1":
-                    track_obj.protocol = TrackProtocolDefines.PROTOCOL_MM1
-                case "MM2":
-                    track_obj.protocol = TrackProtocolDefines.PROTOCOL_MM2
-                case "MFX":
-                    track_obj.protocol = TrackProtocolDefines.PROTOCOL_MFX
-            track_obj.address = turnout["number"]
-            config_msg.track_objects.append(track_obj)
-            #print(turnout)
         for locomotive in self.track_config["Locomotives"]:
             track_obj = TrackObjectConfig()
             track_obj.config_type = TrackObjectConfig.CONFIG_TYPE_LOCOMOTIVE
+            track_obj.address = locomotive["address"]
             match locomotive["protocol"]:
                 case "DCC":
                     track_obj.protocol = TrackProtocolDefines.PROTOCOL_DCC
@@ -121,14 +107,29 @@ class maintenance_control(Node):
                             track_obj.speed_steps =  LocomotiveControl.DCC_SPEEDSTEP_128
                         case _:
                             track_obj.speed_steps =  LocomotiveControl.DCC_SPEEDSTEP_128
+                    config_msg.track_objects.append(track_obj)
                 case "MM1":
                     track_obj.protocol = TrackProtocolDefines.PROTOCOL_MM1
+                    config_msg.track_objects.append(track_obj)
                 case "MM2":
                     track_obj.protocol = TrackProtocolDefines.PROTOCOL_MM2
-                case "MFX":
-                    track_obj.protocol = TrackProtocolDefines.PROTOCOL_MFX
-            track_obj.address = locomotive["address"]
-            config_msg.track_objects.append(track_obj)
+                    config_msg.track_objects.append(track_obj)
+
+        for turnout in self.track_config["Turnouts"]:
+            track_obj = TrackObjectConfig()
+            track_obj.config_type = TrackObjectConfig.CONFIG_TYPE_TURNOUT
+            track_obj.address = turnout["number"]
+            match turnout["protocol"]:
+                case "DCC":
+                    track_obj.protocol = TrackProtocolDefines.PROTOCOL_DCC 
+                    config_msg.track_objects.append(track_obj)
+                case "MM1":
+                    track_obj.protocol = TrackProtocolDefines.PROTOCOL_MM1
+                    config_msg.track_objects.append(track_obj)
+                case "MM2":
+                    track_obj.protocol = TrackProtocolDefines.PROTOCOL_MM2
+                    config_msg.track_objects.append(track_obj)
+            #print(turnout)
 
         self.track_config_publisher.publish(config_msg)
 

@@ -23,6 +23,49 @@ extern TRACK_OBJECT *p_locomtives;
 extern TRACK_OBJECT *p_turnouts;
 extern bool *p_turnout_status;
 
+railway_interfaces__msg__TurnoutState *p_turnout_status_new;
+railway_interfaces__msg__LocomotiveState *p_locomotive_status;
+
+
+
+void init_turnouts_new(){
+  p_turnout_status_new = (railway_interfaces__msg__TurnoutState *)malloc(*p_number_of_active_turnouts * sizeof(railway_interfaces__msg__TurnoutState));
+
+  for(int i = 0; i < *p_number_of_active_turnouts; i++){
+    p_turnout_status_new[i].number = p_turnouts[i].address;
+    p_turnout_status_new[i].protocol = p_turnouts[i].protocol;//railway_interfaces__msg__TrackProtocolDefines__PROTOCOL_MM2;
+    p_turnout_status_new[i].state = p_turnout_status[i];
+  }
+}
+
+void init_locomotives_new(){
+  p_locomotive_status = (railway_interfaces__msg__LocomotiveState *)malloc(*p_number_of_active_locomotives * sizeof(railway_interfaces__msg__LocomotiveState));
+
+  for(int i = 0; i < *p_number_of_active_locomotives; i++){
+    p_locomotive_status[i].protocol = p_locomtives[i].protocol;
+    p_locomotive_status[i].address = p_locomtives[i].address;
+    p_locomotive_status[i].direction = railway_interfaces__msg__LocomotiveState__DIRECTION_FORWARD;
+    word speed; //?
+    //ctrlgetLocoSpeed(locomotive_status[i].address, &speed);
+    p_locomotive_status[i].speed = speed;
+    byte direction; //?
+    //ctrlgetLocoDirection(locomotive_status[i].address, &direction);
+    p_locomotive_status[i].direction = direction;
+
+    p_locomotive_status[i].function_state.capacity = MAX_NUMBER_OF_FUNCTION;
+    p_locomotive_status[i].function_state.data = (bool*) malloc(p_locomotive_status[i].function_state.capacity * sizeof(bool));
+    p_locomotive_status[i].function_state.size = MAX_NUMBER_OF_FUNCTION;
+
+    for(int j = 0; j < MAX_NUMBER_OF_FUNCTION; j++){
+      byte power;
+      //ctrlgetLocoFunction(locomotive_status[i].address, j, &power);
+      p_locomotive_status[i].function_state.data[j] = power ? true : false;
+    }
+  }
+}
+
+
+
 void dumpConfiguration(){
     DEBUG_PRINT("p_eeprom_programmed            = 0x%08x\n", p_eeprom_programmed);
     DEBUG_PRINT("p_number_of_active_locomotives = 0x%08x\n", p_number_of_active_locomotives);
@@ -30,12 +73,11 @@ void dumpConfiguration(){
     DEBUG_PRINT("p_locomtives                   = 0x%08x\n", p_locomtives);
     DEBUG_PRINT("p_turnouts                     = 0x%08x\n", p_turnouts);
     DEBUG_PRINT("p_turnout_status               = 0x%08x\n", p_turnout_status);
-    DEBUG_PRINT("eeprom_programmed 0x%04x\n", *p_eeprom_programmed);
-    DEBUG_PRINT("number_of_locomotives %i\n", *p_number_of_active_locomotives);
-    DEBUG_PRINT("number_of_turnouts %i\n", *p_number_of_active_turnouts);
+    DEBUG_PRINT("eeprom_programmed              = 0x%04x\n", *p_eeprom_programmed);
+    DEBUG_PRINT("number_of_locomotives          = %i\n", *p_number_of_active_locomotives);
+    DEBUG_PRINT("number_of_turnouts             = %i\n", *p_number_of_active_turnouts);
 
     if(*p_eeprom_programmed == EEPROM_PROGRAMMED_TAG){
-      DEBUG_PRINT("!!!\n");
       for(int i = 0; i < *p_number_of_active_locomotives; i++){
         DEBUG_PRINT("Locomitive %i, address = %i, protocol = %i\n", i+1, p_locomtives[i].address, p_locomtives[i].protocol);
       }
@@ -90,14 +132,19 @@ void track_config_callback(const void * msgin){
             &track_config->track_objects.data[i];
       switch(track_object->config_type){
         case railway_interfaces__msg__TrackObjectConfig__CONFIG_TYPE_LOCOMOTIVE:
-          number_of_locomotives++;
+          switch(track_object->protocol){
+            case railway_interfaces__msg__TrackProtocolDefines__PROTOCOL_MM1:
+            case railway_interfaces__msg__TrackProtocolDefines__PROTOCOL_MM2:
+            case railway_interfaces__msg__TrackProtocolDefines__PROTOCOL_DCC:
+              number_of_locomotives++;
+              break;
+          }
           break;
         case railway_interfaces__msg__TrackObjectConfig__CONFIG_TYPE_TURNOUT:
           switch(track_object->protocol){
             case railway_interfaces__msg__TrackProtocolDefines__PROTOCOL_MM1:
             case railway_interfaces__msg__TrackProtocolDefines__PROTOCOL_MM2:
             case railway_interfaces__msg__TrackProtocolDefines__PROTOCOL_DCC:
-            case railway_interfaces__msg__TrackProtocolDefines__PROTOCOL_MFX:
               number_of_turnouts++;
               break;
           }
@@ -105,7 +152,8 @@ void track_config_callback(const void * msgin){
       }
     }
     if(enoughNeededEeprom(number_of_locomotives, number_of_locomotives)){
-      TRACK_OBJECT *p_iterator = p_locomtives;
+      TRACK_OBJECT *p_iterator;
+      p_iterator = p_locomtives;
       *p_number_of_active_locomotives = 0;
       *p_number_of_active_turnouts = 0;
 
@@ -113,25 +161,21 @@ void track_config_callback(const void * msgin){
       for (size_t i = 0; i < track_config->track_objects.size; ++i) {
           const railway_interfaces__msg__TrackObjectConfig * track_object = 
         &track_config->track_objects.data[i];
-#if 1
         switch(track_object->config_type){
           case railway_interfaces__msg__TrackObjectConfig__CONFIG_TYPE_LOCOMOTIVE:
             switch(track_object->protocol){
               case railway_interfaces__msg__TrackProtocolDefines__PROTOCOL_MM1:
               case railway_interfaces__msg__TrackProtocolDefines__PROTOCOL_MM2:
               case railway_interfaces__msg__TrackProtocolDefines__PROTOCOL_DCC:
-//                case railway_interfaces__msg__TrackProtocolDefines__PROTOCOL_MFX:
-// hier gaat het fout? Waarom                p_iterator->address = track_object->address;
-//                p_iterator->dcc_loc_speedsteps = track_object->speed_steps; 
-//                p_iterator->protocol = track_object->protocol;
+                p_iterator->address = track_object->address;
+                p_iterator->dcc_loc_speedsteps = track_object->speed_steps; 
+                p_iterator->protocol = track_object->protocol;
                 p_iterator++;
                 break;
             }
             break;
         }
-#endif
       }
-#if 0
 
       p_turnouts = p_iterator;
       // Count the turnouts & locomotives
@@ -145,7 +189,6 @@ void track_config_callback(const void * msgin){
               case railway_interfaces__msg__TrackProtocolDefines__PROTOCOL_MM2:
               case railway_interfaces__msg__TrackProtocolDefines__PROTOCOL_DCC:
                 p_iterator->address = track_object->address;
-//                case railway_interfaces__msg__TrackProtocolDefines__PROTOCOL_MFX:
                 p_iterator->protocol = track_object->protocol;
                 p_iterator++;
                 break;
@@ -162,17 +205,7 @@ void track_config_callback(const void * msgin){
       EEPROM.commit();
       track_config_enable_flag = false;
       dumpConfiguration();
-#endif
-#if 0
-      DEBUG_PRINT("p_eeprom_programmed            = 0x%08x\n", p_eeprom_programmed);
-      DEBUG_PRINT("p_number_of_active_locomotives = 0x%08x\n", p_number_of_active_locomotives);
-      DEBUG_PRINT("p_number_of_active_turnouts    = 0x%08x\n", p_number_of_active_turnouts);
-      DEBUG_PRINT("p_locomtives                   = 0x%08x\n", p_locomtives);
-      DEBUG_PRINT("p_turnouts                     = 0x%08x\n", p_turnouts);
-      DEBUG_PRINT("p_turnout_status               = 0x%08x\n", p_turnout_status);
-      DEBUG_PRINT("number_of_locomotives %i\n", number_of_locomotives);
-      DEBUG_PRINT("number_of_locomotives %i\n", number_of_turnouts);
-#endif
+
     }
     tft_printf(ST77XX_MAGENTA, "Track\nConfiguration\nStored\n");
   }

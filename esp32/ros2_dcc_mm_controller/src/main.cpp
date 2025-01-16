@@ -208,14 +208,14 @@ void init_ros(){
   
   RCCHECK(rclc_executor_init(&executor, &support.context, number_of_executors, &allocator));
 
-  //RCCHECK(rclc_executor_add_timer(&executor, &turnout_state_publisher_timer));
-  //RCCHECK(rclc_executor_add_subscription(&executor, &turnout_control_subscriber, &turnout_control, &turnout_control_callback, ON_NEW_DATA));
+  RCCHECK(rclc_executor_add_timer(&executor, &turnout_state_publisher_timer));
+  RCCHECK(rclc_executor_add_subscription(&executor, &turnout_control_subscriber, &turnout_control, &turnout_control_callback, ON_NEW_DATA));
 
-  //RCCHECK(rclc_executor_add_timer(&executor, &locomotive_state_publisher_timer));
-  //RCCHECK(rclc_executor_add_subscription(&executor, &locomotive_control_subscriber, &locomotive_control, &locomotive_control_callback, ON_NEW_DATA));
+  RCCHECK(rclc_executor_add_timer(&executor, &locomotive_state_publisher_timer));
+  RCCHECK(rclc_executor_add_subscription(&executor, &locomotive_control_subscriber, &locomotive_control, &locomotive_control_callback, ON_NEW_DATA));
 
-  //RCCHECK(rclc_executor_add_timer(&executor, &power_state_publisher_timer));
-  //RCCHECK(rclc_executor_add_subscription(&executor, &power_control_subscriber, &power_control, &power_control_callback, ON_NEW_DATA));
+  RCCHECK(rclc_executor_add_timer(&executor, &power_state_publisher_timer));
+  RCCHECK(rclc_executor_add_subscription(&executor, &power_control_subscriber, &power_control, &power_control_callback, ON_NEW_DATA));
 
   RCCHECK(rclc_executor_add_subscription(&executor, &track_config_subscriber, &track_config, &track_config_callback, ON_NEW_DATA));
 
@@ -259,6 +259,8 @@ void init_eeprom(){
   
   p_number_of_active_locomotives = p_eeprom_programmed + 1;
   p_number_of_active_turnouts = p_number_of_active_locomotives + 1;
+  // assign array's
+  p_locomtives = (TRACK_OBJECT *)(p_number_of_active_turnouts + 1);
 
 
   if(*p_eeprom_programmed == EEPROM_PROGRAMMED_TAG){
@@ -268,16 +270,16 @@ void init_eeprom(){
       Serial.printf("needed_eeprom_size out of range\n");
     }
 
-    // assign array's
-    p_locomtives = (TRACK_OBJECT *)(p_number_of_active_turnouts + 1);
-
     p_turnouts = p_locomtives + *p_number_of_active_locomotives;
     p_turnout_status = (bool *)(p_turnouts + *p_number_of_active_turnouts);
 
     dumpConfiguration();
   }
-  else
+  else{
+      p_turnouts = p_locomtives;
+      p_turnout_status = (bool *)p_locomtives;
       Serial.printf("\nEEPROM not programmed\n");
+  }
 }
 
 void init_power(){
@@ -292,7 +294,7 @@ void init_turnouts(){
   for(int i = 0; i < NUMBER_OF_ACTIVE_TURNOUTS_MM; i++){
     turnout_status[i].number = active_turnouts_mm[i];
     turnout_status[i].protocol = railway_interfaces__msg__TrackProtocolDefines__PROTOCOL_MM2;
-    turnout_status[i].state = EEPROM.readBool(i);
+    turnout_status[i].state = p_turnout_status[i];
   }
 }
 

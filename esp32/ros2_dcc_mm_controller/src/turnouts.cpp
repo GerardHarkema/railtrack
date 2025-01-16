@@ -22,6 +22,8 @@ extern railway_interfaces__msg__TurnoutState turnout_status[];
 extern railway_interfaces__msg__PowerState power_status;
 extern TrackPacketScheduler trackScheduler;
 
+extern bool *p_turnout_status;
+
 int turnout_state_index = 0;
 
 void turnout_state_publisher_timer_callback(rcl_timer_t * timer, int64_t last_call_time) {
@@ -66,7 +68,7 @@ void turnout_control_callback(const void * msgin)
           Serial.printf("Solenoid not known\n");
           break;
       }
-      EEPROM.writeBool(index, straight);
+      p_turnout_status[index] = straight;
       EEPROM.commit();
       turnout_status[index].state = straight;
       tft_printf(ST77XX_GREEN, "ROS msg\nTurnout\nNumber: %i\nSet: %s\n",
