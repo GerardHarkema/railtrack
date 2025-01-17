@@ -18,11 +18,15 @@
 
 extern rcl_publisher_t turnout_status_publisher;
 extern int number_of_active_mm_turnouts;
-extern railway_interfaces__msg__TurnoutState turnout_status[];
 extern railway_interfaces__msg__PowerState power_status;
 extern TrackPacketScheduler trackScheduler;
 
+
+extern uint16_t *p_number_of_active_turnouts;
+extern TRACK_OBJECT *p_turnouts;
 extern bool *p_turnout_status;
+
+extern railway_interfaces__msg__TurnoutState *p_turnout_status_new;
 
 int turnout_state_index = 0;
 
@@ -31,10 +35,10 @@ void turnout_state_publisher_timer_callback(rcl_timer_t * timer, int64_t last_ca
   RCLC_UNUSED(last_call_time);
   //Serial.print(".");
 
-  if ((timer != NULL) && number_of_active_mm_turnouts) {
-    RCSOFTCHECK(rcl_publish(&turnout_status_publisher, &turnout_status[turnout_state_index], NULL));
+  if ((timer != NULL) && *p_number_of_active_turnouts) {
+    RCSOFTCHECK(rcl_publish(&turnout_status_publisher, &p_turnout_status_new[turnout_state_index], NULL));
     turnout_state_index++;
-    if(turnout_state_index == number_of_active_mm_turnouts) turnout_state_index = 0;
+    if(turnout_state_index == *p_number_of_active_turnouts) turnout_state_index = 0;
   }
 }
 
@@ -49,7 +53,7 @@ void turnout_control_callback(const void * msgin)
     if(lookupTurnoutIndex(control->number, &index)){
       //Serial.printf("Solenoid found\n");
       //Serial.printf("State = %i\n", straight);
-      switch(turnout_status[index].protocol){
+      switch(p_turnout_status_new[index].protocol){
         case railway_interfaces__msg__TrackProtocolDefines__PROTOCOL_DCC:
           Serial.printf("Solenoid DCC\n");
           if(straight){
@@ -70,7 +74,7 @@ void turnout_control_callback(const void * msgin)
       }
       p_turnout_status[index] = straight;
       EEPROM.commit();
-      turnout_status[index].state = straight;
+      p_turnout_status_new[index].state = straight;
       tft_printf(ST77XX_GREEN, "ROS msg\nTurnout\nNumber: %i\nSet: %s\n",
               control->number, straight ? "Green" : "Red");
     }

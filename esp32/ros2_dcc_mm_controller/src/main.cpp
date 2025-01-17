@@ -34,7 +34,6 @@
 #include <TrackManager.h>
 
 #include "defines.h"
-#include "track_config_old.h"
 #include "network_config.h"
 #include "support.h"
 
@@ -43,10 +42,6 @@
 #include "turnouts.h"
 #include "measurements.h"
 #include "track_config.h"
-
-int number_of_active_mm_turnouts = NUMBER_OF_ACTIVE_TURNOUTS_MM;
-int number_of_active_turnouts_ros = NUMBER_OF_ACTIVE_TURNOUTS_ROS;
-int number_of_active_locomotives = NUMBER_OF_ACTIVE_LOCOMOTIVES;
 
 
 rcl_publisher_t turnout_status_publisher;
@@ -71,19 +66,7 @@ Adafruit_ST7735 *tft;
 
 IPAddress agent_ip(ip_address[0], ip_address[1], ip_address[2], ip_address[3]);
 
-#if NUMBER_OF_ACTIVE_TURNOUTS_MM
-railway_interfaces__msg__TurnoutState turnout_status[NUMBER_OF_ACTIVE_TURNOUTS_MM] = {0};
-#else
-// Dummy pointer to turnout_status if no turnouts are defined
-railway_interfaces__msg__TurnoutState *turnout_status;
-#endif
 
-#if NUMBER_OF_ACTIVE_LOCOMOTIVES
-railway_interfaces__msg__LocomotiveState locomotive_status[NUMBER_OF_ACTIVE_LOCOMOTIVES] = {0};
-#else
-// Dummy pointer to locomotive_status if no locomotives are defined
-railway_interfaces__msg__LocomotiveState *locomotive_status;
-#endif
 railway_interfaces__msg__PowerState power_status;
 
 
@@ -98,6 +81,14 @@ rcl_timer_t power_state_publisher_timer;
 TrackPacketScheduler trackScheduler;
 
 Measurements measurements;
+
+uint16_t *p_eeprom_programmed;
+uint16_t *p_number_of_active_turnouts;
+uint16_t *p_number_of_active_locomotives;
+TRACK_OBJECT *p_turnouts;
+TRACK_OBJECT *p_locomtives;
+bool *p_turnout_status;
+
 
 #define MEASUREMENT_SWITCH_PIN    27
 bool display_measurents = false;
@@ -178,7 +169,7 @@ void init_ros(){
   // create timer,
   #define CYCLE_TIME    500
   // prevent division by zero
-  unsigned int timer_timeout = CYCLE_TIME / (NUMBER_OF_ACTIVE_TURNOUTS_MM + 1);
+  unsigned int timer_timeout = CYCLE_TIME / (*p_number_of_active_turnouts + 1);
   RCCHECK(rclc_timer_init_default(
     &turnout_state_publisher_timer,
     &support,
@@ -186,7 +177,7 @@ void init_ros(){
     turnout_state_publisher_timer_callback));
 
   // prevent division by zero
-  timer_timeout = CYCLE_TIME / (NUMBER_OF_ACTIVE_LOCOMOTIVES + 1);
+  timer_timeout = CYCLE_TIME / (*p_number_of_active_locomotives + 1);
   RCCHECK(rclc_timer_init_default(
     &locomotive_state_publisher_timer,
     &support,
@@ -237,18 +228,6 @@ void init_display(){
   tft->println("DCC/MM Control");
 }
 
-uint16_t *p_eeprom_programmed;
-uint16_t *p_number_of_active_turnouts;
-uint16_t *p_number_of_active_locomotives;
-TRACK_OBJECT *p_turnouts;
-TRACK_OBJECT *p_locomtives;
-bool *p_turnout_status;
-
-uint16_t t_number_of_turnout = 0x10;
-uint16_t t_number_of_locomotive = 0x20;
-
-
-
 void init_eeprom(){
 
   int needed_eeprom_size = 0;
@@ -266,7 +245,7 @@ void init_eeprom(){
   if(*p_eeprom_programmed == EEPROM_PROGRAMMED_TAG){
     Serial.printf("\nEEPROM programmed\n");
 
-    if(!enoughNeededEeprom(t_number_of_locomotive, t_number_of_turnout)){
+    if(!enoughNeededEeprom(*p_number_of_active_locomotives, *p_number_of_active_locomotives)){
       Serial.printf("needed_eeprom_size out of range\n");
     }
 
@@ -290,38 +269,7 @@ void init_power(){
 
 }
 
-void init_turnouts(){
-  for(int i = 0; i < NUMBER_OF_ACTIVE_TURNOUTS_MM; i++){
-    turnout_status[i].number = active_turnouts_mm[i];
-    turnout_status[i].protocol = railway_interfaces__msg__TrackProtocolDefines__PROTOCOL_MM2;
-    turnout_status[i].state = p_turnout_status[i];
-  }
-}
 
-void init_locomotives(){
-  for(int i = 0; i < NUMBER_OF_ACTIVE_LOCOMOTIVES; i++){
-    locomotive_status[i].protocol = active_locomotives[i].protocol;
-    locomotive_status[i].address = active_locomotives[i].address;
-    locomotive_status[i].direction = railway_interfaces__msg__LocomotiveState__DIRECTION_FORWARD;
-    word speed; //?
-    //ctrlgetLocoSpeed(locomotive_status[i].address, &speed);
-    locomotive_status[i].speed = speed;
-    byte direction; //?
-    //ctrlgetLocoDirection(locomotive_status[i].address, &direction);
-    locomotive_status[i].direction = direction;
-
-
-    locomotive_status[i].function_state.capacity = MAX_NUMBER_OF_FUNCTION;
-    locomotive_status[i].function_state.data = (bool*) malloc(locomotive_status[i].function_state.capacity * sizeof(bool));
-    locomotive_status[i].function_state.size = MAX_NUMBER_OF_FUNCTION;
-
-    for(int j = 0; j < MAX_NUMBER_OF_FUNCTION; j++){
-      byte power;
-      //ctrlgetLocoFunction(locomotive_status[i].address, j, &power);
-      locomotive_status[i].function_state.data[j] = power ? true : false;
-    }
-  }
-}
 
 void setup() {
   protect_motor_driver_outputs();
@@ -352,9 +300,9 @@ init_display();
 
   init_power();
 
-  init_turnouts();
+  init_turnouts_new();
 
-  init_locomotives();
+  init_locomotives_new();
 
   WiFi.setHostname("DccMMController");
   set_microros_wifi_transports(WIFI_SSID, PASSWORD, agent_ip, (size_t)PORT);

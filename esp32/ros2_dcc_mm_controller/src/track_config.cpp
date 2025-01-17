@@ -24,8 +24,7 @@ extern TRACK_OBJECT *p_turnouts;
 extern bool *p_turnout_status;
 
 railway_interfaces__msg__TurnoutState *p_turnout_status_new;
-railway_interfaces__msg__LocomotiveState *p_locomotive_status;
-
+railway_interfaces__msg__LocomotiveState *p_locomotive_status_new;
 
 
 void init_turnouts_new(){
@@ -39,27 +38,27 @@ void init_turnouts_new(){
 }
 
 void init_locomotives_new(){
-  p_locomotive_status = (railway_interfaces__msg__LocomotiveState *)malloc(*p_number_of_active_locomotives * sizeof(railway_interfaces__msg__LocomotiveState));
+  p_locomotive_status_new = (railway_interfaces__msg__LocomotiveState *)malloc(*p_number_of_active_locomotives * sizeof(railway_interfaces__msg__LocomotiveState));
 
   for(int i = 0; i < *p_number_of_active_locomotives; i++){
-    p_locomotive_status[i].protocol = p_locomtives[i].protocol;
-    p_locomotive_status[i].address = p_locomtives[i].address;
-    p_locomotive_status[i].direction = railway_interfaces__msg__LocomotiveState__DIRECTION_FORWARD;
+    p_locomotive_status_new[i].protocol = p_locomtives[i].protocol;
+    p_locomotive_status_new[i].address = p_locomtives[i].address;
+    p_locomotive_status_new[i].direction = railway_interfaces__msg__LocomotiveState__DIRECTION_FORWARD;
     word speed; //?
     //ctrlgetLocoSpeed(locomotive_status[i].address, &speed);
-    p_locomotive_status[i].speed = speed;
+    p_locomotive_status_new[i].speed = speed;
     byte direction; //?
     //ctrlgetLocoDirection(locomotive_status[i].address, &direction);
-    p_locomotive_status[i].direction = direction;
+    p_locomotive_status_new[i].direction = direction;
 
-    p_locomotive_status[i].function_state.capacity = MAX_NUMBER_OF_FUNCTION;
-    p_locomotive_status[i].function_state.data = (bool*) malloc(p_locomotive_status[i].function_state.capacity * sizeof(bool));
-    p_locomotive_status[i].function_state.size = MAX_NUMBER_OF_FUNCTION;
+    p_locomotive_status_new[i].function_state.capacity = MAX_NUMBER_OF_FUNCTION;
+    p_locomotive_status_new[i].function_state.data = (bool*) malloc(p_locomotive_status_new[i].function_state.capacity * sizeof(bool));
+    p_locomotive_status_new[i].function_state.size = MAX_NUMBER_OF_FUNCTION;
 
     for(int j = 0; j < MAX_NUMBER_OF_FUNCTION; j++){
       byte power;
       //ctrlgetLocoFunction(locomotive_status[i].address, j, &power);
-      p_locomotive_status[i].function_state.data[j] = power ? true : false;
+      p_locomotive_status_new[i].function_state.data[j] = power ? true : false;
     }
   }
 }

@@ -22,13 +22,10 @@
 
 #include "tft_printf.h"
 
-extern railway_interfaces__msg__LocomotiveState locomotive_status[];
-extern LOCOMOTIVE active_locomotives[];
-extern unsigned short int active_turnouts_mm[];
-extern unsigned short int active_turnouts_ros[];
+extern railway_interfaces__msg__LocomotiveState *p_locomotive_status_new;
+extern uint16_t *p_number_of_active_locomotives;
+extern railway_interfaces__msg__TurnoutState *p_turnout_status_new;
 
-extern int number_of_active_mm_turnouts;
-extern int number_of_active_locomotives;
 
 void lookupLocomotiveProtocol(uint8_t protocol, char *protocol_txt){
   switch(protocol){
@@ -78,10 +75,10 @@ char* getDirectionTxt(int direction){
 
 bool lookupTurnoutIndex(int turnout_number, int *turnout_index){
   int i;
-  for(i = 0; i < number_of_active_mm_turnouts; i++){
-    if(active_turnouts_mm[i] == turnout_number) break;
+  for(i = 0; i < *p_number_of_active_locomotives; i++){
+    if(p_turnout_status_new[i].number == turnout_number) break;
   }
-  if(i >= number_of_active_mm_turnouts) return false;
+  if(i >= *p_number_of_active_locomotives) return false;
   *turnout_index = i;
   return true;
 }
@@ -92,11 +89,11 @@ bool lookupLocomotiveIndex(int locomotive_address, uint8_t protocol, int *locomo
   //Serial.printf("locomotive_address = %i\n", locomotive_address);
   //Serial.printf("number_of_active_locomotives = %i\n", number_of_active_locomotives);
 
-  for(i = 0; i < number_of_active_locomotives; i++){
-    if((locomotive_status[i].address == locomotive_address) 
-      && (locomotive_status[i].protocol == protocol)) break;
+  for(i = 0; i < *p_number_of_active_locomotives; i++){
+    if((p_locomotive_status_new[i].address == locomotive_address) 
+      && (p_locomotive_status_new[i].protocol == protocol)) break;
   }
-  if(i >= number_of_active_locomotives) return false;
+  if(i >= *p_number_of_active_locomotives) return false;
   *locomotive_index = i;
 
   return true;
