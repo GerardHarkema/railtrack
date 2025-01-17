@@ -139,6 +139,9 @@ void track_config_callback(const void * msgin){
             case railway_interfaces__msg__TrackProtocolDefines__PROTOCOL_MM1:
             case railway_interfaces__msg__TrackProtocolDefines__PROTOCOL_MM2:
             case railway_interfaces__msg__TrackProtocolDefines__PROTOCOL_DCC:
+#if (defined INCLUDE_MFX_PROTOCOL)
+            case railway_interfaces__msg__TrackProtocolDefines__PROTOCOL_MFX:
+#endif
               number_of_locomotives++;
               break;
           }
@@ -160,7 +163,7 @@ void track_config_callback(const void * msgin){
       *number_of_active_locomotives = 0;
       *number_of_active_turnouts = 0;
 
-      // Count the turnouts & locomotives
+
       for (size_t i = 0; i < track_config->track_objects.size; ++i) {
           const railway_interfaces__msg__TrackObjectConfig * track_object = 
         &track_config->track_objects.data[i];
@@ -170,6 +173,9 @@ void track_config_callback(const void * msgin){
               case railway_interfaces__msg__TrackProtocolDefines__PROTOCOL_MM1:
               case railway_interfaces__msg__TrackProtocolDefines__PROTOCOL_MM2:
               case railway_interfaces__msg__TrackProtocolDefines__PROTOCOL_DCC:
+#if (defined INCLUDE_MFX_PROTOCOL)
+              case railway_interfaces__msg__TrackProtocolDefines__PROTOCOL_MFX:
+#endif
                 p_iterator->address = track_object->address;
                 p_iterator->dcc_loc_speedsteps = track_object->speed_steps; 
                 p_iterator->protocol = track_object->protocol;
