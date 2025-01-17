@@ -86,9 +86,6 @@ bool lookupTurnoutIndex(int turnout_number, int *turnout_index){
 bool lookupLocomotiveIndex(int locomotive_address, uint8_t protocol, int *locomotive_index){
   int i;
 
-  //Serial.printf("locomotive_address = %i\n", locomotive_address);
-  //Serial.printf("number_of_active_locomotives = %i\n", number_of_active_locomotives);
-
   for(i = 0; i < *number_of_active_locomotives; i++){
     if((locomotive_status_msgs[i].address == locomotive_address) 
       && (locomotive_status_msgs[i].protocol == protocol)) break;

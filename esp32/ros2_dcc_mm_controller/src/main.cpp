@@ -33,15 +33,15 @@
 #include <TrackPacketScheduler.h>
 #include <TrackManager.h>
 
-#include "defines.h"
+#include <defines.h>
 #include "network_config.h"
-#include "support.h"
+#include <support.h>
 
 #include "power.h"
 #include "locomotives.h"
 #include "turnouts.h"
 #include "measurements.h"
-#include "track_config.h"
+#include <track_config.h>
 
 
 rcl_publisher_t turnout_status_publisher;
