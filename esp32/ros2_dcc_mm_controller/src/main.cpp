@@ -2,7 +2,7 @@
 #include <EEPROM.h>
 #include <stdio.h>
 
-//#define DEBUG
+#define DEBUG
 #ifdef DEBUG
 #define DEBUG_PRINT(fmt, ...) \
     do { \
@@ -82,9 +82,9 @@ TrackPacketScheduler trackScheduler;
 
 Measurements measurements;
 
-uint16_t *p_eeprom_programmed;
-uint16_t *p_number_of_active_turnouts;
-uint16_t *p_number_of_active_locomotives;
+uint16_t *eeprom_programmed;
+uint16_t *number_of_active_turnouts;
+uint16_t *number_of_active_locomotives;
 TRACK_OBJECT *p_turnouts;
 TRACK_OBJECT *p_locomtives;
 bool *p_turnout_status;
@@ -93,6 +93,7 @@ bool *p_turnout_status;
 #define MEASUREMENT_SWITCH_PIN    27
 bool display_measurents = false;
 
+bool track_config_enable_flag = false;
 
 void init_ros(){
     allocator = rcl_get_default_allocator();
@@ -163,13 +164,13 @@ void init_ros(){
   );
 
   if(!success){
-    Serial.printf("Unable to allocate memory for configuration message");
+    DEBUG_PRINT("Unable to allocate memory for configuration message");
   }
 
   // create timer,
   #define CYCLE_TIME    500
   // prevent division by zero
-  unsigned int timer_timeout = CYCLE_TIME / (*p_number_of_active_turnouts + 1);
+  unsigned int timer_timeout = CYCLE_TIME / (*number_of_active_turnouts + 1);
   RCCHECK(rclc_timer_init_default(
     &turnout_state_publisher_timer,
     &support,
@@ -177,7 +178,7 @@ void init_ros(){
     turnout_state_publisher_timer_callback));
 
   // prevent division by zero
-  timer_timeout = CYCLE_TIME / (*p_number_of_active_locomotives + 1);
+  timer_timeout = CYCLE_TIME / (*number_of_active_locomotives + 1);
   RCCHECK(rclc_timer_init_default(
     &locomotive_state_publisher_timer,
     &support,
@@ -199,18 +200,33 @@ void init_ros(){
   
   RCCHECK(rclc_executor_init(&executor, &support.context, number_of_executors, &allocator));
 
-  RCCHECK(rclc_executor_add_timer(&executor, &turnout_state_publisher_timer));
-  RCCHECK(rclc_executor_add_subscription(&executor, &turnout_control_subscriber, &turnout_control, &turnout_control_callback, ON_NEW_DATA));
+  if(!track_config_enable_flag){
+    RCCHECK(rclc_executor_add_timer(&executor, &turnout_state_publisher_timer));
+    RCCHECK(rclc_executor_add_subscription(&executor, &turnout_control_subscriber, &turnout_control, &turnout_control_callback, ON_NEW_DATA));
 
-  RCCHECK(rclc_executor_add_timer(&executor, &locomotive_state_publisher_timer));
-  RCCHECK(rclc_executor_add_subscription(&executor, &locomotive_control_subscriber, &locomotive_control, &locomotive_control_callback, ON_NEW_DATA));
+    RCCHECK(rclc_executor_add_timer(&executor, &locomotive_state_publisher_timer));
+    RCCHECK(rclc_executor_add_subscription(&executor, &locomotive_control_subscriber, &locomotive_control, &locomotive_control_callback, ON_NEW_DATA));
 
-  RCCHECK(rclc_executor_add_timer(&executor, &power_state_publisher_timer));
-  RCCHECK(rclc_executor_add_subscription(&executor, &power_control_subscriber, &power_control, &power_control_callback, ON_NEW_DATA));
-
+    RCCHECK(rclc_executor_add_timer(&executor, &power_state_publisher_timer));
+    RCCHECK(rclc_executor_add_subscription(&executor, &power_control_subscriber, &power_control, &power_control_callback, ON_NEW_DATA));
+  }
   RCCHECK(rclc_executor_add_subscription(&executor, &track_config_subscriber, &track_config, &track_config_callback, ON_NEW_DATA));
 
 }
+
+void stop_track_timers(){
+
+  rclc_executor_remove_timer(&executor, &turnout_state_publisher_timer);
+  rclc_executor_remove_subscription(&executor, &turnout_control_subscriber);
+
+  rclc_executor_remove_timer(&executor, &locomotive_state_publisher_timer);
+  rclc_executor_remove_subscription(&executor, &locomotive_control_subscriber);
+
+  rclc_executor_remove_timer(&executor, &power_state_publisher_timer);
+  rclc_executor_remove_subscription(&executor, &power_control_subscriber);
+
+}
+
 
 void init_display(){
   tft = new Adafruit_ST7735(CS_PIN, DC_PIN, RST_PIN);
@@ -234,30 +250,31 @@ void init_eeprom(){
 
   EEPROM.begin(EEPROM_SIZE);
   // asign variables
-  p_eeprom_programmed = (uint16_t *)EEPROM.getDataPtr();
+  eeprom_programmed = (uint16_t *)EEPROM.getDataPtr();
   
-  p_number_of_active_locomotives = p_eeprom_programmed + 1;
-  p_number_of_active_turnouts = p_number_of_active_locomotives + 1;
+  number_of_active_locomotives = eeprom_programmed + 1;
+  number_of_active_turnouts = number_of_active_locomotives + 1;
   // assign array's
-  p_locomtives = (TRACK_OBJECT *)(p_number_of_active_turnouts + 1);
+  p_locomtives = (TRACK_OBJECT *)(number_of_active_turnouts + 1);
 
 
-  if(*p_eeprom_programmed == EEPROM_PROGRAMMED_TAG){
-    Serial.printf("\nEEPROM programmed\n");
+  if(*eeprom_programmed == EEPROM_PROGRAMMED_TAG){
+    DEBUG_PRINT("\nEEPROM programmed\n");
 
-    if(!enoughNeededEeprom(*p_number_of_active_locomotives, *p_number_of_active_locomotives)){
-      Serial.printf("needed_eeprom_size out of range\n");
+    if(!enoughNeededEeprom(*number_of_active_locomotives, *number_of_active_locomotives)){
+      DEBUG_PRINT("needed_eeprom_size out of range\n");
     }
 
-    p_turnouts = p_locomtives + *p_number_of_active_locomotives;
-    p_turnout_status = (bool *)(p_turnouts + *p_number_of_active_turnouts);
+    p_turnouts = p_locomtives + *number_of_active_locomotives;
+    p_turnout_status = (bool *)(p_turnouts + *number_of_active_turnouts);
 
     dumpConfiguration();
   }
   else{
+      track_config_enable_flag = true;
       p_turnouts = p_locomtives;
       p_turnout_status = (bool *)p_locomtives;
-      Serial.printf("\nEEPROM not programmed\n");
+      DEBUG_PRINT("\nEEPROM not programmed\n");
   }
 }
 
@@ -276,7 +293,7 @@ void setup() {
   Serial.begin(115200);
   while (!Serial);
   delay(2000);
-  Serial.printf("\nDCC/MM controller started\n");
+  DEBUG_PRINT("\nDCC/MM controller started\n");
 #if 0
   Serial.print("MOSI: ");Serial.println(MOSI);
   Serial.print("MISO: ");Serial.println(MISO);
@@ -284,7 +301,7 @@ void setup() {
   Serial.print("SS: ");Serial.println(SS);  
 #endif
 
-init_display();
+  init_display();
 
 #ifdef ARDUINO_MOTOR_SHIELD_L298
   tft_printf(ST77XX_MAGENTA, "Controller\nStarted\n\nL298 Version");
@@ -298,11 +315,13 @@ init_display();
 
   init_eeprom();
 
-  init_power();
+  if(!track_config_enable_flag){
+    init_power();
 
-  init_turnouts_new();
+    init_turnouts();
 
-  init_locomotives_new();
+    init_locomotives();
+  }
 
   WiFi.setHostname("DccMMController");
   set_microros_wifi_transports(WIFI_SSID, PASSWORD, agent_ip, (size_t)PORT);
@@ -321,7 +340,7 @@ init_display();
 #endif
 
 
-  Serial.printf("DCC/MM WiFi Connected\n");
+  DEBUG_PRINT("DCC/MM WiFi Connected\n");
 
   delay(2000);
 
@@ -329,24 +348,30 @@ init_display();
 
   pinMode(MEASUREMENT_SWITCH_PIN, INPUT_PULLUP);
 
-  measurements.begin();
+  if(track_config_enable_flag){
+    tft_printf(ST77XX_MAGENTA, "Controller\nReady\nto receive\nConfiguration");
 
-  Serial.printf("!!! Ready for operating !!!\n");
-#ifdef ARDUINO_MOTOR_SHIELD_L298
-  tft_printf(ST77XX_MAGENTA, "Controller\nReady\n\nL298 Version");
-#elif IBT_2_MOTOR_DRIVER
-  tft_printf(ST77XX_MAGENTA, "Controller\nReady\n\nIBT_2 Version");
-#elif DCC_EX_MOTOR_SHIELD_8874
-  tft_printf(ST77XX_MAGENTA, "Controller\nReady\n\n8874 Version");
-#else
-  tft_printf(ST77XX_MAGENTA, "Controller\nReady\n\nUnknown Version");
-#endif
+  }
+  else{
+    measurements.begin();
+
+    DEBUG_PRINT("!!! Ready for operating !!!\n");
+  #ifdef ARDUINO_MOTOR_SHIELD_L298
+    tft_printf(ST77XX_MAGENTA, "Controller\nReady\n\nL298 Version");
+  #elif IBT_2_MOTOR_DRIVER
+    tft_printf(ST77XX_MAGENTA, "Controller\nReady\n\nIBT_2 Version");
+  #elif DCC_EX_MOTOR_SHIELD_8874
+    tft_printf(ST77XX_MAGENTA, "Controller\nReady\n\n8874 Version");
+  #else
+    tft_printf(ST77XX_MAGENTA, "Controller\nReady\n\nUnknown Version");
+  #endif
+  }
 }
 
 int old_display_measurents_switch = HIGH;
 
 int track_config_enable_cnt = 0;
-bool track_config_enable_flag = false;
+
 
 void loop() {
 
@@ -354,10 +379,12 @@ void loop() {
   if(!track_config_enable_flag){
     if(new_display_measurents_switch == LOW){
       track_config_enable_cnt++;
-      //Serial.printf("%i\n", track_config_enable_cnt);
+      //DEBUG_PRINT("%i\n", track_config_enable_cnt);
       if(track_config_enable_cnt > 30){
         track_config_enable_flag = true;
         display_measurents = false;
+        trackScheduler.trackPower(false);
+        stop_track_timers();
         tft_printf(ST77XX_MAGENTA, "Ready\nto receive\nnew track\nconfiguration");
       }
     }

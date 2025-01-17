@@ -21,7 +21,7 @@ extern TrackPacketScheduler trackScheduler;
 
 extern railway_interfaces__msg__LocomotiveState locomotive_status[];
 extern LOCOMOTIVE active_locomotives[];
-extern uint16_t *p_number_of_active_locomotives;
+extern uint16_t *number_of_active_locomotives;
 
 
 extern Measurements measurements;
@@ -55,7 +55,7 @@ void power_control_callback(const void * msgin)
   trackScheduler.trackPower(control->enable);
   power_status.state = control->enable;
   if(!power_status.state){
-    for(int i = 0 ; i < *p_number_of_active_locomotives; i++){
+    for(int i = 0 ; i < *number_of_active_locomotives; i++){
 
       switch(active_locomotives[i].protocol){
         case railway_interfaces__msg__TrackProtocolDefines__PROTOCOL_DCC:

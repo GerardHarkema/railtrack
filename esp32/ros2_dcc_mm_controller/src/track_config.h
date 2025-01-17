@@ -9,7 +9,7 @@
 bool enoughNeededEeprom(int number_of_locomotives, int number_of_turnouts);
 void dumpConfiguration();
 void track_config_callback(const void * msgin);
-void init_turnouts_new();
-void init_locomotives_new();
+void init_turnouts();
+void init_locomotives();
 
 #endif

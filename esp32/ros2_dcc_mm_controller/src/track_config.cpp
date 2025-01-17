@@ -16,49 +16,48 @@
 #endif
 
 extern bool track_config_enable_flag;
-extern uint16_t *p_eeprom_programmed;
-extern uint16_t *p_number_of_active_locomotives;
-extern uint16_t *p_number_of_active_turnouts;
+extern uint16_t *eeprom_programmed;
+extern uint16_t *number_of_active_locomotives;
+extern uint16_t *number_of_active_turnouts;
 extern TRACK_OBJECT *p_locomtives;
 extern TRACK_OBJECT *p_turnouts;
 extern bool *p_turnout_status;
 
-railway_interfaces__msg__TurnoutState *p_turnout_status_new;
-railway_interfaces__msg__LocomotiveState *p_locomotive_status_new;
+railway_interfaces__msg__TurnoutState *turnout_status_msgs;
+railway_interfaces__msg__LocomotiveState *locomotive_status_msgs;
 
+void init_turnouts(){
+  turnout_status_msgs = (railway_interfaces__msg__TurnoutState *)malloc(*number_of_active_turnouts * sizeof(railway_interfaces__msg__TurnoutState));
 
-void init_turnouts_new(){
-  p_turnout_status_new = (railway_interfaces__msg__TurnoutState *)malloc(*p_number_of_active_turnouts * sizeof(railway_interfaces__msg__TurnoutState));
-
-  for(int i = 0; i < *p_number_of_active_turnouts; i++){
-    p_turnout_status_new[i].number = p_turnouts[i].address;
-    p_turnout_status_new[i].protocol = p_turnouts[i].protocol;//railway_interfaces__msg__TrackProtocolDefines__PROTOCOL_MM2;
-    p_turnout_status_new[i].state = p_turnout_status[i];
+  for(int i = 0; i < *number_of_active_turnouts; i++){
+    turnout_status_msgs[i].number = p_turnouts[i].address;
+    turnout_status_msgs[i].protocol = p_turnouts[i].protocol;//railway_interfaces__msg__TrackProtocolDefines__PROTOCOL_MM2;
+    turnout_status_msgs[i].state = p_turnout_status[i];
   }
 }
 
-void init_locomotives_new(){
-  p_locomotive_status_new = (railway_interfaces__msg__LocomotiveState *)malloc(*p_number_of_active_locomotives * sizeof(railway_interfaces__msg__LocomotiveState));
+void init_locomotives(){
+  locomotive_status_msgs = (railway_interfaces__msg__LocomotiveState *)malloc(*number_of_active_locomotives * sizeof(railway_interfaces__msg__LocomotiveState));
 
-  for(int i = 0; i < *p_number_of_active_locomotives; i++){
-    p_locomotive_status_new[i].protocol = p_locomtives[i].protocol;
-    p_locomotive_status_new[i].address = p_locomtives[i].address;
-    p_locomotive_status_new[i].direction = railway_interfaces__msg__LocomotiveState__DIRECTION_FORWARD;
+  for(int i = 0; i < *number_of_active_locomotives; i++){
+    locomotive_status_msgs[i].protocol = p_locomtives[i].protocol;
+    locomotive_status_msgs[i].address = p_locomtives[i].address;
+    locomotive_status_msgs[i].direction = railway_interfaces__msg__LocomotiveState__DIRECTION_FORWARD;
     word speed; //?
     //ctrlgetLocoSpeed(locomotive_status[i].address, &speed);
-    p_locomotive_status_new[i].speed = speed;
+    locomotive_status_msgs[i].speed = speed;
     byte direction; //?
     //ctrlgetLocoDirection(locomotive_status[i].address, &direction);
-    p_locomotive_status_new[i].direction = direction;
+    locomotive_status_msgs[i].direction = direction;
 
-    p_locomotive_status_new[i].function_state.capacity = MAX_NUMBER_OF_FUNCTION;
-    p_locomotive_status_new[i].function_state.data = (bool*) malloc(p_locomotive_status_new[i].function_state.capacity * sizeof(bool));
-    p_locomotive_status_new[i].function_state.size = MAX_NUMBER_OF_FUNCTION;
+    locomotive_status_msgs[i].function_state.capacity = MAX_NUMBER_OF_FUNCTION;
+    locomotive_status_msgs[i].function_state.data = (bool*) malloc(locomotive_status_msgs[i].function_state.capacity * sizeof(bool));
+    locomotive_status_msgs[i].function_state.size = MAX_NUMBER_OF_FUNCTION;
 
     for(int j = 0; j < MAX_NUMBER_OF_FUNCTION; j++){
       byte power;
       //ctrlgetLocoFunction(locomotive_status[i].address, j, &power);
-      p_locomotive_status_new[i].function_state.data[j] = power ? true : false;
+      locomotive_status_msgs[i].function_state.data[j] = power ? true : false;
     }
   }
 }
@@ -66,21 +65,21 @@ void init_locomotives_new(){
 
 
 void dumpConfiguration(){
-    DEBUG_PRINT("p_eeprom_programmed            = 0x%08x\n", p_eeprom_programmed);
-    DEBUG_PRINT("p_number_of_active_locomotives = 0x%08x\n", p_number_of_active_locomotives);
-    DEBUG_PRINT("p_number_of_active_turnouts    = 0x%08x\n", p_number_of_active_turnouts);
+    DEBUG_PRINT("eeprom_programmed            = 0x%08x\n", eeprom_programmed);
+    DEBUG_PRINT("number_of_active_locomotives = 0x%08x\n", number_of_active_locomotives);
+    DEBUG_PRINT("number_of_active_turnouts    = 0x%08x\n", number_of_active_turnouts);
     DEBUG_PRINT("p_locomtives                   = 0x%08x\n", p_locomtives);
     DEBUG_PRINT("p_turnouts                     = 0x%08x\n", p_turnouts);
     DEBUG_PRINT("p_turnout_status               = 0x%08x\n", p_turnout_status);
-    DEBUG_PRINT("eeprom_programmed              = 0x%04x\n", *p_eeprom_programmed);
-    DEBUG_PRINT("number_of_locomotives          = %i\n", *p_number_of_active_locomotives);
-    DEBUG_PRINT("number_of_turnouts             = %i\n", *p_number_of_active_turnouts);
+    DEBUG_PRINT("eeprom_programmed              = 0x%04x\n", *eeprom_programmed);
+    DEBUG_PRINT("number_of_locomotives          = %i\n", *number_of_active_locomotives);
+    DEBUG_PRINT("number_of_turnouts             = %i\n", *number_of_active_turnouts);
 
-    if(*p_eeprom_programmed == EEPROM_PROGRAMMED_TAG){
-      for(int i = 0; i < *p_number_of_active_locomotives; i++){
+    if(*eeprom_programmed == EEPROM_PROGRAMMED_TAG){
+      for(int i = 0; i < *number_of_active_locomotives; i++){
         DEBUG_PRINT("Locomitive %i, address = %i, protocol = %i\n", i+1, p_locomtives[i].address, p_locomtives[i].protocol);
       }
-      for(int i = 0; i < *p_number_of_active_turnouts; i++){
+      for(int i = 0; i < *number_of_active_turnouts; i++){
         DEBUG_PRINT("Turnout %i, address = %i, protocol = %i, state = %i\n", i+1, p_turnouts[i].address, p_turnouts[i].protocol, p_turnout_status[i]);
       }
     }
@@ -112,16 +111,21 @@ void track_config_callback(const void * msgin){
 
   DEBUG_PRINT("Configuration\n received\n");
 
-
   if(track_config_enable_flag){
   // Check if the message contains track objects
     if (!track_config->track_objects.size) {
-        *p_number_of_active_locomotives = 0;
-        *p_number_of_active_turnouts = 0;
-        memset(p_eeprom_programmed, 0x00, EEPROM_SIZE);
+        *number_of_active_locomotives = 0;
+        *number_of_active_turnouts = 0;
+        memset(eeprom_programmed, 0x00, EEPROM_SIZE);
         EEPROM.commit();
         
-        DEBUG_PRINT("Track-config factory reset\n");
+        DEBUG_PRINT("Factory settings restored\n");
+        tft_printf(ST77XX_CYAN, "Factory\nsettings\nrestored\n");
+        delay(2000);
+        DEBUG_PRINT("Rebooting\n");
+        tft_printf(ST77XX_CYAN, "Rebooting\n");
+        delay(2000);
+        ESP.restart();
         return;
     }
 
@@ -153,8 +157,8 @@ void track_config_callback(const void * msgin){
     if(enoughNeededEeprom(number_of_locomotives, number_of_locomotives)){
       TRACK_OBJECT *p_iterator;
       p_iterator = p_locomtives;
-      *p_number_of_active_locomotives = 0;
-      *p_number_of_active_turnouts = 0;
+      *number_of_active_locomotives = 0;
+      *number_of_active_turnouts = 0;
 
       // Count the turnouts & locomotives
       for (size_t i = 0; i < track_config->track_objects.size; ++i) {
@@ -198,15 +202,36 @@ void track_config_callback(const void * msgin){
       p_turnout_status = (bool *)p_iterator;
       if(number_of_turnouts)
         memset(p_turnout_status, 0, number_of_turnouts * sizeof(bool));
-      *p_number_of_active_locomotives = number_of_locomotives;
-      *p_number_of_active_turnouts = number_of_turnouts;
-      *p_eeprom_programmed = EEPROM_PROGRAMMED_TAG;
+      *number_of_active_locomotives = number_of_locomotives;
+      *number_of_active_turnouts = number_of_turnouts;
+      *eeprom_programmed = EEPROM_PROGRAMMED_TAG;
       EEPROM.commit();
       track_config_enable_flag = false;
       dumpConfiguration();
+      DEBUG_PRINT("Track configuration stored\n");
+      tft_printf(ST77XX_CYAN, "Track\nconfiguration\nctored\n");
+      delay(2000);
+      DEBUG_PRINT("Rebooting\n");
+      tft_printf(ST77XX_CYAN, "Rebooting\n");
+      delay(2000);
+      ESP.restart();
 
     }
-    tft_printf(ST77XX_MAGENTA, "Track\nConfiguration\nStored\n");
+    else{
+      DEBUG_PRINT("Track configuration to large\n");
+      tft_printf(ST77XX_RED, "Track\nconfiguration\nto\nlarge\n");
+      delay(2000);
+      DEBUG_PRINT("Increase EEPROM Size in platformio.ini\n");
+      tft_printf(ST77XX_RED, "Increase EEPROM\nsize in\nplatformio.ini");
+      delay(2000);
+      DEBUG_PRINT("Compile System and uploadn");
+      tft_printf(ST77XX_RED, "Compile\nsystem\nand\nupload");
+      delay(2000);
+      DEBUG_PRINT("Rebooting in old configuration\n");
+      tft_printf(ST77XX_RED, "Rebooting\nIn old\nconfiguration\n");
+      delay(2000);
+      ESP.restart();
+    }
   }
   else
     dumpConfiguration();
