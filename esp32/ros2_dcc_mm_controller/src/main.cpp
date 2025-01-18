@@ -34,7 +34,6 @@
 #include <TrackManager.h>
 
 #include <defines.h>
-#include "network_config.h"
 #include <support.h>
 
 #include "power.h"
@@ -42,6 +41,8 @@
 #include "turnouts.h"
 #include "measurements.h"
 #include <track_config.h>
+#include "network_config_old.h"
+#include "network_config.h"
 
 
 rcl_publisher_t turnout_status_publisher;
@@ -286,20 +287,19 @@ void init_power(){
 
 }
 
-
+bool wifiUp;
 
 void setup() {
   protect_motor_driver_outputs();
   Serial.begin(115200);
   while (!Serial);
   delay(2000);
+
   DEBUG_PRINT("\nDCC/MM controller started\n");
-#if 0
-  Serial.print("MOSI: ");Serial.println(MOSI);
-  Serial.print("MISO: ");Serial.println(MISO);
-  Serial.print("SCK: ");Serial.println(SCK);
-  Serial.print("SS: ");Serial.println(SS);  
-#endif
+  DEBUG_PRINT("MOSI: %i\n", MOSI);
+  DEBUG_PRINT("MISO: %i\n", MISO);
+  DEBUG_PRINT("SCK: %i\n", SCK);
+  DEBUG_PRINT("SS: %i\n", SS);  
 
   init_display();
 
@@ -312,6 +312,9 @@ void setup() {
 #else
   tft_printf(ST77XX_MAGENTA, "Controller\nStarted\n\nUnknown Version");
 #endif
+  NETWORK_CONFIG networkConfig;
+  wifiUp = configureNetwork(true, &networkConfig);
+  if(!wifiUp) return;
 
   init_eeprom();
 
@@ -375,6 +378,8 @@ int track_config_enable_cnt = 0;
 
 void loop() {
 
+  if(!wifiUp) return;
+
   int new_display_measurents_switch = digitalRead(MEASUREMENT_SWITCH_PIN);
   if(!track_config_enable_flag){
     if(new_display_measurents_switch == LOW){
@@ -394,8 +399,8 @@ void loop() {
   if(!track_config_enable_flag){
     if((old_display_measurents_switch != new_display_measurents_switch) && (new_display_measurents_switch == LOW)){
       display_measurents = display_measurents ? false : true;
-      Serial.println("Toggle");
-      Serial.println(display_measurents);
+      DEBUG_PRINT("Toggle\n");
+      DEBUG_PRINT("display_measurents = %i\n", display_measurents);
       tft_printf(ST77XX_GREEN,"");
     }
     old_display_measurents_switch = new_display_measurents_switch;
@@ -414,5 +419,4 @@ void loop() {
 #endif
 
   RCSOFTCHECK(rclc_executor_spin_some(&executor, RCL_MS_TO_NS(100)));
-
 }
