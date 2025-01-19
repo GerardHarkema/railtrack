@@ -197,11 +197,11 @@ bool configureNetwork(bool forceConfigure, NETWORK_CONFIG *networkConfig) {
             DEBUG_PRINT("microROS Port-number set to: %s\n", ros_server_port);
             // Write file to save value
             writeFile(LittleFS, ros_server_portPath, ros_server_port.c_str());
-          }          //DEBUG_PRINT("POST[%s]: %s\n", p->name().c_str(), p->value().c_str());
+          }
         }
       }
       request->send(200, "text/plain", "Done. Controller will restart");
-      tft_printf(ST77XX_MAGENTA, "WiFi confuguration\nstored\nRestarting...\n");
+      tft_printf(ST77XX_MAGENTA, "WiFi\nconfiguration\nstored\nRestarting...\n");
       delay(3000);
       ESP.restart();
     });
