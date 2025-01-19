@@ -41,8 +41,7 @@
 #include "turnouts.h"
 #include "measurements.h"
 #include <track_config.h>
-#include "network_config_old.h"
-#include "network_config.h"
+#include <wifi_network_config.h>
 
 
 rcl_publisher_t turnout_status_publisher;
@@ -65,8 +64,9 @@ railway_interfaces__msg__TrackConfig track_config;
 
 Adafruit_ST7735 *tft;
 
-IPAddress agent_ip(ip_address[0], ip_address[1], ip_address[2], ip_address[3]);
+//IPAddress agent_ip(ip_address[0], ip_address[1], ip_address[2], ip_address[3]);
 
+#define PORT   8888
 
 railway_interfaces__msg__PowerState power_status;
 
@@ -291,6 +291,9 @@ bool wifiUp;
 
 void setup() {
   protect_motor_driver_outputs();
+
+  pinMode(MEASUREMENT_SWITCH_PIN, INPUT_PULLUP);
+
   Serial.begin(115200);
   while (!Serial);
   delay(2000);
@@ -312,8 +315,12 @@ void setup() {
 #else
   tft_printf(ST77XX_MAGENTA, "Controller\nStarted\n\nUnknown Version");
 #endif
+
+  bool force_network_configure;
+  force_network_configure = !digitalRead(MEASUREMENT_SWITCH_PIN);
+
   NETWORK_CONFIG networkConfig;
-  wifiUp = configureNetwork(true, &networkConfig);
+  wifiUp = configureNetwork(force_network_configure, &networkConfig);
   if(!wifiUp) return;
 
   init_eeprom();
@@ -327,7 +334,10 @@ void setup() {
   }
 
   WiFi.setHostname("DccMMController");
-  set_microros_wifi_transports(WIFI_SSID, PASSWORD, agent_ip, (size_t)PORT);
+  set_microros_wifi_transports(const_cast<char*>(networkConfig.ssid.c_str()), 
+                               const_cast<char*>(networkConfig.password.c_str()), 
+                               networkConfig.microros_server_ip_address,
+                               networkConfig.microros_server_port);
 
   pinMode(LED_BUILTIN, OUTPUT);
   digitalWrite(LED_BUILTIN, HIGH);
@@ -349,7 +359,6 @@ void setup() {
 
   init_ros();
 
-  pinMode(MEASUREMENT_SWITCH_PIN, INPUT_PULLUP);
 
   if(track_config_enable_flag){
     tft_printf(ST77XX_MAGENTA, "Controller\nReady\nto receive\nConfiguration");

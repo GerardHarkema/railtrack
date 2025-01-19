@@ -4,8 +4,11 @@
 #include <ESPAsyncWebServer.h>
 #include <AsyncTCP.h>
 #include "LittleFS.h"
-#include "network_config.h"
+#include "wifi_network_config.h"
 #include "tft_printf.h"
+
+#include <string>
+#include <iostream>
 
 #define DEBUG
 #ifdef DEBUG
@@ -26,24 +29,20 @@ AsyncWebServer server(80);
 const char* PARAM_INPUT_1 = "ssid";
 const char* PARAM_INPUT_2 = "pass";
 const char* PARAM_INPUT_3 = "ros_server_ip";
+const char* PARAM_INPUT_4 = "ros_server_port";
 
 //Variables to save values from HTML form
 String ssid;
 String pass;
 String ros_server_ip;
+String ros_server_port;
 
 // File paths to save input values permanently
 const char* ssidPath = "/ssid.txt";
 const char* passPath = "/pass.txt";
 const char* ros_server_ipPath = "/ros_server_ip.txt";
+const char* ros_server_portPath = "/ros_server_port.txt";
 
-IPAddress localIP;
-//IPAddress localIP(192, 168, 1, 200); // hardcoded
-
-// Set your Gateway IP address
-IPAddress localGateway;
-//IPAddress localGateway(192, 168, 1, 1); //hardcoded
-IPAddress subnet(255, 255, 0, 0);
 
 // Timer variables
 unsigned long previousMillis = 0;
@@ -95,22 +94,12 @@ void writeFile(fs::FS &fs, const char * path, const char * message){
 
 // Initialize WiFi
 bool testWifi() {
-  if(ssid=="" || pass==""){
-    DEBUG_PRINT("Undefined SSID or IP address\n");
+  if(ssid=="" || pass=="" || ros_server_ip=="" || ros_server_port==""){
+    DEBUG_PRINT("Undefined SSID, Password, microROS server IP address or Port\n");
     return false;
   }
 
   WiFi.mode(WIFI_STA);
-#if 0
-  localIP.fromString(ip.c_str());
-  localGateway.fromString(gateway.c_str());
-
-
-  if (!WiFi.config(localIP, localGateway, subnet)){
-    DEBUG_PRINT("STA Failed to configure\n");
-    return false;
-  }
-#endif
   WiFi.begin(ssid.c_str(), pass.c_str());
   DEBUG_PRINT("Connecting to WiFi...\n");
   tft_printf(ST77XX_MAGENTA, "Connecting\nto WiFi...\n");
@@ -127,7 +116,6 @@ bool testWifi() {
     }
   }
 
-  DEBUG_PRINT("Local IP Address : %s\n", WiFi.localIP());
   return true;
 }
 
@@ -135,8 +123,7 @@ bool testWifi() {
 NETWORK_CONFIG network_config;
 
 bool configureNetwork(bool forceConfigure, NETWORK_CONFIG *networkConfig) {
-  // Serial port for debugging purposes
-//  Serial.begin(115200);
+
 
   initLittleFS();
  
@@ -144,14 +131,18 @@ bool configureNetwork(bool forceConfigure, NETWORK_CONFIG *networkConfig) {
   ssid = readFile(LittleFS, ssidPath);
   pass = readFile(LittleFS, passPath);
   ros_server_ip = readFile(LittleFS, ros_server_ipPath);
+  ros_server_port = readFile(LittleFS, ros_server_portPath);
+
   DEBUG_PRINT("ssid : %s\n", ssid.c_str());
   DEBUG_PRINT("pass : %s\n", pass.c_str());
   DEBUG_PRINT("ros_server_ip : %s\n", ros_server_ip.c_str());
-  if(testWifi()) {
-    //networkConfig->ssid = ssid.c_str();
-    //networkConfig->password = pass.c_str();
-    //networkConfig.server_ip_address = localIP;
-    //networkConfig = network_config;
+  DEBUG_PRINT("ros_server_port : %s\n", ros_server_port.c_str());
+
+  if(testWifi() & !forceConfigure) {
+    networkConfig->password = pass;
+    networkConfig->ssid = ssid;
+    networkConfig->microros_server_ip_address.fromString(ros_server_ip);
+    networkConfig->microros_server_port = std::stoi(ros_server_port.c_str());
     return true;
   }
   else {
@@ -193,14 +184,20 @@ bool configureNetwork(bool forceConfigure, NETWORK_CONFIG *networkConfig) {
             // Write file to save value
             writeFile(LittleFS, passPath, pass.c_str());
           }
-          // HTTP POST ip value
+          // HTTP POST microROS server ip value
           if (p->name() == PARAM_INPUT_3) {
             ros_server_ip = p->value().c_str();
-            DEBUG_PRINT("IP Address set to: %s\n", ros_server_ip);
+            DEBUG_PRINT("micoROS server IP Address set to: %s\n", ros_server_ip);
             // Write file to save value
             writeFile(LittleFS, ros_server_ipPath, ros_server_ip.c_str());
           }
-          //DEBUG_PRINT("POST[%s]: %s\n", p->name().c_str(), p->value().c_str());
+          // HTTP POST microROS port value
+          if (p->name() == PARAM_INPUT_4) {
+            ros_server_port = p->value().c_str();
+            DEBUG_PRINT("microROS Port-number set to: %s\n", ros_server_port);
+            // Write file to save value
+            writeFile(LittleFS, ros_server_portPath, ros_server_port.c_str());
+          }          //DEBUG_PRINT("POST[%s]: %s\n", p->name().c_str(), p->value().c_str());
         }
       }
       request->send(200, "text/plain", "Done. Controller will restart");
