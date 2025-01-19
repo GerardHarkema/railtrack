@@ -51,8 +51,10 @@ const long interval = 10000;  // interval to wait for Wi-Fi connection (millisec
 
 // Initialize LittleFS
 void initLittleFS() {
-  if (!LittleFS.begin(true)) {
+  if (!LittleFS.begin(false)) {
     DEBUG_PRINT("An error has occurred while mounting LittleFS\n");
+    tft_printf(ST77XX_BLUE, "No filesystem\ndetected\nInstall by\nPlatfomIO\n");
+    while(true){};
   }
   DEBUG_PRINT("LittleFS mounted successfully\n");
 }
@@ -126,6 +128,15 @@ bool configureNetwork(bool forceConfigure, NETWORK_CONFIG *networkConfig) {
 
 
   initLittleFS();
+
+  // detect webserver files
+
+  File file = LittleFS.open("/wifimanager.html");
+  if(!file){
+    DEBUG_PRINT("No webpages file found\n");
+    tft_printf(ST77XX_BLUE, "No webpages\nfound\nInstall by\nPlatfomIO\n");
+    while(true){};
+  }
  
   // Load values saved in LittleFS
   ssid = readFile(LittleFS, ssidPath);

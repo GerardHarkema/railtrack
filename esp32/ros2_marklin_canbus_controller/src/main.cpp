@@ -98,7 +98,10 @@ bool track_config_enable_flag = false;
 void init_ros(){
   allocator = rcl_get_default_allocator();
   //create init_options
-  RCCHECK(rclc_support_init(&support, 0, NULL, &allocator));
+  if(rclc_support_init(&support, 0, NULL, &allocator)){
+    tft_printf(ST77XX_BLUE, "microROS server\nnot found\nCheck network\nsettings\n");
+    while(true){};
+  }
 
   // create node
   RCCHECK(rclc_node_init_default(&node, "railtrack_dcc_mm_controller", "", &support));
@@ -239,7 +242,7 @@ void init_display(){
   tft->setTextColor(ST77XX_CYAN);
   tft->setTextSize(1);
   tft->setCursor(1, 22);
-  tft->println("DCC/MM Control");
+  tft->println("Marklin Control");
 }
 
 void init_eeprom(){
@@ -347,10 +350,14 @@ void setup() {
   delay(2000);
 
   init_ros();
+  if(track_config_enable_flag){
+    tft_printf(ST77XX_MAGENTA, "Controller\nReady\nto receive\nConfiguration");
 
-
-  Serial.println("!!! Ready for operating !!!");
-  tft_printf(ST77XX_MAGENTA, "Marklin\ncanbus\ncontroller\nReady\n");
+  }
+  else{
+    Serial.println("!!! Ready for operating !!!");
+    tft_printf(ST77XX_MAGENTA, "Marklin\ncanbus\ncontroller\nReady\n");
+  }
 }
 
 int old_display_measurents_switch = HIGH;

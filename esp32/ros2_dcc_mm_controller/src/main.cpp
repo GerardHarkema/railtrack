@@ -93,9 +93,12 @@ bool display_measurents = false;
 bool track_config_enable_flag = false;
 
 void init_ros(){
-    allocator = rcl_get_default_allocator();
+  allocator = rcl_get_default_allocator();
   //create init_options
-  RCCHECK(rclc_support_init(&support, 0, NULL, &allocator));
+  if(rclc_support_init(&support, 0, NULL, &allocator)){
+    tft_printf(ST77XX_BLUE, "microROS server\nnot found\nCheck network\nsettings\n");
+    while(true){};
+  }
 
   // create node
   RCCHECK(rclc_node_init_default(&node, "railtrack_dcc_mm_controller", "", &support));
