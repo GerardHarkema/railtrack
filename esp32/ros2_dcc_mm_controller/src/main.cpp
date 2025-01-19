@@ -64,10 +64,6 @@ railway_interfaces__msg__TrackConfig track_config;
 
 Adafruit_ST7735 *tft;
 
-//IPAddress agent_ip(ip_address[0], ip_address[1], ip_address[2], ip_address[3]);
-
-#define PORT   8888
-
 railway_interfaces__msg__PowerState power_status;
 
 
@@ -249,6 +245,9 @@ void init_eeprom(){
 
   int needed_eeprom_size = 0;
 
+  int max_number_of_track_objects = (EEPROM_SIZE - (sizeof(uint16_t) * 3))/sizeof(TRACK_OBJECT);
+  DEBUG_PRINT("Max number of tackobjects = %i\n", max_number_of_track_objects);
+
   EEPROM.begin(EEPROM_SIZE);
   // asign variables
   eeprom_programmed = (uint16_t *)EEPROM.getDataPtr();
@@ -260,7 +259,7 @@ void init_eeprom(){
 
 
   if(*eeprom_programmed == EEPROM_PROGRAMMED_TAG){
-    DEBUG_PRINT("\nEEPROM programmed\n");
+    DEBUG_PRINT("EEPROM programmed\n");
 
     if(!enoughNeededEeprom(*number_of_active_locomotives, *number_of_active_locomotives)){
       DEBUG_PRINT("needed_eeprom_size out of range\n");

@@ -30,7 +30,6 @@
 
 
 #include <defines.h>
-#include "network_config.h"
 #include <support.h>
 
 #include "power.h"
@@ -38,6 +37,7 @@
 #include "turnouts.h"
 #include "measurements.h"
 #include <track_config.h>
+#include <wifi_network_config.h>
 
 #include "TrackController.h"
 
@@ -67,11 +67,7 @@ railway_interfaces__msg__TrackConfig track_config;
 
 Adafruit_ST7735 *tft;
 
-IPAddress agent_ip(ip_address[0], ip_address[1], ip_address[2], ip_address[3]);
-
-
 railway_interfaces__msg__PowerState power_status;
-
 
 rclc_support_t support;
 rcl_allocator_t allocator;
@@ -288,7 +284,12 @@ void init_power(){
   power_status.controller_type = railway_interfaces__msg__PowerState__CONTROLLER_CAN;
 }
 
+bool wifiUp;
+
 void setup() {
+
+  pinMode(MEASUREMENT_SWITCH_PIN, INPUT_PULLUP);
+
   Serial.begin(115200);
   while (!Serial);
   delay(2000);
@@ -314,6 +315,12 @@ void setup() {
   }
   ctrl->begin();
 
+  bool force_network_configure;
+  force_network_configure = !digitalRead(MEASUREMENT_SWITCH_PIN);
+
+  NETWORK_CONFIG networkConfig;
+  wifiUp = configureNetwork(force_network_configure, &networkConfig);
+  if(!wifiUp) return;
 
   init_eeprom();
 
@@ -327,7 +334,10 @@ void setup() {
 
 
   WiFi.setHostname("RailTrackController");
-  set_microros_wifi_transports(WIFI_SSID, PASSWORD, agent_ip, (size_t)PORT);
+  set_microros_wifi_transports(const_cast<char*>(networkConfig.ssid.c_str()), 
+                               const_cast<char*>(networkConfig.password.c_str()), 
+                               networkConfig.microros_server_ip_address,
+                               networkConfig.microros_server_port);
 
   pinMode(LED_BUILTIN, OUTPUT);
   digitalWrite(LED_BUILTIN, HIGH);
@@ -338,7 +348,6 @@ void setup() {
 
   init_ros();
 
-  pinMode(MEASUREMENT_SWITCH_PIN, INPUT_PULLUP);
 
   Serial.println("!!! Ready for operating !!!");
   tft_printf(ST77XX_MAGENTA, "Marklin\ncanbus\ncontroller\nReady\n");
@@ -349,6 +358,8 @@ int old_display_measurents_switch = HIGH;
 int track_config_enable_cnt = 0;
 
 void loop() {
+    if(!wifiUp) return;
+    
   int new_display_measurents_switch = digitalRead(MEASUREMENT_SWITCH_PIN);
   if(!track_config_enable_flag){
     if(new_display_measurents_switch == LOW){

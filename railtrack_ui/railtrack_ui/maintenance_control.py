@@ -96,6 +96,9 @@ class maintenance_control(Node):
             track_obj.config_type = TrackObjectConfig.CONFIG_TYPE_LOCOMOTIVE
             track_obj.address = locomotive["address"]
             match locomotive["protocol"]:
+                case "MFX":
+                    track_obj.protocol = TrackProtocolDefines.PROTOCOL_MFX
+                    config_msg.track_objects.append(track_obj)
                 case "DCC":
                     track_obj.protocol = TrackProtocolDefines.PROTOCOL_DCC
                     match locomotive["speed_steps"]:
