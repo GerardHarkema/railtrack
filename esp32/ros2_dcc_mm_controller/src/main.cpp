@@ -96,7 +96,7 @@ void init_ros(){
   allocator = rcl_get_default_allocator();
   //create init_options
   if(rclc_support_init(&support, 0, NULL, &allocator)){
-    tft_printf(ST77XX_BLUE, "microROS server\nnot found\nCheck network\nsettings\n");
+    tft_printf(ST77XX_BLUE, "microROS agent\nnot found\nCheck network\nsettings\n");
     while(true){};
   }
 
@@ -338,8 +338,8 @@ void setup() {
   WiFi.setHostname("DccMMController");
   set_microros_wifi_transports(const_cast<char*>(networkConfig.ssid.c_str()), 
                                const_cast<char*>(networkConfig.password.c_str()), 
-                               networkConfig.microros_server_ip_address,
-                               networkConfig.microros_server_port);
+                               networkConfig.microros_agent_ip_address,
+                               networkConfig.microros_agent_port);
 
   pinMode(LED_BUILTIN, OUTPUT);
   digitalWrite(LED_BUILTIN, HIGH);

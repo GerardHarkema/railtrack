@@ -301,8 +301,13 @@ void TrackController::end() {
 	}
 }
 
+boolean canbus_error = false;
+
+
 boolean TrackController::sendMessage(TrackMessage &message) {
 	can_t can;
+
+	if(canbus_error) return false;
 
 	message.hash = mHash;
 	
@@ -321,6 +326,14 @@ boolean TrackController::sendMessage(TrackMessage &message) {
 	}
 	
 	return can_send_message(&can);
+}
+
+
+boolean TrackController::isCanbusError(){
+		boolean return_value = canbus_error;
+		//Serial.printf("canbus_error = %i\n", canbus_error);
+		//canbus_error = false;
+		return return_value;
 }
 
 boolean TrackController::receiveMessage(TrackMessage &message) {
@@ -352,16 +365,19 @@ boolean TrackController::receiveMessage(TrackMessage &message) {
 	return result;
 }
 
+
 boolean TrackController::exchangeMessage(TrackMessage &out, TrackMessage &in, word timeout) {
 	int command = out.command;
 
 	if (!sendMessage(out)) {
+		canbus_error = true;
 		if (mDebug) {
 			Serial.println(F("!?! Send error"));
 			Serial.println(F("!?! Emergency stop"));
-			setPower(false);
-			for (;;);
+			//setPower(false);
+			//for (;;);
 		}
+		return false;
 	}
 
 	ulong time = millis();
@@ -377,6 +393,7 @@ boolean TrackController::exchangeMessage(TrackMessage &out, TrackMessage &in, wo
 		}
 	}
 
+	canbus_error = true;
 	if (mDebug) {
 		Serial.println(F("!?! Receive timeout"));
 	}

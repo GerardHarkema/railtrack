@@ -122,8 +122,8 @@ void track_config_callback(const void * msgin){
         DEBUG_PRINT("Factory settings restored\n");
         tft_printf(ST77XX_CYAN, "Factory\nsettings\nrestored\n");
         delay(2000);
-        DEBUG_PRINT("Rebooting\n");
-        tft_printf(ST77XX_CYAN, "Rebooting\n");
+        DEBUG_PRINT("Restarting...\n");
+        tft_printf(ST77XX_CYAN, "Restarting...\n");
         delay(2000);
         ESP.restart();
         return;
@@ -215,10 +215,10 @@ void track_config_callback(const void * msgin){
       track_config_enable_flag = false;
       dumpConfiguration();
       DEBUG_PRINT("Track configuration stored\n");
-      tft_printf(ST77XX_CYAN, "Track\nconfiguration\nctored\n");
+      tft_printf(ST77XX_CYAN, "Track\nconfiguration\nstored\n");
       delay(2000);
-      DEBUG_PRINT("Rebooting\n");
-      tft_printf(ST77XX_CYAN, "Rebooting\n");
+      DEBUG_PRINT("Restarting...\n");
+      tft_printf(ST77XX_CYAN, "Restarting...\n");
       delay(2000);
       ESP.restart();
 

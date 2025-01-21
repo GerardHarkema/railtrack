@@ -99,7 +99,7 @@ void init_ros(){
   allocator = rcl_get_default_allocator();
   //create init_options
   if(rclc_support_init(&support, 0, NULL, &allocator)){
-    tft_printf(ST77XX_BLUE, "microROS server\nnot found\nCheck network\nsettings\n");
+    tft_printf(ST77XX_BLUE, "microROS agent\nnot found\nCheck network\nsettings\n");
     while(true){};
   }
 
@@ -339,8 +339,8 @@ void setup() {
   WiFi.setHostname("RailTrackController");
   set_microros_wifi_transports(const_cast<char*>(networkConfig.ssid.c_str()), 
                                const_cast<char*>(networkConfig.password.c_str()), 
-                               networkConfig.microros_server_ip_address,
-                               networkConfig.microros_server_port);
+                               networkConfig.microros_agent_ip_address,
+                               networkConfig.microros_agent_port);
 
   pinMode(LED_BUILTIN, OUTPUT);
   digitalWrite(LED_BUILTIN, HIGH);
@@ -396,6 +396,7 @@ void loop() {
   //Serial.print("*");
   if(ctrl->receiveMessage(message)){
 
+
     int address = (message.data[2] << 8) 
                  + message.data[3];
     int index = 0;
@@ -416,11 +417,11 @@ void loop() {
         switch(message.data[4]){
           case SYSTEM_STOP:
               power_status.state = false;
-               tft_printf(ST77XX_GREEN, "CANBUS msg\nSystem: Stop");
+              tft_printf(ST77XX_GREEN, "CANBUS msg\nSystem: Stop");
             break;
           case SYSTEM_GO:
               power_status.state = true;
-               tft_printf(ST77XX_GREEN, "CANBUS msg\nSystem: Go");
+              tft_printf(ST77XX_GREEN, "CANBUS msg\nSystem: Go");
             break;
           case UBERLAST:
             switch(message.data[5]){
@@ -497,10 +498,6 @@ void loop() {
             tft_printf(ST77XX_GREEN, "CANBUS msg\nLocomotive\nAddress(%s): %i\nSet dir: %s\n",
               protocol_txt, sub_address, direction_txt);
           }
-
-
-
-    
           break;
       case LOC_FUNCTION:
           function_index = message.data[4];
@@ -519,10 +516,12 @@ void loop() {
         break;    
     }
   }
+  if(ctrl->isCanbusError()){
+    tft_printf(ST77XX_BLUE, "CANBUS Error\nCheck\nConnection or\nMarklin Railbox");
+    while(true){};
+  }
 
   vTaskDelay(20);
-  //delay(20);
 
   RCSOFTCHECK(rclc_executor_spin_some(&executor, RCL_MS_TO_NS(100)));
-
 }

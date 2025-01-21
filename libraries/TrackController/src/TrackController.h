@@ -313,6 +313,8 @@ class TrackController {
      */
     boolean receiveMessage(TrackMessage &message);
 
+    boolean isCanbusError();
+
     /**
      * Sends a message and waits for the corresponding response,
      * returning true on success. Blocks until either a message with
