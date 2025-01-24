@@ -56,10 +56,10 @@ class locomotive_control(Node):
                     case _:
                         self.locomotive_msg.dcc_speed_step = LocomotiveControl.DCC_SPEEDSTEP_128 # default
             case "MFX":
-                if 0:
                     self.locomotive_msg.address = locomotive_descr['address']
                     self.locomotive_msg.protocol = TrackProtocolDefines.PROTOCOL_MFX
                     self.number_of_functions = 32
+                    self.locomotive_msg.dcc_speed_step = LocomotiveControl.DCC_SPEEDSTEP_128
             case _:
                 pass
 

@@ -44,55 +44,66 @@ void MaerklinMotorola::Parse() {
 		  DataQueue[QueuePos].DecoderState = MM2DecoderState_Unavailable;
 		  DataQueue[QueuePos].PortAddress = 0;
 		  
-		  byte Bits[18];
+			byte BitStream[18];
+			//DataxQueue[QueuePos].BitStream
 		  
 		  for(unsigned char i=0;i<35;i+=2) { //decode bits
-			Bits[i/2] = (DataQueue[QueuePos].Timings[i]>(period>>1)) ? 1 : 0; //longer than half: 1
+				BitStream[i/2] = (DataQueue[QueuePos].Timings[i]>(period>>1)) ? 1 : 0; //longer than half: 1
 
-			if(i<33) {
-			  int period_tmp = DataQueue[QueuePos].Timings[i] + DataQueue[QueuePos].Timings[i+1];
-			  if(period_tmp > 125 && period_tmp < 175) valid = false; //MFX herausfiltern
-			}
+				if(i<33) {
+					int period_tmp = DataQueue[QueuePos].Timings[i] + DataQueue[QueuePos].Timings[i+1];
+					if(period_tmp > 125 && period_tmp < 175) valid = false; //MFX herausfiltern
+				}
 		  }
 
-		  //The first 5 "trits" are always ternary (MM1 and MM2) - For MM2, the least 4 "trits" are quarternary
-		  for(unsigned char i=0;i<9;i++) { //decode trits from bits
-			if(Bits[i*2] == 0 && Bits[i*2+1] == 0)
-			{
-				//00
-				DataQueue[QueuePos].Trits[i] = 0;
-			}
-			else if(Bits[i*2] == 1 && Bits[i*2+1] == 1)
-			{
-				//11
-				DataQueue[QueuePos].Trits[i] = 1;
-			}
-			else if(Bits[i*2] == 1 && Bits[i*2+1] == 0)
-			{
-				//10
-				DataQueue[QueuePos].Trits[i] = 2;
-				if(i>=5)
-				{
-					//MM1 trailing "trits" only use "11" and "00" so we have MM2 here
-					DataQueue[QueuePos].IsMM2 = true;
+ 			uint32_t mask = 0b1;
+			DataQueue[QueuePos].BitStream = 0;
+			for(int i = 0; i < 18; i++){
+				if(BitStream[i]){
+					DataQueue[QueuePos].BitStream = DataQueue[QueuePos].BitStream | mask;
 				}
+				mask = mask << 1;
 			}
-			else
-			{
-				//01 -> MM2 only and only for trits 5...9
-				if(i<5)
+
+		  //The first 5 "trits" are always ternary (MM1 and MM2) - For MM2, the least 4 "trits" are quarternar
+
+		  for(unsigned char i=0;i<9;i++) { //decode trits from bits
+				if(BitStream[i*2] == 0 && BitStream[i*2+1] == 0)
 				{
-					//Pattern 01 can't occur on trits 0...4 -> invalid input
-					valid = false;
-					break;
+					//00
+					DataQueue[QueuePos].Trits[i] = 0;
+				}
+				else if(BitStream[i*2] == 1 && BitStream[i*2+1] == 1)
+				{
+					//11
+					DataQueue[QueuePos].Trits[i] = 1;
+				}
+				else if(BitStream[i*2] == 1 && BitStream[i*2+1] == 0)
+				{
+					//10
+					DataQueue[QueuePos].Trits[i] = 2;
+					if(i>=5)
+					{
+						//MM1 trailing "trits" only use "11" and "00" so we have MM2 here
+						DataQueue[QueuePos].IsMM2 = true;
+					}
 				}
 				else
 				{
-					//MM1 trailing "trits" only use "11" and "00" so we have MM2 here
-					DataQueue[QueuePos].Trits[i] = 3;	
-					DataQueue[QueuePos].IsMM2 = true;
+					//01 -> MM2 only and only for trits 5...9
+					if(i<5)
+					{
+						//Pattern 01 can't occur on trits 0...4 -> invalid input
+						valid = false;
+						break;
+					}
+					else
+					{
+						//MM1 trailing "trits" only use "11" and "00" so we have MM2 here
+						DataQueue[QueuePos].Trits[i] = 3;	
+						DataQueue[QueuePos].IsMM2 = true;
+					}
 				}
-			}
 		  }
 
 		  //Decoder
@@ -104,14 +115,14 @@ void MaerklinMotorola::Parse() {
 			if(!DataQueue[QueuePos].IsMagnet) { //Loktelegramm
 			  DataQueue[QueuePos].Function = (DataQueue[QueuePos].Trits[4] == 1) ? true : false;
 
-			  unsigned char s = Bits[10] + Bits[12] * 2 + Bits[14] * 4 + Bits[16] * 8;
+			  unsigned char s = BitStream[10] + BitStream[12] * 2 + BitStream[14] * 4 + BitStream[16] * 8;
 			  DataQueue[QueuePos].Stop = (s==0) ? true : false;
 			  DataQueue[QueuePos].ChangeDir = (s==1) ? true : false;
 			  DataQueue[QueuePos].Speed = (s==0) ?  0 : s-1;
 			  if(DataQueue[QueuePos].IsMM2)
 			  {
 				//convert MM2 bits to one number
-				unsigned char sMM2 = Bits[17] + Bits[15] * 2 + Bits[13] * 4 + Bits[11] * 8;
+				unsigned char sMM2 = BitStream[17] + BitStream[15] * 2 + BitStream[13] * 4 + BitStream[11] * 8;
 				DataQueue[QueuePos].IsSpeed = false; 
 				switch(sMM2)
 				{
@@ -122,8 +133,11 @@ void MaerklinMotorola::Parse() {
 					break;
 
 					case 4:
+					DataQueue[QueuePos].MM2Direction = MM2DirectionState_Forward_H;
+					DataQueue[QueuePos].IsSpeed = true;
+					break;
 					case 5:
-					DataQueue[QueuePos].MM2Direction = MM2DirectionState_Forward;
+					DataQueue[QueuePos].MM2Direction = MM2DirectionState_Forward_L;
 					DataQueue[QueuePos].IsSpeed = true;
 					break;
 
@@ -134,8 +148,11 @@ void MaerklinMotorola::Parse() {
 					break;
 
 					case 10:
+					DataQueue[QueuePos].MM2Direction = MM2DirectionState_Backward_H;
+					DataQueue[QueuePos].IsSpeed = true;
+					break;
 					case 11:
-					DataQueue[QueuePos].MM2Direction = MM2DirectionState_Backward;
+					DataQueue[QueuePos].MM2Direction = MM2DirectionState_Backward_L;
 					DataQueue[QueuePos].IsSpeed = true;
 					break;
 
@@ -160,17 +177,17 @@ void MaerklinMotorola::Parse() {
 			} else { //magnet telegram
 			  if(DataQueue[QueuePos].Trits[4]==0) {
 					DataQueue[QueuePos].IsAdditionalFunction = false;
-					unsigned char s = Bits[10] + Bits[12] * 2 + Bits[14] * 4;
+					unsigned char s = BitStream[10] + BitStream[12] * 2 + BitStream[14] * 4;
 					DataQueue[QueuePos].SubAddress = s;				
 					DataQueue[QueuePos].PortAddress = (( DataQueue[QueuePos].Address - 1) * 4) + (s >> 1) + 1;
-					if (Bits[16]==1) {
+					if (BitStream[16]==1) {
 						DataQueue[QueuePos].MagnetState = true;
-						DataQueue[QueuePos].DecoderState = Bits[10] ? MM2DecoderState_Green : MM2DecoderState_Red;				    
+						DataQueue[QueuePos].DecoderState = BitStream[10] ? MM2DecoderState_Green : MM2DecoderState_Red;				    
 					}
 			  }
 				else{
 					DataQueue[QueuePos].IsAdditionalFunction = true;
-					DataQueue[QueuePos].IsMM1FunctionOn = Bits[10] + Bits[12] * 2 + Bits[14] * 4  + Bits[16] * 8;
+					DataQueue[QueuePos].IsMM1FunctionOn = BitStream[10] + BitStream[12] * 2 + BitStream[14] * 4  + BitStream[16] * 8;
 				}
 				parsed=true;
 			}  

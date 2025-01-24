@@ -242,6 +242,8 @@ class TrackController {
 	 */
 	boolean mLoopback;
 
+    uint16_t message_count = 0;
+    
 #ifdef ESP32
     TaskHandle_t enqueue_task_h;
 #endif
@@ -280,6 +282,9 @@ class TrackController {
      * generated.
      */
     void init(word hash, boolean debug, boolean loopback);
+
+
+    void printMessageHeader();
 
     /**
      * Queries the hash used by the TrackController.

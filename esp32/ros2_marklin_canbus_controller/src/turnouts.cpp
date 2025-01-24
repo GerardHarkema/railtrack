@@ -50,7 +50,7 @@ void turnout_control_callback(const void * msgin)
   if(power_status.state){
     ctrl->setTurnout(TURNOUT_BASE_ADDRESS + control->number - 1, straight);
     if(lookupTurnoutIndex(control->number, &index)){
-      EEPROM.writeBool(index, straight);
+      p_turnout_status[index] = straight;
       EEPROM.commit();
       turnout_status_msgs[index].state = straight;
     }

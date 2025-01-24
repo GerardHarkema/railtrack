@@ -111,9 +111,9 @@ bool TrackPacketQueue::insertPacket(TrackPacket &packet)
                 case MM2_LOC_F4_TELEGRAM:
                   queue_packet->mmSetFunction(3, packet.mmGetFunction());
                   break;
-                case MM_LOC_AUXILIARY_TELEGRAM:
-                  queue_packet->mmSetAuxiliary(packet.mmGetAuxiliary());
-                  break;
+//                case MM_LOC_AUXILIARY_TELEGRAM:
+//                  queue_packet->mmSetAuxiliary(packet.mmGetAuxiliary());
+//                  break;
               }
               break;
             case MM_SOLENOID_TELEGRAM:
@@ -122,11 +122,11 @@ bool TrackPacketQueue::insertPacket(TrackPacket &packet)
               break;
           }
           //queue.erase(queue_packet);
-          //break;
+          break;
         }
       }
       if(!found){
-        //Serial.printf("MM Telegram inserted\n");
+        //DEBUG_PRINT("MM Telegram inserted\n");
         if(packet.mmGetKind() != MM_LOC_AUXILIARY_TELEGRAM){ // skip this fake telegram
           try {
             if(packet.isHighPriority())
@@ -167,33 +167,33 @@ void TrackPacketQueue::printQueue(void)
     for (queue_packet = queue.begin(); queue_packet != queue.end(); ++queue_packet){
       switch(queue_packet->getPacketProtocol()){
         case TRACK_PROTOCOL_DCC:
-          Serial.printf("Queue-> %i (dcc): Address = 0x%04x, Kind = %i, Repeatcount = %i", i,
+          DEBUG_PRINT("Queue-> %i (dcc): Address = 0x%04x, Kind = %i, Repeatcount = %i", i,
             queue_packet->dccGetAddress(), 
             queue_packet->dccGetKind(), 
             queue_packet->getRepeatCount());
             dcc_bitstream_size = queue_packet->dccGetSize();
-            Serial.printf(", Size = %i", dcc_bitstream_size);
+            DEBUG_PRINT(", Size = %i", dcc_bitstream_size);
             if(dcc_bitstream_size){
-              Serial.printf(", Data = ");
+              DEBUG_PRINT(", Data = ");
               for(int j = 0; j < dcc_bitstream_size; j++)
-                Serial.printf(" 0x%02x", queue_packet->dccGetData(j));
+                DEBUG_PRINT(" 0x%02x", queue_packet->dccGetData(j));
             }
-            Serial.printf("\n");
+            DEBUG_PRINT("\n");
           break;
         case TRACK_PROTOCOL_MM:
-          Serial.printf("Queue-> %i (mm): Address = 0x%04x, Kind = %i, Repeatcount = %i", i,
+          DEBUG_PRINT("Queue-> %i (mm): Address = 0x%04x, Kind = %i, Repeatcount = %i", i,
             queue_packet->mmGetAddress(), 
             queue_packet->mmGetKind(), 
             queue_packet->getRepeatCount());
-            Serial.printf(", Size = 76(fixed)");
-            Serial.printf("\n");
+            DEBUG_PRINT(", Size = 76(fixed)");
+            DEBUG_PRINT("\n");
           break;
       }
       i++;
     }
   }
   else{
-    Serial.printf("Queue->Queue Empty\n");    
+    DEBUG_PRINT("Queue->Queue Empty\n");    
   }
 
 #ifdef THREAD_SAFE_QUEUE

@@ -46,24 +46,23 @@ void setup() {
   display_menu();
 }
 
-#if 1
+#if 0
 void printBitStream(uint32_t bit_stream){
-  //Serial.println(bit_stream);
-  for(int j = 0; j < 9; j++){
-  
-  if(j==0)Serial.print("Address: ");
-  if(j==4)Serial.print("Auxilary: ");
-  if(j==5)Serial.print("Data: ");
-  (bit_stream & 0x01) ? Serial.print("1") : Serial.print("0");
-  bit_stream = bit_stream >> 1;
-  (bit_stream & 0x01) ? Serial.print("1") : Serial.print("0");
-  bit_stream = bit_stream >> 1;
-  Serial.print(" ");
-}
-Serial.println();
+      Serial.println(bit_stream);
+      for(int j = 0; j < 9; j++){
+			
+			//if(j==0)Serial.print("Address: ");
+			///if(j==4)Serial.print("Auxilary: ");
+			//if(j==5)Serial.print("Data: ");
+      (bit_stream & 0x01) ? Serial.print("1") : Serial.print("0");
+      bit_stream = bit_stream >> 1;
+      (bit_stream & 0x01) ? Serial.print("1") : Serial.print("0");
+      bit_stream = bit_stream >> 1;
+      Serial.print(" ");
+    }
+    Serial.println();
 }
 #endif
-
 unsigned int i = 0;
 void loop() {
 
@@ -128,7 +127,7 @@ void loop() {
       Serial.print("; MagnetState = " + String(groen ? "groen" : "rood"));
       Serial.println();
       if(display_bitstream){
-        printBitStream(Data->BitStream);
+        //printBitStream(Data->BitStream);
       }
     }
 
@@ -146,7 +145,7 @@ void loop() {
         mask = mask << 1;
       }
       if(display_bitstream){
-        printBitStream(Data->BitStream);
+        //printBitStream(Data->BitStream);
       }
     }
     if(!Data->IsMagnet && display_speed) {
@@ -156,31 +155,32 @@ void loop() {
             Serial.print("MM2 -->");
             Serial.print(" Address = "); Serial.print(Data->Address);
             Serial.print("; Speed = "); Serial.print(Data->Speed);
-            switch(Data->MM2Direction){
+
+           switch(Data->MM2Direction){
               case MM2DirectionState_Unavailable:
                 Serial.print("; Direction = Unavailable");
                 break;
               case MM2DirectionState_Forward_H:
-                Serial.print("; Direction = Forward (+6..+14)");
+                Serial.print("; Direction = Forward (+6..+14)     ");
                 break;
               case MM2DirectionState_Forward_L:
-                Serial.print("; Direction = Forward  (+0..+6)");
+                Serial.print("; Direction = Forward  (+0..+6)     ");
                 break;
               case MM2DirectionState_Backward_L:
                 Serial.print("; Direction = Backward (-6..-0)");
                 break;
               case MM2DirectionState_Backward_H:
-                Serial.print("; Direction = Backward (-7..-14)");
+                Serial.print("; Direction = Backward (-7..-14)    ");
                 break;
             }
-            Serial.print("; Auxilary = " + String(Data->Function ? "On" : "Off"));
+             Serial.print("; Auxilary = " + String(Data->Function ? "On" : "Off"));
             if(!Data->IsSpeed){
               Serial.print("; FunctionIndex= "); Serial.print(Data->MM2FunctionIndex);
               Serial.print("; Function = " + String(Data->IsMM2FunctionOn ? "On" : "Off"));
             }
             Serial.println();
             if(display_bitstream){
-              printBitStream(Data->BitStream);
+              //printBitStream(Data->BitStream);
             }
           }
         }
@@ -194,7 +194,7 @@ void loop() {
           Serial.print("; ChangeDir = "); Serial.print(Data->ChangeDir);
           Serial.println();
           if(display_bitstream){
-              printBitStream(Data->BitStream);
+            //printBitStream(Data->BitStream);
           }
         }
       }

@@ -303,6 +303,15 @@ void TrackController::end() {
 
 boolean canbus_error = false;
 
+void TrackController::printMessageHeader(){
+	if(message_count % 10 == 0){
+    Serial.println("--- ---- - ---- ---- ---- ---- ---- ---- ---- ---- ---- ----");
+    Serial.println("DIR HASH R CMND LNGT DAT0 DAT1 DAT2 DAT3 DAT4 DAT5 DAT6 DAT7");
+    Serial.println("--- ---- - ---- ---- ---- ---- ---- ---- ---- ---- ---- ----");
+		message_count = 0;
+	}
+	message_count++;
+}
 
 boolean TrackController::sendMessage(TrackMessage &message) {
 	can_t can;
@@ -321,8 +330,9 @@ boolean TrackController::sendMessage(TrackMessage &message) {
 	}
 
 	if (mDebug) {
-	    Serial.print("==> ");
-	    Serial.println(message);
+		printMessageHeader();
+	  Serial.print("==> ");
+	  Serial.println(message);
 	}
 	
 	return can_send_message(&can);
@@ -357,8 +367,9 @@ boolean TrackController::receiveMessage(TrackMessage &message) {
 		}
 
 		if (mDebug) {
-		    Serial.print("<== ");
-		    Serial.println(message);
+			printMessageHeader();
+		  Serial.print("<== ");
+		  Serial.println(message);
 		}
 	}
 

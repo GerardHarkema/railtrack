@@ -310,12 +310,7 @@ void setup() {
   tft_printf(ST77XX_MAGENTA, "Marklin\ncanbus\ncontroller\nstarted\n");
 
   ctrl = new TrackController(0xdf24, canbus_debug_flag);
-  if(canbus_debug_flag){  
-    Serial.printf("\n");
-    Serial.printf("\n");
-    Serial.printf("DIR HASH R CMND LNGT DAT0 DAT1 DAT2 DAT3 DAT4 DAT5 DAT6 DAT7\n");
-    Serial.printf("--- ---- - ---- ---- ---- ---- ---- ---- ---- ---- ---- ----\n");
-  }
+
   ctrl->begin();
 
   bool force_network_configure;
@@ -518,7 +513,7 @@ void loop() {
   }
   if(ctrl->isCanbusError()){
     tft_printf(ST77XX_BLUE, "CANBUS Error\nCheck\nConnection or\nMarklin Railbox");
-    while(true){};
+    //while(true){};
   }
 
   vTaskDelay(20);
