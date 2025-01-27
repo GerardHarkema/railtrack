@@ -39,7 +39,9 @@ enum MM2DecoderState
 
 struct MaerklinMotorolaData {
   byte Trits[9];
+#if (defined INCLUDE_BITSTREAM_DISPLAY)
   uint32_t BitStream;
+#endif
   int Timings[35];
   unsigned long tm_package_delta;
   MM2DirectionState MM2Direction;

@@ -20,11 +20,16 @@ from railway_interfaces.msg import LocomotiveControl
 from railway_interfaces.msg import LocomotiveState  
 from railway_interfaces.msg import TrackConfig, TrackObjectConfig, TrackProtocolDefines
 
+from local_file_picker import local_file_picker
+
 
 class maintenance_control(Node):
-    def __init__(self, track_config, track_config_publisher):
+    def __init__(self, track_config, track_config_publisher, app_path, super_class):
         self.track_config = track_config
         self.track_config_publisher = track_config_publisher
+        self.app_path = app_path
+        self.super_class = super_class
+
         #with ui.card():
         #    ui.label("Track maintenance")
         #    self.maintenance_button = ui.button('ENABLE', on_click=lambda:self.maintenance()).classes('drop-shadow bg-red')
@@ -72,6 +77,7 @@ class maintenance_control(Node):
                 self.update_controller_button = ui.button('Update Controller', on_click=lambda: self.update_controller()).classes('drop-shadow bg-green')
                 self.factory_reset_controller_button = ui.button('Factory Reset Controller', on_click=lambda: self.factory_reset_controller()).classes('drop-shadow bg-green')
             with ui.tab_panel(self.settings):
+                self.select_configuration_button = ui.button('Select Configuration', on_click=lambda: self.select_configuration(), icon='folder').classes('drop-shadow bg-green')
                 pass
 
 
@@ -88,6 +94,41 @@ class maintenance_control(Node):
     def set_direction(self):
         pass
 
+
+
+    async def select_configuration(self):
+        result = await local_file_picker('~', multiple=False)
+        if result != None:
+            ui.notify(f'You chose {result}')
+            # Compute relative path
+            with open(result[0], 'r', encoding='utf-8') as f:
+                test_track_config = json.load(f)
+            try:
+                configuration_type = test_track_config["configuration_type"]
+                if configuration_type != "track_configuration":
+                    with ui.dialog() as popup, ui.card():
+                        ui.label("Invalid configuration!")
+                        ui.button("Close", on_click=popup.close)
+                    popup.open()
+                    return            
+            except KeyError:
+                with ui.dialog() as popup, ui.card():
+                    ui.label("Invalid configuration!")
+                    ui.button("Close", on_click=popup.close)
+                popup.open()
+                return
+            relative_path = os.path.relpath(result[0], self.app_path)
+            #ui.notify(f'You chose {relative_path}')
+
+            config = {"config_file": relative_path}
+            json_config = json.dumps(config, indent=4)
+            with open(self.app_path + "/settings.json", "w") as outfile:
+                outfile.write(json_config)
+            ui.notify('Configuration saved')
+            self.super_class.test(self.super_class)  # ????
+        else:
+            ui.notify(f'No file selected')
+
     def update_controller(self):
         config_msg = TrackConfig()
 
@@ -101,15 +142,19 @@ class maintenance_control(Node):
                     config_msg.track_objects.append(track_obj)
                 case "DCC":
                     track_obj.protocol = TrackProtocolDefines.PROTOCOL_DCC
-                    match locomotive["speed_steps"]:
-                        case 14:
-                            track_obj.speed_steps =  LocomotiveControl.DCC_SPEEDSTEP_14
-                        case 28:
-                            track_obj.speed_steps =  LocomotiveControl.DCC_SPEEDSTEP_28
-                        case 128:
-                            track_obj.speed_steps =  LocomotiveControl.DCC_SPEEDSTEP_128
-                        case _:
-                            track_obj.speed_steps =  LocomotiveControl.DCC_SPEEDSTEP_128
+                    try:
+                        match locomotive["speed_steps"]:
+                            case 14:
+                                track_obj.speed_steps =  LocomotiveControl.DCC_SPEEDSTEP_14
+                            case 28:
+                                track_obj.speed_steps =  LocomotiveControl.DCC_SPEEDSTEP_28
+                            case 128:
+                                track_obj.speed_steps =  LocomotiveControl.DCC_SPEEDSTEP_128
+                            case _:
+                                track_obj.speed_steps =  LocomotiveControl.DCC_SPEEDSTEP_128
+                    except KeyError:
+                        track_obj.speed_steps =  LocomotiveControl.DCC_SPEEDSTEP_128
+                    
                     config_msg.track_objects.append(track_obj)
                 case "MM1":
                     track_obj.protocol = TrackProtocolDefines.PROTOCOL_MM1

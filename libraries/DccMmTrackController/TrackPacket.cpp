@@ -171,9 +171,10 @@ void TrackPacket::mm2GetBitstream(uint32_t *bitstream, bool *double_frequency){
 			//operating_level_speed = mm_data.speed;
 			track_speed = operating_level_speed;
 			if(track_speed) track_speed++;
-
+#if 0
 			Serial.printf("Speed: %i, reversed direction = %s, operating level speed = %i, track_speed = %i\n", 
 										mm_data.speed , reverse_direction ? "true" : "false", operating_level_speed, track_speed);
+#endif
 			speed_mask = 1;
 			for(int i = 0; i < 4; i++){
 				if(track_speed & speed_mask){

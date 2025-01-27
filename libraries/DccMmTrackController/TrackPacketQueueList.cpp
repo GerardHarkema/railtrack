@@ -111,9 +111,9 @@ bool TrackPacketQueue::insertPacket(TrackPacket &packet)
                 case MM2_LOC_F4_TELEGRAM:
                   queue_packet->mmSetFunction(3, packet.mmGetFunction());
                   break;
-//                case MM_LOC_AUXILIARY_TELEGRAM:
-//                  queue_packet->mmSetAuxiliary(packet.mmGetAuxiliary());
-//                  break;
+                case MM_LOC_AUXILIARY_TELEGRAM:
+                  queue_packet->mmSetAuxiliary(packet.mmGetAuxiliary());
+                  break;
               }
               break;
             case MM_SOLENOID_TELEGRAM:

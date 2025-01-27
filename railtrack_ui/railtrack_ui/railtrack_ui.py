@@ -200,7 +200,7 @@ class RailTrackNode(Node):
                     pass
 
                 with ui.tab_panel(self.maintenance_tab):
-                    self.maintenance_control = maintenance_control(self.track_config  ,self.track_config_publisher)
+                    self.maintenance_control = maintenance_control(self.track_config  ,self.track_config_publisher, self.railtrack_ui_path, self)
             with ui.grid(columns=3):
                 with ui.card():
                     ui.label("Control")
@@ -303,6 +303,12 @@ class RailTrackNode(Node):
             notify_text = notify_text + ": Disable"
         ui.notify(notify_text)
         pass
+    def test(self, context):
+        ui.notify("Test enterd")
+        for loc in self.locomotivesui: # of in context
+            del loc
+
+
 
 def main() -> None:
     # NOTE: This function is defined as the ROS entry point in setup.py, but it's empty to enable NiceGUI auto-reloading

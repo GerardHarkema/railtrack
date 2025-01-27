@@ -46,15 +46,20 @@ class locomotive_control(Node):
                 self.locomotive_msg.address = locomotive_descr['address']
                 self.locomotive_msg.protocol = TrackProtocolDefines.PROTOCOL_DCC
                 self.number_of_functions = 16
-                match locomotive_descr['speed_steps']:
-                    case 128:
-                        self.locomotive_msg.dcc_speed_step = LocomotiveControl.DCC_SPEEDSTEP_128
-                    case 28:
-                        self.locomotive_msg.dcc_speed_step = LocomotiveControl.DCC_SPEEDSTEP_28
-                    case 14:
-                        self.locomotive_msg.dcc_speed_step = LocomotiveControl.DCC_SPEEDSTEP_14
-                    case _:
-                        self.locomotive_msg.dcc_speed_step = LocomotiveControl.DCC_SPEEDSTEP_128 # default
+                try:
+                    tmp = locomotive_descr['speed_steps']
+                    match locomotive_descr['speed_steps']:
+                        case 128:
+                            self.locomotive_msg.dcc_speed_step = LocomotiveControl.DCC_SPEEDSTEP_128
+                        case 28:
+                            self.locomotive_msg.dcc_speed_step = LocomotiveControl.DCC_SPEEDSTEP_28
+                        case 14:
+                            self.locomotive_msg.dcc_speed_step = LocomotiveControl.DCC_SPEEDSTEP_14
+                        case _:
+                            self.locomotive_msg.dcc_speed_step = LocomotiveControl.DCC_SPEEDSTEP_128 # default
+                except KeyError:
+                    self.locomotive_msg.dcc_speed_step = LocomotiveControl.DCC_SPEEDSTEP_128
+
             case "MFX":
                     self.locomotive_msg.address = locomotive_descr['address']
                     self.locomotive_msg.protocol = TrackProtocolDefines.PROTOCOL_MFX
@@ -229,3 +234,7 @@ class locomotive_control(Node):
                 else:
                     self.function_buttons[index].classes('drop-shadow bg-green', remove='bg-red')
                 index = index + 1
+
+    def __del__(self):
+        ui.notify("delete loc") 
+        pass

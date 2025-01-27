@@ -56,6 +56,7 @@ void MaerklinMotorola::Parse() {
 				}
 		  }
 
+#if (defined INCLUDE_BITSTREAM_DISPLAY)
  			uint32_t mask = 0b1;
 			DataQueue[QueuePos].BitStream = 0;
 			for(int i = 0; i < 18; i++){
@@ -64,7 +65,7 @@ void MaerklinMotorola::Parse() {
 				}
 				mask = mask << 1;
 			}
-
+#endif
 		  //The first 5 "trits" are always ternary (MM1 and MM2) - For MM2, the least 4 "trits" are quarternar
 
 		  for(unsigned char i=0;i<9;i++) { //decode trits from bits

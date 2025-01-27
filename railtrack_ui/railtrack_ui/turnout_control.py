@@ -82,3 +82,6 @@ class turnout_control(Node):
                 self.led.classes('text-red', remove='text-green')
                 text = 'Set turnout ' + str(self.turnout_msg.number) + ": red" 
                 #print(text)
+    
+    def __del__(self):
+        pass
