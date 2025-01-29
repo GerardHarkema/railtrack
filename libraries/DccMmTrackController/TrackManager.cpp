@@ -134,7 +134,6 @@ void setDCCeot(rmt_item32_t* item) {
 TrackManager *channelHandle;
 
 void IRAM_ATTR interrupt(rmt_channel_t channel, void *t) {
-  //Serial.printf("R");
   TrackManager *tt = channelHandle;
   if (tt) tt->RMTinterrupt();
 #if 0
@@ -317,7 +316,6 @@ int TrackManager::RMTfillDataDcc(const byte buffer[], byte byteCount) {
 
   setDCCBit1(dcc_data_message + dcc_data_len-1);     // overwrite previous zero bit with one bit
   setDCCeot(dcc_data_message + dcc_data_len++);         // EOT marker
-  //Serial.printf("dcc_data_len = %i\n", dcc_data_len);
   noInterrupts();                      // keep dataReady and dataRepeat consistnet to each other
   track_data_available = DCC_TRACK_DATA;
   interrupts();
@@ -344,7 +342,6 @@ int TrackManager::RMTfillDataMM(const u_int32_t data, bool doubleFrequency) {
   }    
   setMMt2(mm_data_message + mm_data_len++, doubleFrequency);
     
-  //Serial.printf("mm_data_len = %i\n", mm_data_len);
   noInterrupts();                      // keep dataReady and dataRepeat consistnet to each other
   track_data_available = MM_TRACK_DATA;
   interrupts();

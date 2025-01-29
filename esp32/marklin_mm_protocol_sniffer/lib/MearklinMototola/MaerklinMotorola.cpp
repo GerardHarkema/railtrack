@@ -127,6 +127,7 @@ void MaerklinMotorola::Parse() {
 				DataQueue[QueuePos].IsSpeed = false; 
 				switch(sMM2)
 				{
+
 					case 2:
 					case 3:
 					DataQueue[QueuePos].MM2FunctionIndex = 2;

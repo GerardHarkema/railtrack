@@ -48,6 +48,9 @@ void locomotive_control_callback(const void * msgin)
   char protocol_txt[10];
   //uint address;
   uint16_t functions = 0; 
+
+  bool current_direction, new_direction;
+
   if(power_status.state){
 
     switch(control->command){
@@ -56,17 +59,6 @@ void locomotive_control_callback(const void * msgin)
           DEBUG_PRINT("Found locomotive for setting speed\n");
           int8_t speed;
           switch(locomotive_status_msgs[locomotive_index].protocol){
-  #if (defined INCLUDE_MFX_PROTOCOL)
-            case railway_interfaces__msg__TrackProtocolDefines__PROTOCOL_MFX:
-              DEBUG_PRINT("Protocol MFX, handeld as DCC\n");         
-              speed = (uint8_t)(control->speed / SPEED_STEP_RESOLUTION_128);
-              if(locomotive_status_msgs[locomotive_index].direction ==
-                railway_interfaces__msg__LocomotiveControl__DIRECTION_REVERSE)
-                  speed = speed * -1;
-              DEBUG_PRINT("DCC: Set Speed 128: %i\n", speed);
-              trackScheduler.dccSetSpeed128(control->address, DCC_SHORT_ADDRESS, speed); //This should be in the call backs of the ROS subscribers
-              break;
-  #endif
             case railway_interfaces__msg__TrackProtocolDefines__PROTOCOL_DCC:
               DEBUG_PRINT("Protocol DCC\n");         
               switch(control->dcc_speed_step){
@@ -142,11 +134,12 @@ void locomotive_control_callback(const void * msgin)
               }
               break;
             case railway_interfaces__msg__TrackProtocolDefines__PROTOCOL_MM1:
-              trackScheduler.mm1ChangeDir(control->address);
               trackScheduler.mm1SetSpeed(control->address, 0); //This should be in the call backs of the ROS subscribers
+              trackScheduler.mmChangeDir(control->address);
               break;
             case railway_interfaces__msg__TrackProtocolDefines__PROTOCOL_MM2:
               trackScheduler.mm2SetSpeed(control->address, 0); //This should be in the call backs of the ROS subscribers
+              trackScheduler.mmChangeDir(control->address);
               break;
             default:
               DEBUG_PRINT("Unknomwn protocol\n"); 

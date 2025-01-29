@@ -458,7 +458,7 @@ bool TrackPacketScheduler::dccUnsetBasicAccessory(uint16_t address, uint8_t func
 
 bool TrackPacketScheduler::mm1SetSpeed(uint16_t address, int8_t new_speed){
 #if 0
-  Serial.printf("MM1 Set speed--> Address = %i, speed = %i\n" , address, new_speed);
+  DEBUG_PRINT("MM1 Set speed--> Address = %i, speed = %i\n" , address, new_speed);
   int8_t speed;
 
   speed = new_speed < 0 ? -new_speed : new_speed; // nevre go for a reverse speed
@@ -473,21 +473,19 @@ bool TrackPacketScheduler::mm1SetSpeed(uint16_t address, int8_t new_speed){
 #endif
 }
 
-bool TrackPacketScheduler::mm1ChangeDir(uint16_t address){
-#if 0
+bool TrackPacketScheduler::mmChangeDir(uint16_t address){
+  DEBUG_PRINT("Change direction\n");
   TrackPacket p(TRACK_PROTOCOL_MM);
   p.mmSetKind(MM1_LOC_CHANGE_DIR_TELEGRAM);
   p.mmSetAddress(address);
-  p.setRepeatCount(1);
+  p.setRepeatCount(2);
+  p.setPriority(true);
   return packet_buffer.insertPacket(p);
-#else
-  return false;
-#endif
 }
 
 
 bool TrackPacketScheduler::mm2SetSpeed(uint16_t address, int8_t new_speed){
-  Serial.printf("MM2 Set speed--> Address = %i, speed = %i\n" , address, new_speed);
+  DEBUG_PRINT("MM2 Set speed--> Address = %i, speed = %i\n" , address, new_speed);
   TrackPacket p(TRACK_PROTOCOL_MM);
   p.mmSetKind(MM2_LOC_SPEED_TELEGRAM);
   p.mmSetAddress(address);
@@ -497,16 +495,16 @@ bool TrackPacketScheduler::mm2SetSpeed(uint16_t address, int8_t new_speed){
 }
 
 bool TrackPacketScheduler::mmSetSolenoid(uint16_t port, bool state){
-  //Serial.printf("set solenoid\n");
+  //DEBUG_PRINT("set solenoid\n");
   TrackPacket p(TRACK_PROTOCOL_MM);
   p.mmSetKind(MM_SOLENOID_TELEGRAM);
   port += 3; // Port 0 does not excists
   p.mmSetAddress(port/4);
-  //Serial.printf("State %i\n", state);
-  //Serial.printf("set solenoid address = %i\n", (port/4) + 1);
+  //DEBUG_PRINT("State %i\n", state);
+  //DEBUG_PRINT("set solenoid address = %i\n", (port/4) + 1);
   u_int8_t sub_address = ((port%4) * 2) + (state?1:0); 
   p.mmSetSolenoidSubaddress(sub_address);
-  //Serial.printf("set solenoid sub address = %i\n", sub_address); 
+  //DEBUG_PRINT("set solenoid sub address = %i\n", sub_address); 
   p.setRepeatCount(4);
   return packet_buffer.insertPacket(p);
 }
@@ -562,7 +560,7 @@ bool TrackPacketScheduler::mm1SetFunctions(uint16_t address, uint8_t functions){
   uint8_t mask = 1;
   TrackPacket p(TRACK_PROTOCOL_MM);
 
-  Serial.printf("Setfunction: %i\n", functions);
+  DEBUG_PRINT("Setfunction: %i\n", functions);
 
   if(functions & mask){
       p.mmSetKind(MM_LOC_AUXILIARY_TELEGRAM);
@@ -599,7 +597,7 @@ void TrackPacketScheduler::update() //checks queues, puts whatever's pending on 
 
 #ifdef DEBUG_QUEUE
     if(packet_buffer.isEmpty())
-      Serial.printf("Buffer empty\n");
+      DEBUG_PRINT("Buffer empty\n");
     else
       packet_buffer.printQueue();
 #endif
@@ -611,12 +609,12 @@ void TrackPacketScheduler::update() //checks queues, puts whatever's pending on 
       case TRACK_PROTOCOL_DCC:
         dcc_bitstream_size = p.dccGetBitstream(dcc_bitstream);
         //DEBUG_PRINT("dcc_bitstream_size = %i\n", dcc_bitstream_size);
-        //Serial.printf("Fill dcc\n");
+        //DEBUG_PRINT("Fill dcc\n");
         track.RMTfillDataDcc(dcc_bitstream, dcc_bitstream_size);
         break;
       case TRACK_PROTOCOL_MM:
         p.mm2GetBitstream(&mm2_bitstream, &mm2_double_frequency);
-        //Serial.printf("Fill mm\n");
+        //DEBUG_PRINT("Fill mm\n");
         track.RMTfillDataMM(mm2_bitstream, mm2_double_frequency);
         break;  
 

@@ -65,6 +65,19 @@ bool TrackPacketQueue::insertPacket(TrackPacket &packet)
       }
       break;
     case TRACK_PROTOCOL_MM:
+      if(packet.mmGetKind() == MM1_LOC_CHANGE_DIR_TELEGRAM){
+        try {
+            if(packet.isHighPriority())
+              queue.push_front(packet);
+            else
+              queue.push_back(packet);
+          }
+          catch (const std::exception& e){
+            queue_full = true;
+            result = false;
+          }
+      }
+
       for (queue_packet = queue.begin(); queue_packet != queue.end(); ++queue_packet){
         if(queue_packet->mmGetAddress() == packet.mmGetAddress() && 
             queue_packet->getPacketProtocol() == TRACK_PROTOCOL_MM){
@@ -100,7 +113,6 @@ bool TrackPacketQueue::insertPacket(TrackPacket &packet)
                   break;
                 case MM2_LOC_F1_TELEGRAM:
                   queue_packet->mmSetFunction(0, packet.mmGetFunction());
-                  found = true;
                   break;
                 case MM2_LOC_F2_TELEGRAM:
                   queue_packet->mmSetFunction(1, packet.mmGetFunction());

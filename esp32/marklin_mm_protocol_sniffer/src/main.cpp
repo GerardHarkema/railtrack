@@ -184,6 +184,7 @@ void loop() {
                 break;
             }
             Serial.print("; Auxilary = " + String(Data->Function ? "On" : "Off"));
+            if(Data->ChangeDir)Serial.print("; Change Direction");
             if(!Data->IsSpeed){
               Serial.print("; FunctionIndex= "); Serial.print(Data->MM2FunctionIndex);
               Serial.print("; Function = " + String(Data->IsMM2FunctionOn ? "On" : "Off"));

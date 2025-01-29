@@ -171,10 +171,7 @@ void TrackPacket::mm2GetBitstream(uint32_t *bitstream, bool *double_frequency){
 			//operating_level_speed = mm_data.speed;
 			track_speed = operating_level_speed;
 			if(track_speed) track_speed++;
-#if 0
-			Serial.printf("Speed: %i, reversed direction = %s, operating level speed = %i, track_speed = %i\n", 
-										mm_data.speed , reverse_direction ? "true" : "false", operating_level_speed, track_speed);
-#endif
+
 			speed_mask = 1;
 			for(int i = 0; i < 4; i++){
 				if(track_speed & speed_mask){
@@ -240,10 +237,11 @@ void TrackPacket::mm2GetBitstream(uint32_t *bitstream, bool *double_frequency){
 			}
 			break;
 	}
-
+#endif
 
 	switch(mm_data.kind){
 		case MM1_LOC_CHANGE_DIR_TELEGRAM:
+
 											// 111111110000000000
 											// 765432109876543210	
 			bitstream_mask = 0b000000110000000000; // Change direction
@@ -251,7 +249,7 @@ void TrackPacket::mm2GetBitstream(uint32_t *bitstream, bool *double_frequency){
 			*bitstream = *bitstream | bitstream_mask;	
 			break;
 	}
-
+#if 0
 	bitstream_mask = 0;
 
 	switch(mm_data.kind){
@@ -268,7 +266,7 @@ void TrackPacket::mm2GetBitstream(uint32_t *bitstream, bool *double_frequency){
 			bitstream_mask = 0b000000110000000000; 
 			for(int i = 0; i < 4; i++){
 				if(mm_data.function_on_[i]){
-					Serial.printf("Index: %i\n", i);
+					DEBUG_PRINT("Index: %i\n", i);
 					*bitstream = *bitstream | bitstream_mask;	
 				}
 				bitstream_mask = bitstream_mask << 2;
@@ -342,16 +340,17 @@ void TrackPacket::mm2GetBitstream(uint32_t *bitstream, bool *double_frequency){
 	}
 	*bitstream = *bitstream | bitstream_mask;
 
+#if 0
 	uint32_t streem_validate = *bitstream;
 	streem_validate = streem_validate >> 10;
 	uint8_t bitcount = 0;
 	for (int i = 0; i < 4; i++){
 		if((streem_validate & 0b11) == 0b01){
 			bitcount++;
-			//Serial.printf("Error 1, telegram_type = %i\n", mm_data.kind);
+			//DEBUG_PRINT("Error 1, telegram_type = %i\n", mm_data.kind);
 		}
 		if((streem_validate & 0b11) == 0b10){
-			//Serial.printf("Error 2, telegram_type = %i\n", mm_data.kind);
+			//DEBUG_PRINT("Error 2, telegram_type = %i\n", mm_data.kind);
 			bitcount++;
 			
 		}
@@ -360,20 +359,21 @@ void TrackPacket::mm2GetBitstream(uint32_t *bitstream, bool *double_frequency){
 
 	}
 	if(!bitcount){
-		Serial.printf("Telegram error %i\n", mm_data.kind);
+		DEBUG_PRINT("Telegram error %i\n", mm_data.kind);
 		streem_validate = *bitstream;
 		streem_validate = streem_validate >> 10;
 		for(int i = 0; i < 4; i++){
-			Serial.printf("%i", streem_validate & 0b01 ? 1 : 0);
+			DEBUG_PRINT("%i", streem_validate & 0b01 ? 1 : 0);
 			streem_validate = streem_validate >> 1;
-			Serial.printf("%i", streem_validate & 0b01 ? 1 : 0);
+			DEBUG_PRINT("%i", streem_validate & 0b01 ? 1 : 0);
 			streem_validate = streem_validate >> 1;
-			Serial.printf(" ");
+			DEBUG_PRINT(" ");
 
 		}
-			Serial.printf("\n");
+			DEBUG_PRINT("\n");
 
 	}
+#endif
 }
 
 MM_KIND_TYPE mm2_loc_kind_seqence[] = {MM2_LOC_SPEED_TELEGRAM,

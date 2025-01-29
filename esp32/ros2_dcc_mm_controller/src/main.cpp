@@ -2,7 +2,7 @@
 #include <EEPROM.h>
 #include <stdio.h>
 
-#define DEBUG
+//#define DEBUG
 #ifdef DEBUG
 #define DEBUG_PRINT(fmt, ...) \
     do { \
@@ -300,7 +300,7 @@ void setup() {
   while (!Serial);
   delay(2000);
 
-  DEBUG_PRINT("\nDCC/MM controller started\n");
+  Serial.printf("\nDCC/MM controller started\n");
   DEBUG_PRINT("MOSI: %i\n", MOSI);
   DEBUG_PRINT("MISO: %i\n", MISO);
   DEBUG_PRINT("SCK: %i\n", SCK);
@@ -355,7 +355,7 @@ void setup() {
 #endif
 
 
-  DEBUG_PRINT("DCC/MM WiFi Connected\n");
+  Serial.printf("DCC/MM WiFi Connected\n");
 
   delay(2000);
 
@@ -369,7 +369,7 @@ void setup() {
   else{
     measurements.begin();
 
-    DEBUG_PRINT("!!! Ready for operating !!!\n");
+    Serial.printf("!!! Ready for operating !!!\n");
   #ifdef ARDUINO_MOTOR_SHIELD_L298
     tft_printf(ST77XX_MAGENTA, "Controller\nReady\n\nL298 Version");
   #elif IBT_2_MOTOR_DRIVER

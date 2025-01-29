@@ -51,11 +51,8 @@ void turnout_control_callback(const void * msgin)
   if(power_status.state){
     //ctrlsetTurnout(TURNOUT_BASE_ADDRESS + control->number - 1, straight);
     if(lookupTurnoutIndex(control->number, &index)){
-      //Serial.printf("Solenoid found\n");
-      //Serial.printf("State = %i\n", straight);
       switch(turnout_status_msgs[index].protocol){
         case railway_interfaces__msg__TrackProtocolDefines__PROTOCOL_DCC:
-          Serial.printf("Solenoid DCC\n");
           if(straight){
             //trackScheduler.dccSetBasicAccessory(index);
           }
@@ -65,11 +62,9 @@ void turnout_control_callback(const void * msgin)
           break;
         case railway_interfaces__msg__TrackProtocolDefines__PROTOCOL_MM1:
         case railway_interfaces__msg__TrackProtocolDefines__PROTOCOL_MM2:           
-          Serial.printf("Solenoid MM\n");
           trackScheduler.mmSetSolenoid(control->number, straight);
           break;
         default:
-          Serial.printf("Solenoid not known\n");
           break;
       }
       p_turnout_status[index] = straight;
@@ -79,7 +74,7 @@ void turnout_control_callback(const void * msgin)
               control->number, straight ? "Green" : "Red");
     }
     else{
-      Serial.printf("Solenoid not found\n");
+      DEBUG_PRINT("Solenoid not found\n");
     }
   }
 

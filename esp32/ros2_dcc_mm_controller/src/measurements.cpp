@@ -50,7 +50,7 @@ void Measurements::begin(){
     DEBUG_PRINT("Unable to start task\n");
   }
 
-    //Serial.printf("ADC Resolution = %i", analogReadResolution());
+    //DEBUG_PRINT("ADC Resolution = %i", analogReadResolution());
 
 }
 
@@ -70,7 +70,7 @@ void Measurements::loop(){
     adc_temperature_last_value = analogReadMilliVolts(TEMPERATURE_MEASUREMENT_PIN);
     adc_temperature_buffer[adc_temperature_index++] = adc_temperature_last_value;
     if(adc_temperature_index >= INTEGRATION_SIZE)adc_temperature_index = 0;
-    //Serial.printf("Analog value %i mV\n", adc_current_current_value);
+    DEBUG_PRINT("Analog value %i mV\n", adc_current_current_value);
 }
 
 float Measurements::getCurrent(){

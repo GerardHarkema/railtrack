@@ -3,7 +3,7 @@
 #include "support.h"
 #include "track_config.h"
 
-#define DEBUG
+//#define DEBUG
 #ifdef DEBUG
 #define DEBUG_PRINT(fmt, ...) \
     do { \
