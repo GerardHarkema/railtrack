@@ -43,21 +43,14 @@ void init_locomotives(){
     locomotive_status_msgs[i].protocol = p_locomtives[i].protocol;
     locomotive_status_msgs[i].address = p_locomtives[i].address;
     locomotive_status_msgs[i].direction = railway_interfaces__msg__LocomotiveState__DIRECTION_FORWARD;
-    word speed; //?
-    //ctrlgetLocoSpeed(locomotive_status[i].address, &speed);
-    locomotive_status_msgs[i].speed = speed;
-    byte direction; //?
-    //ctrlgetLocoDirection(locomotive_status[i].address, &direction);
-    locomotive_status_msgs[i].direction = direction;
+    locomotive_status_msgs[i].speed = 0;
 
     locomotive_status_msgs[i].function_state.capacity = MAX_NUMBER_OF_FUNCTION;
     locomotive_status_msgs[i].function_state.data = (bool*) malloc(locomotive_status_msgs[i].function_state.capacity * sizeof(bool));
     locomotive_status_msgs[i].function_state.size = MAX_NUMBER_OF_FUNCTION;
 
     for(int j = 0; j < MAX_NUMBER_OF_FUNCTION; j++){
-      byte power;
-      //ctrlgetLocoFunction(locomotive_status[i].address, j, &power);
-      locomotive_status_msgs[i].function_state.data[j] = power ? true : false;
+      locomotive_status_msgs[i].function_state.data[j] = false;
     }
   }
 }
@@ -65,9 +58,9 @@ void init_locomotives(){
 
 
 void dumpConfiguration(){
-    DEBUG_PRINT("eeprom_programmed            = 0x%08x\n", eeprom_programmed);
-    DEBUG_PRINT("number_of_active_locomotives = 0x%08x\n", number_of_active_locomotives);
-    DEBUG_PRINT("number_of_active_turnouts    = 0x%08x\n", number_of_active_turnouts);
+    DEBUG_PRINT("eeprom_programmed              = 0x%08x\n", eeprom_programmed);
+    DEBUG_PRINT("number_of_active_locomotives   = 0x%08x\n", number_of_active_locomotives);
+    DEBUG_PRINT("number_of_active_turnouts      = 0x%08x\n", number_of_active_turnouts);
     DEBUG_PRINT("p_locomtives                   = 0x%08x\n", p_locomtives);
     DEBUG_PRINT("p_turnouts                     = 0x%08x\n", p_turnouts);
     DEBUG_PRINT("p_turnout_status               = 0x%08x\n", p_turnout_status);

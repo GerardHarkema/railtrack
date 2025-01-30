@@ -26,7 +26,8 @@ from ws2812_effects import ws2812_effects
 class scenery_control(Node):
 
     def __init__(self, scenery_descr, control_publisher):
-        #super().__init__('railtrackgui')
+        super().__init__("Scenery_" + str(scenery_descr['number']))
+
 
         self.scenery_descr = scenery_descr
         self.control_publisher = control_publisher

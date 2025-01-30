@@ -24,6 +24,8 @@ from railway_interfaces.msg import TrackProtocolDefines
 class turnout_control(Node):
 
     def __init__(self, turnout_descr, control_publisher):
+        super().__init__("Turnout_" + turnout_descr['protocol'] + "_" + str(turnout_descr['number']))
+
         self.turnout_msg = TurnoutControl()
         self.turnout_msg.number = turnout_descr['number']
         self.control_publisher = control_publisher

@@ -39,6 +39,8 @@ class point_class():
 
 class turnout_control_on_layout(Node):
     def __init__(self, turnout, image, turnout_control_publisher):
+        super().__init__("Tracklayout_" + str(turnout["number"]))
+
         self.image = image
         self.rios =[]
         self.red_contents = []

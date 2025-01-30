@@ -23,7 +23,7 @@ from railway_interfaces.msg import TrackProtocolDefines
 class locomotive_control(Node):
 
     def __init__(self, locomotive_descr, control_publisher, locomotive_images_path):
-        #super().__init__('railtrackgui')
+        super().__init__("Locomotive_" + locomotive_descr['protocol'] + "_" + str(locomotive_descr['address']))
 
         self.locomotive_descr = locomotive_descr
         self.control_publisher = control_publisher;
@@ -78,7 +78,10 @@ class locomotive_control(Node):
         self.function_status = []
         self.function_numbers = []
 
-        with ui.card():
+        self.card = ui.card()
+
+        #with ui.card():
+        with self.card:
             text = str(locomotive_descr['type']) + ': ' + str(locomotive_descr['name'])
             ui.label(text)
             image = locomotive_images_path + "/" + locomotive_descr["image"]
@@ -89,7 +92,7 @@ class locomotive_control(Node):
                 self.speed_slider = ui.slider(min=0, max=1000, value=50, on_change=lambda:self.set_speed()).props('label-always')
                 self.speed_slider.on(type = 'update:model-valuex', leading_events = False, trailing_events = False, throttle = 5.0) 
                 self.increment_button = ui.button(icon = 'add', on_click=lambda:self.set_increment_speed()) 
-                self.direction_button = ui.button('FORWARD', on_click=lambda:self.set_direction()).classes('drop-shadow bg-red')
+                self.direction_button = ui.button('REVERSE', on_click=lambda:self.set_direction()).classes('drop-shadow bg-red')
                 self.stop_button = ui.button('STOP', on_click=lambda:self.stop())
                 try:
                     functions = locomotive_descr['functions']
@@ -236,5 +239,6 @@ class locomotive_control(Node):
                 index = index + 1
 
     def __del__(self):
+        self.card.delete()
         ui.notify("delete loc") 
         pass

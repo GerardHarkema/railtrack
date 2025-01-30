@@ -25,6 +25,8 @@ from local_file_picker import local_file_picker
 
 class maintenance_control(Node):
     def __init__(self, track_config, track_config_publisher, app_path, super_class):
+        super().__init__("Maintenance")
+
         self.track_config = track_config
         self.track_config_publisher = track_config_publisher
         self.app_path = app_path

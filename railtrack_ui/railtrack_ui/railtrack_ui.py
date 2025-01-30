@@ -6,6 +6,7 @@ from pathlib import Path
 import rclpy
 import os
 import json
+import sys
 
 from rclpy.executors import ExternalShutdownException
 from rclpy.node import Node
@@ -208,6 +209,7 @@ class RailTrackNode(Node):
                     self.power_button = ui.button('STOP', on_click=lambda:self.power()).classes('drop-shadow bg-red')
                     ui.label("Connection state (Flash)")
                     self.active = ui.icon('fiber_manual_record', size='3em').classes('drop-shadow text-green')
+                    self.destroy_button = ui.button('Destroy', on_click=lambda:self.test()).classes('drop-shadow bg-red')
                 with ui.card():
                     ui.label("Status")
                     with ui.grid(columns=3):                
@@ -303,9 +305,11 @@ class RailTrackNode(Node):
             notify_text = notify_text + ": Disable"
         ui.notify(notify_text)
         pass
-    def test(self, context):
+    def test(self):
         ui.notify("Test enterd")
         for loc in self.locomotivesui: # of in context
+            ref_count = sys.getrefcount(loc)
+            self.get_logger().info(f"ref_count {ref_count}")
             del loc
 
 
