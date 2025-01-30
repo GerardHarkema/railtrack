@@ -22,29 +22,26 @@
 
 #include "tft_printf.h"
 
-extern railway_interfaces__msg__LocomotiveState locomotive_status[];
-extern LOCOMOTIVE active_locomotives[];
-extern unsigned short int active_turnouts_mm[];
-extern unsigned short int active_turnouts_ros[];
+extern railway_interfaces__msg__LocomotiveState *locomotive_status_msgs;
+extern uint16_t *number_of_active_locomotives;
+extern railway_interfaces__msg__TurnoutState *turnout_status_msgs;
 
-extern int number_of_active_mm_turnouts;
-extern int number_of_active_locomotives;
 
-void lookupLocomotiveProtocol(PROTOCOL protocol, char *protocol_txt){
+void lookupLocomotiveProtocol(uint8_t protocol, char *protocol_txt){
   switch(protocol){
-    case ROS:
+    case railway_interfaces__msg__TrackProtocolDefines__PROTOCOL_ROS:
       strcpy(protocol_txt, "ROS");
       break;
-    case MM1:
+    case railway_interfaces__msg__TrackProtocolDefines__PROTOCOL_MM1:
       strcpy(protocol_txt, "MM1");
       break;    
-    case MM2:
+    case railway_interfaces__msg__TrackProtocolDefines__PROTOCOL_MM2:
       strcpy(protocol_txt, "MM2");
       break;    
-    case DCC:
+    case railway_interfaces__msg__TrackProtocolDefines__PROTOCOL_DCC:
       strcpy(protocol_txt, "DCC");
       break;
-    case MFX:
+    case railway_interfaces__msg__TrackProtocolDefines__PROTOCOL_MFX:
       strcpy(protocol_txt, "MFX");
       break;
     default:
@@ -78,25 +75,22 @@ char* getDirectionTxt(int direction){
 
 bool lookupTurnoutIndex(int turnout_number, int *turnout_index){
   int i;
-  for(i = 0; i < number_of_active_mm_turnouts; i++){
-    if(active_turnouts_mm[i] == turnout_number) break;
+  for(i = 0; i < *number_of_active_locomotives; i++){
+    if(turnout_status_msgs[i].number == turnout_number) break;
   }
-  if(i >= number_of_active_mm_turnouts) return false;
+  if(i >= *number_of_active_locomotives) return false;
   *turnout_index = i;
   return true;
 }
 
-bool lookupLocomotiveIndex(int locomotive_address, PROTOCOL protocol, int *locomotive_index){
+bool lookupLocomotiveIndex(int locomotive_address, uint8_t protocol, int *locomotive_index){
   int i;
 
-  //Serial.printf("locomotive_address = %i\n", locomotive_address);
-  //Serial.printf("number_of_active_locomotives = %i\n", number_of_active_locomotives);
-
-  for(i = 0; i < number_of_active_locomotives; i++){
-    if((locomotive_status[i].address == locomotive_address) 
-      && (locomotive_status[i].protocol == protocol)) break;
+  for(i = 0; i < *number_of_active_locomotives; i++){
+    if((locomotive_status_msgs[i].address == locomotive_address) 
+      && (locomotive_status_msgs[i].protocol == protocol)) break;
   }
-  if(i >= number_of_active_locomotives) return false;
+  if(i >= *number_of_active_locomotives) return false;
   *locomotive_index = i;
 
   return true;

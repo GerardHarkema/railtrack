@@ -54,12 +54,12 @@ class locomotive_emulator(Node):
 
     def handle_control(self, control) -> None:
         if control.address == self.locomotive_msg.address:
-            if control.command == LocomotiveControl().__class__.SET_SPEED:
+            if control.command == LocomotiveControl.SET_SPEED:
                 self.locomotive_msg.speed = control.speed
-            elif control.command == LocomotiveControl().__class__.SET_DIRECTION:
+            elif control.command == LocomotiveControl.SET_DIRECTION:
                 self.locomotive_msg.direction = control.direction
                 self.locomotive_msg.speed = 0
-            elif control.command == LocomotiveControl().__class__.SET_FUNCTION:
+            elif control.command == LocomotiveControl.SET_FUNCTION:
                 pass
             else:
                 pass

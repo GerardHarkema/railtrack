@@ -1,6 +1,6 @@
 #include <Arduino.h>
 #include <EEPROM.h>
-#include "support.h"
+#include <support.h>
 #include "turnouts.h"
 
 //#define DEBUG
@@ -18,20 +18,27 @@
 
 extern rcl_publisher_t turnout_status_publisher;
 extern int number_of_active_mm_turnouts;
-extern railway_interfaces__msg__TurnoutState turnout_status[];
 extern railway_interfaces__msg__PowerState power_status;
 extern TrackPacketScheduler trackScheduler;
+
+
+extern uint16_t *number_of_active_turnouts;
+extern TRACK_OBJECT *p_turnouts;
+extern bool *p_turnout_status;
+
+extern railway_interfaces__msg__TurnoutState *turnout_status_msgs;
 
 int turnout_state_index = 0;
 
 void turnout_state_publisher_timer_callback(rcl_timer_t * timer, int64_t last_call_time) {
 
   RCLC_UNUSED(last_call_time);
+  //Serial.print(".");
 
-  if ((timer != NULL) && number_of_active_mm_turnouts) {
-    RCSOFTCHECK(rcl_publish(&turnout_status_publisher, &turnout_status[turnout_state_index], NULL));
+  if ((timer != NULL) && *number_of_active_turnouts) {
+    RCSOFTCHECK(rcl_publish(&turnout_status_publisher, &turnout_status_msgs[turnout_state_index], NULL));
     turnout_state_index++;
-    if(turnout_state_index == number_of_active_mm_turnouts) turnout_state_index = 0;
+    if(turnout_state_index == *number_of_active_turnouts) turnout_state_index = 0;
   }
 }
 
@@ -44,11 +51,8 @@ void turnout_control_callback(const void * msgin)
   if(power_status.state){
     //ctrlsetTurnout(TURNOUT_BASE_ADDRESS + control->number - 1, straight);
     if(lookupTurnoutIndex(control->number, &index)){
-      //Serial.printf("Solenoid found\n");
-      //Serial.printf("State = %i\n", straight);
-      switch(turnout_status[index].protocol){
-        case DCC:
-          Serial.printf("Solenoid DCC\n");
+      switch(turnout_status_msgs[index].protocol){
+        case railway_interfaces__msg__TrackProtocolDefines__PROTOCOL_DCC:
           if(straight){
             //trackScheduler.dccSetBasicAccessory(index);
           }
@@ -56,25 +60,22 @@ void turnout_control_callback(const void * msgin)
             //trackScheduler.dccUnsetBasicAccessory(index);
           }
           break;
-        case MM1:
-        case MM2:           
-          //Serial.printf("Solenoid MM\n");
+        case railway_interfaces__msg__TrackProtocolDefines__PROTOCOL_MM1:
+        case railway_interfaces__msg__TrackProtocolDefines__PROTOCOL_MM2:           
           trackScheduler.mmSetSolenoid(control->number, straight);
           break;
         default:
-          Serial.printf("Solenoid not known\n");
           break;
       }
-
-      EEPROM.writeBool(index, straight);
+      p_turnout_status[index] = straight;
       EEPROM.commit();
-      turnout_status[index].state = straight;
+      turnout_status_msgs[index].state = straight;
+      tft_printf(ST77XX_GREEN, "ROS msg\nTurnout\nNumber: %i\nSet: %s\n",
+              control->number, straight ? "Green" : "Red");
     }
     else{
-      Serial.printf("Solenoid not found\n");
+      DEBUG_PRINT("Solenoid not found\n");
     }
-    tft_printf(ST77XX_GREEN, "ROS msg\nTurnout\nNumber: %i\nSet: %s\n",
-            control->number, straight ? "Green" : "Red");
   }
 
 }

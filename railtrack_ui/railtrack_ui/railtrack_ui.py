@@ -24,6 +24,7 @@ from railway_interfaces.msg import PowerControl
 from railway_interfaces.msg import PowerState 
 from railway_interfaces.msg import SceneryControl  
 from railway_interfaces.msg import SceneryState   
+from railway_interfaces.msg import TrackConfig   
 
 from turnout_control import turnout_control
 from locomotive_control import locomotive_control
@@ -31,25 +32,52 @@ from railtracklayout_control import railtracklayout_control
 from scenery_control import scenery_control
 from maintenance_control import maintenance_control
 
+import re
+
 class RailTrackNode(Node):
 
     def __init__(self) -> None:
         super().__init__('railtrack_gui')
-        
-        self.declare_parameter("config_file", "");
-        self.config_file = self.get_parameter("config_file").get_parameter_value().string_value
-        self.declare_parameter("locomotive_images_path", "");
-        self.locomotive_images_path = self.get_parameter("locomotive_images_path").get_parameter_value().string_value
-        self.declare_parameter("railtracklayout_images_path", "");
-        self.railtracklayout_images_path = self.get_parameter("railtracklayout_images_path").get_parameter_value().string_value
 
-        with open(self.config_file, 'r', encoding='utf-8') as f:
-            self.track_config = json.load(f)
+        self.declare_parameter("railtrack_ui_path", "");
+        self.railtrack_ui_path = self.get_parameter("railtrack_ui_path").get_parameter_value().string_value
+        self.get_logger().info(f"railtrack_ui_path {self.railtrack_ui_path}")
+
+ 
+        self.program_settings_file = self.railtrack_ui_path  + '/settings.json'
+        # Read programm settings
+        with open(self.program_settings_file, 'r', encoding='utf-8') as f:
+            self.program_settings = json.load(f)
+
+        self.get_logger().info(f"program_settings {self.program_settings}")
+        
+        self.config_file = self.program_settings["config_file"]
+        if not os.path.exists(self.config_file):
+            self.config_file = self.railtrack_ui_path + "/" + self.program_settings["config_file"]
+
+        self.get_logger().info(f"config_file {self.config_file}")
+
+        if os.path.exists(self.config_file):
+            with open(self.config_file, 'r', encoding='utf-8') as f:
+                self.track_config = json.load(f)
+        else:
+            self.get_logger().info(f"File {self.config_file} does not exist.")
+            return
+        
+
+        self.config_file_path = os.path.dirname(os.path.abspath(self.config_file))
+        self.get_logger().info(f"config_file_path {self.config_file_path}")
+
+        self.locomotive_images_path = self.config_file_path + '/' + self.track_config["locomotive_images_path"]
+        self.get_logger().info(f"locomotive_images_path {self.locomotive_images_path}")
+
+        self.railtracklayout_images_path = self.config_file_path + '/' + self.track_config["railtrack_layout_image"]
+        self.get_logger().info(f"railtracklayout_images_path {self.railtracklayout_images_path}")
 
         self.qos_profile = QoSProfile(
-            reliability=QoSReliabilityPolicy.BEST_EFFORT,
-            history=QoSHistoryPolicy.KEEP_LAST,
-            depth=1)
+                reliability=QoSReliabilityPolicy.BEST_EFFORT,
+                history=QoSHistoryPolicy.KEEP_LAST,
+                depth=1)
 
         topic = "/railtrack/turnout/status"
         self.turnout_status_subscription = self.create_subscription(TurnoutState, topic, self.turnout_status_callback, qos_profile=self.qos_profile)
@@ -69,15 +97,17 @@ class RailTrackNode(Node):
         topic = "/railtrack/power_control"
         self.power_control_publisher = self.create_publisher(PowerControl, topic,  1)
 
-        self.power_msg = PowerControl()
-        self.power_msg.enable = False
+        topic = "/railtrack/track_config"
+        self.track_config_publisher = self.create_publisher(TrackConfig, topic,  1)
 
         topic = "/railtrack/scenery/status"
         self.scenery_status_subscription = self.create_subscription(SceneryState, topic,  self.scenery_status_callback, qos_profile=self.qos_profile)
 
         topic = "/railtrack/scenery/control"
-        self.scenery_control_publisher = self.create_publisher(SceneryControl, topic,  1)
+        self.scenery_control_publisher = self.create_publisher(SceneryControl, topic,  self.qos_profile)
 
+        self.power_msg = PowerControl()
+        self.power_msg.enable = False
 
         self.turnoutsui= []
         self.locomotivesui = []
@@ -163,14 +193,14 @@ class RailTrackNode(Node):
                 try:
                     tmp = self.track_config["railtrack_layout_image"]
                     with ui.tab_panel(self.tracklayouts_tab):
-                        railtracklayout_image_file = self.railtracklayout_images_path + "/"+ self.track_config["railtrack_layout_image"]
-                        self.track_control = railtracklayout_control(self.track_config["Turnouts"], railtracklayout_image_file, self.turnout_control_publisher)
+                        #railtracklayout_image_file = self.locomotive_images_path + "/"+ self.track_config["railtrack_layout_image"]
+                        self.track_control = railtracklayout_control(self.track_config["Turnouts"], self.railtracklayout_images_path, self.turnout_control_publisher)
                         pass
                 except KeyError:
                     pass
 
                 with ui.tab_panel(self.maintenance_tab):
-                    self.maintenance_control = maintenance_control()
+                    self.maintenance_control = maintenance_control(self.track_config  ,self.track_config_publisher, self.railtrack_ui_path, self)
             with ui.grid(columns=3):
                 with ui.card():
                     ui.label("Control")
@@ -273,15 +303,21 @@ class RailTrackNode(Node):
             notify_text = notify_text + ": Disable"
         ui.notify(notify_text)
         pass
+    def test(self, context):
+        ui.notify("Test enterd")
+        for loc in self.locomotivesui: # of in context
+            del loc
+
+
 
 def main() -> None:
     # NOTE: This function is defined as the ROS entry point in setup.py, but it's empty to enable NiceGUI auto-reloading
     pass
 
 
-def ros_main() -> None:
+def ros_main(args=None) -> None:
 
-    rclpy.init()
+    rclpy.init(args=args)
 
     node = RailTrackNode()
     try:

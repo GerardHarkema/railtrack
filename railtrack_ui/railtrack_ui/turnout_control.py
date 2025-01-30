@@ -17,7 +17,8 @@ from rclpy.qos import QoSProfile, QoSReliabilityPolicy, QoSHistoryPolicy
 
 from std_msgs.msg import Bool;
 from railway_interfaces.msg import TurnoutControl  
-from railway_interfaces.msg import TurnoutState  
+from railway_interfaces.msg import TurnoutState
+from railway_interfaces.msg import TrackProtocolDefines 
 
 
 class turnout_control(Node):
@@ -29,15 +30,16 @@ class turnout_control(Node):
 
         match turnout_descr['protocol']:
             case "ROS":
-                self.turnout_msg.protocol = TurnoutControl().__class__.PROTOCOL_ROS
+                self.turnout_msg.protocol = TrackProtocolDefines.PROTOCOL_ROS
             case "MM1":
-                self.turnout_msg.protocol = TurnoutControl().__class__.PROTOCOL_MM1
+                self.turnout_msg.protocol = TrackProtocolDefines.PROTOCOL_MM1
             case "MM2":    
-                self.turnout_msg.protocol = TurnoutControl().__class__.PROTOCOL_MM2
+                self.turnout_msg.protocol = TrackProtocolDefines.PROTOCOL_MM2
             case "DCC":
-                self.turnout_msg.protocol = TurnoutControl().__class__.PROTOCOL_DCC
+                self.turnout_msg.protocol = TrackProtocolDefines.PROTOCOL_DCC
             case "MFX":
-                self.turnout_msg.protocol = TurnoutControl().__class__.PROTOCOL_MFX
+                if 0:
+                    self.turnout_msg.protocol = TrackProtocolDefines.PROTOCOL_MFX
             case _:
                 pass
 
@@ -64,9 +66,13 @@ class turnout_control(Node):
         ui.notify(notify_text)
 
     def set_status_indicator(self, status) -> None:
-        #print("set_status_indicator " + str(self.turnout_msg.number))
+        #print("number " + str(self.turnout_msg.number))
         #print(status.number)
+        #print("protocol " + str(self.turnout_msg.protocol))
+        #print(status.protocol)
         #print()
+
+        #self.get_logger().info(f"status.protocol {status.protocol}")
         if((self.turnout_msg.number == status.number) and (self.turnout_msg.protocol == status.protocol)):
             if status.state:
                 self.led.classes('text-green', remove='text-red')
@@ -76,3 +82,6 @@ class turnout_control(Node):
                 self.led.classes('text-red', remove='text-green')
                 text = 'Set turnout ' + str(self.turnout_msg.number) + ": red" 
                 #print(text)
+    
+    def __del__(self):
+        pass

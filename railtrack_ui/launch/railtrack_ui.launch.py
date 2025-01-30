@@ -12,19 +12,14 @@ def generate_launch_description():
     # dit moet nog anders referentio t.o.v. package
     # wijzig niet de python file, maar de template
 
-
-    config_file = "/home/gerard/railtrack_ws/src/railtrack/railtrack_ui/../config/track_config.json"
-    locomotive_images_path = "/home/gerard/railtrack_ws/src/railtrack/railtrack_ui/../config/locomotive_images"
-    railtracklayout_images_path = "/home/gerard/railtrack_ws/src/railtrack/railtrack_ui/../config/railtracklayout_images"
+    railtrack_ui_path = "/home/gerard/railtrack_ws/src/railtrack/railtrack_ui"
 
     return LaunchDescription([
         Node(
             package='railtrack_ui',
             executable='railtrack_ui.py',
             output='screen',
-            parameters=[{'config_file': config_file},
-                        {"locomotive_images_path": locomotive_images_path},
-                        {"railtracklayout_images_path": railtracklayout_images_path}
+            parameters=[{"railtrack_ui_path": railtrack_ui_path},
                         ],
         ),
     ])

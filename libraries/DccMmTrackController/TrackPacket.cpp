@@ -116,17 +116,19 @@ uint32_t mm_tribit_lookup[] = {0b00, 	// "0"
 
 																	 // 111111110000000000
 																	 // 765432109876543210	
-uint32_t mm_speed_index_lookup[] = {0b001000100000000000,  // -14..-7
-																    0b101000100000000000,  //-6..-0
+uint32_t mm_speed_index_lookup[] = {0b101000100000000000,  //-6..-0
+																	  0b001000100000000000,  //-14..-7
 																    0b100010000000000000,  //+0..+6
 																    0b000010000000000000}; //+7..+14
 
-											 // 111111110000000000
-											 // 765432109876543210	
-#define MM_F1_MASK			0b000010100000000000
-#define MM_F2_MASK			0b001000000000000000
-#define MM_F3_MASK			0b001010000000000000
-#define MM_F4_MASK			0b001010100000000000
+											 			//  111111110000000000
+											 			//  765432109876543210	
+#define MM_F1_MASK						0b000010100000000000
+#define MM_F2_MASK						0b001000000000000000
+#define MM_F3_MASK						0b001010000000000000
+#define MM_F4_MASK						0b001010100000000000
+#define MM_Fx_MASK_EXEPT_OFF	0b001000100000000000
+#define MM_Fx_MASK_EXEPT_ON		0b000010000000000000
 
 void TrackPacket::mm2GetBitstream(uint32_t *bitstream, bool *double_frequency){
 
@@ -147,6 +149,8 @@ void TrackPacket::mm2GetBitstream(uint32_t *bitstream, bool *double_frequency){
 	uint8_t speed_mask;
 	uint8_t port_mask;
 	int8_t operating_level_speed;
+	int8_t track_speed;
+	bool reverse_direction = false;
 	
 	switch(mm_data.kind){
 		case MM2_LOC_SPEED_TELEGRAM: 
@@ -162,13 +166,15 @@ void TrackPacket::mm2GetBitstream(uint32_t *bitstream, bool *double_frequency){
 			//*bitstream = *bitstream | bitstream_mask;			
 
 			//Speed bits
-			speed = mm_data.speed < 0 ? -mm_data.speed: mm_data.speed;
-			if(speed == 1) speed++;
-			operating_level_speed = mm_data.speed < 0 ? -speed : speed;
-			//Serial.printf("Speed: %i, %i ", mm_data.speed , speed);
+			reverse_direction = mm_data.speed < 0 ? true : false;
+			operating_level_speed = mm_data.speed < 0 ? -mm_data.speed: mm_data.speed;
+			//operating_level_speed = mm_data.speed;
+			track_speed = operating_level_speed;
+			if(track_speed) track_speed++;
+
 			speed_mask = 1;
 			for(int i = 0; i < 4; i++){
-				if(speed & speed_mask){
+				if(track_speed & speed_mask){
 								          // 111111110000000000
 									        // 765432109876543210	
 					bitstream_mask = 0b000000010000000000;
@@ -201,7 +207,7 @@ void TrackPacket::mm2GetBitstream(uint32_t *bitstream, bool *double_frequency){
 			break;
 	}	
 	switch(mm_data.kind){
-		case MM1_LOC_SPEED_TELEGRAM: 
+//		case MM1_LOC_SPEED_TELEGRAM: 
 		case MM2_LOC_SPEED_TELEGRAM: 
 		case MM2_LOC_F1_TELEGRAM: 
 		case MM2_LOC_F2_TELEGRAM: 
@@ -216,7 +222,7 @@ void TrackPacket::mm2GetBitstream(uint32_t *bitstream, bool *double_frequency){
 			}
 		break;
 	}
-
+#if 0
 	switch(mm_data.kind){
 		case MM1_LOC_SPEED_TELEGRAM:
 			div_value = mm_data.speed;
@@ -231,11 +237,11 @@ void TrackPacket::mm2GetBitstream(uint32_t *bitstream, bool *double_frequency){
 			}
 			break;
 	}
-
-
+#endif
 
 	switch(mm_data.kind){
 		case MM1_LOC_CHANGE_DIR_TELEGRAM:
+
 											// 111111110000000000
 											// 765432109876543210	
 			bitstream_mask = 0b000000110000000000; // Change direction
@@ -243,7 +249,7 @@ void TrackPacket::mm2GetBitstream(uint32_t *bitstream, bool *double_frequency){
 			*bitstream = *bitstream | bitstream_mask;	
 			break;
 	}
-
+#if 0
 	bitstream_mask = 0;
 
 	switch(mm_data.kind){
@@ -260,54 +266,114 @@ void TrackPacket::mm2GetBitstream(uint32_t *bitstream, bool *double_frequency){
 			bitstream_mask = 0b000000110000000000; 
 			for(int i = 0; i < 4; i++){
 				if(mm_data.function_on_[i]){
-					Serial.printf("Index: %i\n", i);
+					DEBUG_PRINT("Index: %i\n", i);
 					*bitstream = *bitstream | bitstream_mask;	
 				}
 				bitstream_mask = bitstream_mask << 2;
 			}
 			break;
 	}
+#endif
 
 
 	switch(mm_data.kind){
 		case MM2_LOC_SPEED_TELEGRAM:
 			//Function Index
-			if(operating_level_speed < -6){
-				bitstream_mask = mm_speed_index_lookup[0];
-				//Serial.printf("Operating level: -14..-7\n");
+			if(reverse_direction){
+				if(operating_level_speed <= 7)
+					bitstream_mask = mm_speed_index_lookup[0]; // Operating level: -6..-0
+				else
+					bitstream_mask = mm_speed_index_lookup[1]; // Operating level: -14..-7\n
 			}
-			else if (operating_level_speed < 0){
-				bitstream_mask = mm_speed_index_lookup[1];
-				//Serial.printf("Operating level: -6..-0\n");
+			else
+			{			
+				if(operating_level_speed <= 7)
+					bitstream_mask = mm_speed_index_lookup[2]; // Operating level: +0..+6
+				else
+					bitstream_mask = mm_speed_index_lookup[3]; // Operating level: +7..+14
 			}
-			else if (operating_level_speed < 7){
-				bitstream_mask = mm_speed_index_lookup[2];
-				//Serial.printf("Operating level: +0..+6\n");
-			}
-			else{
-				bitstream_mask = mm_speed_index_lookup[3];
-				//Serial.printf("Operating level: +7..+14\n");
-			}
-
 			break;
-		case MM2_LOC_F1_TELEGRAM: 
-			bitstream_mask = MM_F1_MASK;
+		case MM2_LOC_F1_TELEGRAM:
+			if((operating_level_speed == 2) && !mm_data.function_on_[0])
+			{
+					bitstream_mask = MM_Fx_MASK_EXEPT_OFF;
+			}
+			else if ((operating_level_speed == 10) && mm_data.function_on_[0]){
+					bitstream_mask = MM_Fx_MASK_EXEPT_ON;
+			}else
+				bitstream_mask = MM_F1_MASK;
 			if(mm_data.function_on_[0]) bitstream_mask = bitstream_mask | (1 << 17);
 			break;
 		case MM2_LOC_F2_TELEGRAM: 
-			bitstream_mask = MM_F2_MASK;
+			if((operating_level_speed == 3) && !mm_data.function_on_[1])
+			{
+					bitstream_mask = MM_Fx_MASK_EXEPT_OFF;
+			}
+			else if ((operating_level_speed == 11) && mm_data.function_on_[1]){
+					bitstream_mask = MM_Fx_MASK_EXEPT_ON;
+			}else
+				bitstream_mask = MM_F2_MASK;
 			if(mm_data.function_on_[1]) bitstream_mask = bitstream_mask | (1 << 17);
 			break;
 		case MM2_LOC_F3_TELEGRAM: 
-			bitstream_mask = MM_F3_MASK;
+			if((operating_level_speed == 5) && !mm_data.function_on_[2])
+			{
+					bitstream_mask = MM_Fx_MASK_EXEPT_OFF;
+			}
+			else if ((operating_level_speed == 13) && mm_data.function_on_[2]){
+					bitstream_mask = MM_Fx_MASK_EXEPT_ON;
+			}else
+				bitstream_mask = MM_F3_MASK;
 			if(mm_data.function_on_[2]) bitstream_mask = bitstream_mask | (1 << 17);
 			break;
 		case MM2_LOC_F4_TELEGRAM: 
-			bitstream_mask = MM_F4_MASK;
+			if((operating_level_speed == 6) && !mm_data.function_on_[3])
+			{
+					bitstream_mask = MM_Fx_MASK_EXEPT_OFF;
+			}
+			else if ((operating_level_speed == 14) && mm_data.function_on_[3]){
+					bitstream_mask = MM_Fx_MASK_EXEPT_ON;
+			}else
+				bitstream_mask = MM_F4_MASK;
 			if(mm_data.function_on_[3]) bitstream_mask = bitstream_mask | (1 << 17);
 			break;
 	}
 	*bitstream = *bitstream | bitstream_mask;
+
+#if 0
+	uint32_t streem_validate = *bitstream;
+	streem_validate = streem_validate >> 10;
+	uint8_t bitcount = 0;
+	for (int i = 0; i < 4; i++){
+		if((streem_validate & 0b11) == 0b01){
+			bitcount++;
+			//DEBUG_PRINT("Error 1, telegram_type = %i\n", mm_data.kind);
+		}
+		if((streem_validate & 0b11) == 0b10){
+			//DEBUG_PRINT("Error 2, telegram_type = %i\n", mm_data.kind);
+			bitcount++;
+			
+		}
+
+		streem_validate = streem_validate >> 2;
+
+	}
+	if(!bitcount){
+		DEBUG_PRINT("Telegram error %i\n", mm_data.kind);
+		streem_validate = *bitstream;
+		streem_validate = streem_validate >> 10;
+		for(int i = 0; i < 4; i++){
+			DEBUG_PRINT("%i", streem_validate & 0b01 ? 1 : 0);
+			streem_validate = streem_validate >> 1;
+			DEBUG_PRINT("%i", streem_validate & 0b01 ? 1 : 0);
+			streem_validate = streem_validate >> 1;
+			DEBUG_PRINT(" ");
+
+		}
+			DEBUG_PRINT("\n");
+
+	}
+#endif
 }
 
 MM_KIND_TYPE mm2_loc_kind_seqence[] = {MM2_LOC_SPEED_TELEGRAM,

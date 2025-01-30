@@ -301,8 +301,22 @@ void TrackController::end() {
 	}
 }
 
+boolean canbus_error = false;
+
+void TrackController::printMessageHeader(){
+	if(message_count % 10 == 0){
+    Serial.println("--- ---- - ---- ---- ---- ---- ---- ---- ---- ---- ---- ----");
+    Serial.println("DIR HASH R CMND LNGT DAT0 DAT1 DAT2 DAT3 DAT4 DAT5 DAT6 DAT7");
+    Serial.println("--- ---- - ---- ---- ---- ---- ---- ---- ---- ---- ---- ----");
+		message_count = 0;
+	}
+	message_count++;
+}
+
 boolean TrackController::sendMessage(TrackMessage &message) {
 	can_t can;
+
+	if(canbus_error) return false;
 
 	message.hash = mHash;
 	
@@ -316,11 +330,20 @@ boolean TrackController::sendMessage(TrackMessage &message) {
 	}
 
 	if (mDebug) {
-	    Serial.print("==> ");
-	    Serial.println(message);
+		printMessageHeader();
+	  Serial.print("==> ");
+	  Serial.println(message);
 	}
 	
 	return can_send_message(&can);
+}
+
+
+boolean TrackController::isCanbusError(){
+		boolean return_value = canbus_error;
+		//Serial.printf("canbus_error = %i\n", canbus_error);
+		//canbus_error = false;
+		return return_value;
 }
 
 boolean TrackController::receiveMessage(TrackMessage &message) {
@@ -344,24 +367,28 @@ boolean TrackController::receiveMessage(TrackMessage &message) {
 		}
 
 		if (mDebug) {
-		    Serial.print("<== ");
-		    Serial.println(message);
+			printMessageHeader();
+		  Serial.print("<== ");
+		  Serial.println(message);
 		}
 	}
 
 	return result;
 }
 
+
 boolean TrackController::exchangeMessage(TrackMessage &out, TrackMessage &in, word timeout) {
 	int command = out.command;
 
 	if (!sendMessage(out)) {
+		canbus_error = true;
 		if (mDebug) {
 			Serial.println(F("!?! Send error"));
 			Serial.println(F("!?! Emergency stop"));
-			setPower(false);
-			for (;;);
+			//setPower(false);
+			//for (;;);
 		}
+		return false;
 	}
 
 	ulong time = millis();
@@ -377,6 +404,7 @@ boolean TrackController::exchangeMessage(TrackMessage &out, TrackMessage &in, wo
 		}
 	}
 
+	canbus_error = true;
 	if (mDebug) {
 		Serial.println(F("!?! Receive timeout"));
 	}

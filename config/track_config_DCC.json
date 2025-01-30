@@ -1,7 +1,138 @@
 {
-  "railtrack_layout_image" : "railtrack_layout.jpg",
+  "configuration_type"	: "track_configuration",
+  "locomotive_images_path" : "locomotive_images",
+  "railtrack_layout_image" : "railtracklayout_images/railtrack_layout.jpg",
   "display_maintenance_tab" : true,
   "Locomotives": [
+    {
+      "name": "DB 74 854",
+      "type": "Stoom Locomotief",
+      "image": "BR74.jpg",
+      "protocol": "DCC",
+      "address": 5,
+      "max_speed" : 1000,
+      "decrement_speed_step" : 50,
+      "increment_speed_step" : 50,
+      "functions":[
+        {
+          "number": 0,
+          "title" : "Shunting light",
+          "icon" : "lightbulb"
+        },
+        {
+          "number": 4,
+          "title" : "Acceleration",
+          "icon" : "double_arrow"
+        }
+      ] 
+    },
+    {
+      "name": "DB 24 044",
+      "type": "Stoom Locomotief",
+      "image": "BR24.jpg",
+      "protocol": "DCC",
+      "address": 6,
+      "max_speed" : 1000,
+      "decrement_speed_step" : 50,
+      "increment_speed_step" : 50,
+      "functions":[
+        {
+          "number": 0,
+          "title" : "Shunting light",
+          "icon" : "lightbulb"
+        },
+        {
+          "number": 1,
+          "title" : "Smoke generator",
+          "icon" : "lightbulb"
+        },
+        {
+          "number": 2,
+          "title" : "Operating",
+          "icon" : "volume_up"
+        },
+        {
+          "number": 3,
+          "title" : "Whistle Blast",
+          "icon" : "volume_up"
+        },
+        {
+          "number": 4,
+          "title" : "Acceleration",
+          "icon" : "double_arrow"
+        },
+        {
+          "number": 5,
+          "title" : "Squealing brakes off",
+          "icon" : "volume_up"
+        },
+        {
+          "number": 6,
+          "title" : "Bell",
+          "icon" : "volume_up"
+        },
+        {
+          "number": 7,
+          "title" : "Switching whistle",
+          "icon" : "volume_up",
+          "once": true
+        },
+        {
+          "number": 8,
+          "title" : "Blowing off steam",
+          "icon" : "volume_up",
+          "once": true
+        },
+        {
+          "number": 9,
+          "title" : "Air pump",
+          "icon" : "volume_up"
+        },
+        {
+          "number": 10,
+          "title" : "Cool being shoveled",
+          "icon" : "volume_up"
+        },
+        {
+          "number": 11,
+          "title" : "Rocker grate",
+          "icon" : "volume_up"
+        },
+        {
+          "number": 12,
+          "title" : "Injector",
+          "icon" : "volume_up"
+        },
+        {
+          "number": 13,
+          "title" : "Generator",
+          "icon" : "volume_up"
+        }
+
+      ] 
+    },
+    {
+      "name": "Hondekop, mat 65, BeNeLux",
+      "type": "Treinstel",
+      "image": "hondekop.jpg",
+      "protocol": "DCC",
+      "address": 7,
+      "max_speed" : 1000,
+      "decrement_speed_step" : 50,
+      "increment_speed_step" : 50,
+      "functions":[
+        {
+          "number": 0,
+          "title" : "Shunting light",
+          "icon" : "lightbulb"
+        },
+        {
+          "number": 4,
+          "title" : "Acceleration",
+          "icon" : "double_arrow"
+        }
+      ] 
+    },
     {
       "name": "NS1212",
       "type": "Elektrische Locomotief",
@@ -21,11 +152,11 @@
       ] 
     },
     {
-      "name": "DB3029",
-      "type": "Stoom Locomotief",
-      "image": "DB3029.jpg",
+      "name": "NS1135",
+      "type": "Elektrische Locomotief",
+      "image": "NS1135.jpg",
       "protocol": "DCC",
-      "address": 3,
+      "address": 40,
       "speed_steps" : 128,
       "max_speed" : 900,
       "decrement_speed_step" : 50,
@@ -56,7 +187,7 @@
         {
           "number": 1,
           "title" : "Test",
-          "icon" : "lightbulb"
+          "icon" : "double_arrow"
         }
       ] 
     },
@@ -93,6 +224,24 @@
         }
       ] 
 
+    },
+    {
+      "name": "DB3029",
+      "type": "Stoom Locomotief",
+      "image": "DB3029.jpg",
+      "protocol": "DCC",
+      "address": 3,
+      "speed_steps" : 128,
+      "max_speed" : 900,
+      "decrement_speed_step" : 50,
+      "increment_speed_step" : 50,
+      "functions":[
+        {
+          "number": 0,
+          "title" : "Shunting light",
+          "icon" : "lightbulb"
+        }
+      ] 
     }
   ],
   "Turnouts": [
@@ -273,5 +422,15 @@
         } 
       ]         
     }
+  ],
+  "Scenerys" : [
+  	{
+  		"number" : 1,
+  		"name" : "Brewery"
+  	},
+  	{
+  		"number" : 2,
+  		"name" : "Home"
+  	}
   ]
 }

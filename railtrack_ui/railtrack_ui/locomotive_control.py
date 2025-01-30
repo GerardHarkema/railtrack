@@ -17,8 +17,8 @@ from rclpy.qos import QoSProfile, QoSReliabilityPolicy, QoSHistoryPolicy
 
 from std_msgs.msg import Bool;
 from railway_interfaces.msg import LocomotiveControl  
-from railway_interfaces.msg import LocomotiveState  
-
+from railway_interfaces.msg import LocomotiveState
+from railway_interfaces.msg import TrackProtocolDefines 
 
 class locomotive_control(Node):
 
@@ -30,27 +30,44 @@ class locomotive_control(Node):
         self.locomotive_msg = LocomotiveControl()
         match locomotive_descr['protocol']:
             case "ROS":
-                self.locomotive_msg.address = locomotive_descr['address']
-                self.locomotive_msg.protocol = LocomotiveControl().__class__.PROTOCOL_ROS
-                self.number_of_functions = 4
+                if 0:
+                    self.locomotive_msg.address = locomotive_descr['address']
+                    self.locomotive_msg.protocol = TrackProtocolDefines.PROTOCOL_ROS
+                    self.number_of_functions = 4
             case "MM1":
                 self.locomotive_msg.address = locomotive_descr['address']
-                self.locomotive_msg.protocol = LocomotiveControl().__class__.PROTOCOL_MM1
+                self.locomotive_msg.protocol = TrackProtocolDefines.PROTOCOL_MM1
                 self.number_of_functions = 4
             case "MM2":    
                 self.locomotive_msg.address = locomotive_descr['address']
-                self.locomotive_msg.protocol = LocomotiveControl().__class__.PROTOCOL_MM2
+                self.locomotive_msg.protocol = TrackProtocolDefines.PROTOCOL_MM2
                 self.number_of_functions = 4
             case "DCC":
                 self.locomotive_msg.address = locomotive_descr['address']
-                self.locomotive_msg.protocol = LocomotiveControl().__class__.PROTOCOL_DCC
+                self.locomotive_msg.protocol = TrackProtocolDefines.PROTOCOL_DCC
                 self.number_of_functions = 16
+                try:
+                    tmp = locomotive_descr['speed_steps']
+                    match locomotive_descr['speed_steps']:
+                        case 128:
+                            self.locomotive_msg.dcc_speed_step = LocomotiveControl.DCC_SPEEDSTEP_128
+                        case 28:
+                            self.locomotive_msg.dcc_speed_step = LocomotiveControl.DCC_SPEEDSTEP_28
+                        case 14:
+                            self.locomotive_msg.dcc_speed_step = LocomotiveControl.DCC_SPEEDSTEP_14
+                        case _:
+                            self.locomotive_msg.dcc_speed_step = LocomotiveControl.DCC_SPEEDSTEP_128 # default
+                except KeyError:
+                    self.locomotive_msg.dcc_speed_step = LocomotiveControl.DCC_SPEEDSTEP_128
+
             case "MFX":
-                self.locomotive_msg.address = locomotive_descr['address']
-                self.locomotive_msg.protocol = LocomotiveControl().__class__.PROTOCOL_MFX
-                self.number_of_functions = 32
+                    self.locomotive_msg.address = locomotive_descr['address']
+                    self.locomotive_msg.protocol = TrackProtocolDefines.PROTOCOL_MFX
+                    self.number_of_functions = 32
+                    self.locomotive_msg.dcc_speed_step = LocomotiveControl.DCC_SPEEDSTEP_128
             case _:
                 pass
+
         self.speed = 0
         self.max_speed = 1000;
         self.max_speed = locomotive_descr['max_speed']
@@ -109,7 +126,7 @@ class locomotive_control(Node):
     
     
     def set_speed(self):
-        self.locomotive_msg.command = LocomotiveControl().__class__.SET_SPEED
+        self.locomotive_msg.command = LocomotiveControl.SET_SPEED
         self.locomotive_msg.speed = self.speed_slider.value
         self.control_publisher.publish(self.locomotive_msg)
         notify_text = "Set Speed, Protocol: " + self.locomotive_descr['protocol'] \
@@ -138,14 +155,14 @@ class locomotive_control(Node):
 
     def set_direction(self):
         #print(self.locomotive_msg)
-        self.locomotive_msg.command = LocomotiveControl().__class__.SET_DIRECTION
+        self.locomotive_msg.command = LocomotiveControl.SET_DIRECTION
         self.locomotive_msg.speed = 0
         if(self.direction_button.text == 'FORWARD'):
             self.direction_button.text ='REVERSE'
-            self.locomotive_msg.direction = LocomotiveControl().__class__.DIRECTION_FORWARD
+            self.locomotive_msg.direction = LocomotiveControl.DIRECTION_FORWARD
         else:
             self.direction_button.text ='FORWARD'
-            self.locomotive_msg.direction = LocomotiveControl().__class__.DIRECTION_REVERSE
+            self.locomotive_msg.direction = LocomotiveControl.DIRECTION_REVERSE
         self.control_publisher.publish(self.locomotive_msg)
         notify_text = "Set Direction, Protocol: " + self.locomotive_descr['protocol'] \
             + ", Loc ID: " + str(self.locomotive_descr['address'])         \
@@ -182,7 +199,7 @@ class locomotive_control(Node):
             self.function_buttons[index].classes('drop-shadow bg-green', remove='bg-red')
 
         notify_text = "Set Function " + str(function_index) + ": " + str(self.function_status[index])
-        self.locomotive_msg.command = LocomotiveControl().__class__.SET_FUNCTION;
+        self.locomotive_msg.command = LocomotiveControl.SET_FUNCTION;
         self.locomotive_msg.function_index = function_index;
         self.locomotive_msg.function_state = self.function_status[index];
         self.control_publisher.publish(self.locomotive_msg);
@@ -204,7 +221,7 @@ class locomotive_control(Node):
             self.speed_slider.value = status.speed
             self.speed = status.speed
             self.speed_slider.enable()
-            if status.direction == LocomotiveState().__class__.DIRECTION_FORWARD:
+            if status.direction == LocomotiveState.DIRECTION_FORWARD:
                 self.direction_button.text ='REVERSE'
             else:
                 self.direction_button.text ='FORWARD'
@@ -217,3 +234,7 @@ class locomotive_control(Node):
                 else:
                     self.function_buttons[index].classes('drop-shadow bg-green', remove='bg-red')
                 index = index + 1
+
+    def __del__(self):
+        ui.notify("delete loc") 
+        pass

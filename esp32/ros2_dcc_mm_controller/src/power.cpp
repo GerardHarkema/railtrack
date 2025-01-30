@@ -20,8 +20,9 @@ extern rcl_publisher_t power_status_publisher;
 extern TrackPacketScheduler trackScheduler;
 
 extern railway_interfaces__msg__LocomotiveState locomotive_status[];
-extern int number_of_active_locomotives;
 extern LOCOMOTIVE active_locomotives[];
+extern uint16_t *number_of_active_locomotives;
+
 
 extern Measurements measurements;
 extern bool display_measurents;
@@ -54,29 +55,29 @@ void power_control_callback(const void * msgin)
   trackScheduler.trackPower(control->enable);
   power_status.state = control->enable;
   if(!power_status.state){
-    for(int i = 0 ; i < number_of_active_locomotives; i++){
+    for(int i = 0 ; i < *number_of_active_locomotives; i++){
 
       switch(active_locomotives[i].protocol){
-        case DCC:
+        case railway_interfaces__msg__TrackProtocolDefines__PROTOCOL_DCC:
           DEBUG_PRINT("Protocol DCC\n");         
           switch(active_locomotives[i].speed_steps){
-            case SS_128:
+            case railway_interfaces__msg__LocomotiveControl__DCC_SPEEDSTEP_128:
               //trackScheduler.dccSetSpeed128(active_locomotives[i].address, DCC_SHORT_ADDRESS, 0); //This should be in the call backs of the ROS subscribers
               break;
-            case SS_28:
+            case railway_interfaces__msg__LocomotiveControl__DCC_SPEEDSTEP_28:
               //trackScheduler.dccSetSpeed28(active_locomotives[i].address, DCC_SHORT_ADDRESS, 0); //This should be in the call backs of the ROS subscribers
               break;
-            case SS_14:
+            case railway_interfaces__msg__LocomotiveControl__DCC_SPEEDSTEP_14:
               //trackScheduler.dccSetSpeed14(active_locomotives[i].address, DCC_SHORT_ADDRESS, 0); //This should be in the call backs of the ROS subscribers
               break;
             default:
               break;
           }
           break;
-        case MM1:
+        case railway_interfaces__msg__TrackProtocolDefines__PROTOCOL_MM1:
           //trackScheduler.mm1SetSpeed(active_locomotives[i].address, 0); //This should be in the call backs of the ROS subscribers
           break;
-        case MM2:
+        case railway_interfaces__msg__TrackProtocolDefines__PROTOCOL_MM2:
           //trackScheduler.mm2SetSpeed(active_locomotives[i].address, 0); //This should be in the call backs of the ROS subscribers
           break;
         default:

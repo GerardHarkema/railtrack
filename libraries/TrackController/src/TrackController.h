@@ -242,6 +242,8 @@ class TrackController {
 	 */
 	boolean mLoopback;
 
+    uint16_t message_count = 0;
+    
 #ifdef ESP32
     TaskHandle_t enqueue_task_h;
 #endif
@@ -281,6 +283,9 @@ class TrackController {
      */
     void init(word hash, boolean debug, boolean loopback);
 
+
+    void printMessageHeader();
+
     /**
      * Queries the hash used by the TrackController.
      */
@@ -312,6 +317,8 @@ class TrackController {
      * instead.
      */
     boolean receiveMessage(TrackMessage &message);
+
+    boolean isCanbusError();
 
     /**
      * Sends a message and waits for the corresponding response,

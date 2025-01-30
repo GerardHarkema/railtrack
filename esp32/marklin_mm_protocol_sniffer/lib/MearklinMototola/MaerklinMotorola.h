@@ -24,8 +24,10 @@ enum DataGramState
 enum MM2DirectionState
 {
 	MM2DirectionState_Unavailable,
-	MM2DirectionState_Forward,
-	MM2DirectionState_Backward,
+	MM2DirectionState_Forward_H, // +7..+14
+	MM2DirectionState_Forward_L, // +0.. +6
+	MM2DirectionState_Backward_L, // -0..-6
+	MM2DirectionState_Backward_H, // -7..-14
 };
 
 enum MM2DecoderState
@@ -37,6 +39,9 @@ enum MM2DecoderState
 
 struct MaerklinMotorolaData {
   byte Trits[9];
+#if (defined INCLUDE_BITSTREAM_DISPLAY)
+  uint32_t BitStream;
+#endif
   int Timings[35];
   unsigned long tm_package_delta;
   MM2DirectionState MM2Direction;

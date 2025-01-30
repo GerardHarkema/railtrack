@@ -28,35 +28,35 @@ try:
     line = "LOCOMOTIVE active_locomotives[] = {"
     for i in range(len(locomotives) - 1):
         line = line + "{" + str(locomotives[i]["address"]) + ', '
-        line = line + str(locomotives[i]["protocol"]) + ', '
+        line = line + "railway_interfaces__msg__TrackProtocolDefines__PROTOCOL_" + str(locomotives[i]["protocol"]) + ', '
         if str(locomotives[i]["protocol"]) == "DCC":
             speed_steps = locomotives[i]["speed_steps"]
             if speed_steps == 128:
-                line = line + "SS_128" + '}, '    
+                line = line + "railway_interfaces__msg__LocomotiveControl__DCC_SPEEDSTEP_128" + '}, '    
             elif speed_steps == 28:
-                line = line + "SS_28" + '}, '    
+                line = line + "railway_interfaces__msg__LocomotiveControl__DCC_SPEEDSTEP_28" + '}, '    
             elif speed_steps == 14:
-                line = line + "SS_14" + '}, '  
+                line = line + "railway_interfaces__msg__LocomotiveControl__DCC_SPEEDSTEP_14" + '}, '  
             else:
-                line = line + "SS_INVALID" + '}, '  
+                line = line + "railway_interfaces__msg__LocomotiveControl__DCC_SPEEDSTEP_UNKNOWN" + '}, '  
         else:
-            line = line + "SS_NOT_USED" + '}, '  
+            line = line + "railway_interfaces__msg__LocomotiveControl__DCC_SPEEDSTEP_UNKNOWN" + '}, '  
         #line = line + "0},"
 
     line = line + "{" + str(locomotives[len(locomotives) - 1]["address"]) + ', '
-    line = line + str(locomotives[len(locomotives) - 1]["protocol"]) + ', '
+    line = line + "railway_interfaces__msg__TrackProtocolDefines__PROTOCOL_" + str(locomotives[len(locomotives) - 1]["protocol"]) + ', '
     if str(locomotives[len(locomotives) - 1]["protocol"]) == "DCC":
         speed_steps = locomotives[len(locomotives) - 1]["speed_steps"]
         if speed_steps == 128:
-            line = line + "SS_128" + '}, '    
+            line = line + "railway_interfaces__msg__LocomotiveControl__DCC_SPEEDSTEP_128" + '}, '    
         elif speed_steps == 28:
-            line = line + "SS_28" + '}, '    
+            line = line + "railway_interfaces__msg__LocomotiveControl__DCC_SPEEDSTEP_28" + '}, '    
         elif speed_steps == 14:
-            line = line + "SS_14" + '}, '  
+            line = line + "railway_interfaces__msg__LocomotiveControl__DCC_SPEEDSTEP_14" + '}, '  
         else:
-            line = line + "SS_INVALID" + '}, '  
+            line = line + "railway_interfaces__msg__LocomotiveControl__DCC_SPEEDSTEP_UNKNOWN" + '}, '  
     else:
-        line = line + "SS_NOT_USED" + '}, '    
+        line = line + "railway_interfaces__msg__LocomotiveControl__DCC_SPEEDSTEP_UNKNOWN" + '}, '    
     line = line + "};\n"
     header = header + line
     line = "#define  NUMBER_OF_ACTIVE_LOCOMOTIVES   " + str(len(locomotives)) + "\n"
@@ -119,6 +119,6 @@ else:
 line = "#endif //_TRACK_CONFIG_\n"
 header = header + line
 
-with open('include/track_config.h', 'w', encoding='utf-8') as f:
+with open('include/track_config_old.h', 'w', encoding='utf-8') as f:
     f.write(header)
 
