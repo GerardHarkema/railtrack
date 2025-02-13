@@ -457,7 +457,6 @@ bool TrackPacketScheduler::dccUnsetBasicAccessory(uint16_t address, uint8_t func
 
 
 bool TrackPacketScheduler::mm1SetSpeed(uint16_t address, int8_t new_speed){
-#if 0
   DEBUG_PRINT("MM1 Set speed--> Address = %i, speed = %i\n" , address, new_speed);
   int8_t speed;
 
@@ -468,9 +467,6 @@ bool TrackPacketScheduler::mm1SetSpeed(uint16_t address, int8_t new_speed){
   p.mmSetSpeed(speed);
   p.setRepeatCount(REPEAT_COUNT_CONTINOUS);
   return packet_buffer.insertPacket(p);
-#else
-  return false;
-#endif
 }
 
 bool TrackPacketScheduler::mmChangeDir(uint16_t address){
@@ -556,7 +552,7 @@ bool TrackPacketScheduler::mm2SetFunctions(uint16_t address, uint8_t functions){
 
 bool TrackPacketScheduler::mm1SetFunctions(uint16_t address, uint8_t functions){
 
-#if 0
+#if 1
   uint8_t mask = 1;
   TrackPacket p(TRACK_PROTOCOL_MM);
 

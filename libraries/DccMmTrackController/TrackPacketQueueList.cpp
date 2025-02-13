@@ -85,11 +85,18 @@ bool TrackPacketQueue::insertPacket(TrackPacket &packet)
           switch(queue_packet->mmGetKind())
           {
             case MM1_LOC_SPEED_TELEGRAM:
-              if(packet.mmGetKind() == MM1_LOC_SPEED_TELEGRAM)
+              found = true;
+#if 0
+              if(packet.mmGetKind() == MM1_LOC_SPEED_TELEGRAM){
+                 Serial.printf("found\n");
+
                 found = true;
+              }
+#endif
               switch(packet.mmGetKind()){
                 case MM1_LOC_SPEED_TELEGRAM:
                   queue_packet->mmSetSpeed(packet.mmGetSpeed());
+                  Serial.printf("MM1_LOC_SPEED_TELEGRAM\n");
                   break;
                 case MM_LOC_AUXILIARY_TELEGRAM:
                   queue_packet->mmSetAuxiliary(packet.mmGetAuxiliary());
@@ -140,6 +147,8 @@ bool TrackPacketQueue::insertPacket(TrackPacket &packet)
       if(!found){
         //DEBUG_PRINT("MM Telegram inserted\n");
         if(packet.mmGetKind() != MM_LOC_AUXILIARY_TELEGRAM){ // skip this fake telegram
+                         Serial.printf("insert\n");
+
           try {
             if(packet.isHighPriority())
               queue.push_front(packet);

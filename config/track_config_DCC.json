@@ -207,7 +207,7 @@
       "type": "Dummy MM1",
       "image": "dummy.jpg",
       "protocol": "MM1",
-      "address": 50,
+      "address": 30,
       "max_speed" : 1000,
       "decrement_speed_step" : 71,
       "increment_speed_step" : 71,

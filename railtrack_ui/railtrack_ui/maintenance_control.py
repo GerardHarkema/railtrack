@@ -19,68 +19,81 @@ from std_msgs.msg import Bool;
 from railway_interfaces.msg import LocomotiveControl  
 from railway_interfaces.msg import LocomotiveState  
 from railway_interfaces.msg import TrackConfig, TrackObjectConfig, TrackProtocolDefines
+from railway_interfaces.msg import DccCvWrite
 
 from local_file_picker import local_file_picker
 
 
 class maintenance_control(Node):
-    def __init__(self, track_config, track_config_publisher, app_path, super_class):
+    def __init__(self, track_config, track_config_publisher, app_path, locomotive_dcc_cv_write_publisher):
         super().__init__("Maintenance")
 
         self.track_config = track_config
         self.track_config_publisher = track_config_publisher
         self.app_path = app_path
-        self.super_class = super_class
+        self.locomotive_dcc_cv_write_publisher = locomotive_dcc_cv_write_publisher
 
         #with ui.card():
         #    ui.label("Track maintenance")
         #    self.maintenance_button = ui.button('ENABLE', on_click=lambda:self.maintenance()).classes('drop-shadow bg-red')
         with ui.tabs().classes('w-full') as tabs:
-            self.locomotive_tab = ui.tab('Locomotive')
-            self.turnout_tab = ui.tab('Turnout')
+            # self.locomotive_tab = ui.tab('Locomotive')
+            # self.turnout_tab = ui.tab('Turnout')
             self.cv_programming_tab = ui.tab('cv Programing')
             self.controller = ui.tab('Controller')
             self.settings = ui.tab('Settings')
 
-        with ui.tab_panels(tabs, value=self.locomotive_tab).classes('w-full'):
-            with ui.tab_panel(self.turnout_tab):
-                with ui.grid(columns=4):
-                    self.turnout_number = ui.number(label='Turnout Number', value=1, format='%i')
-                    self.turnout_protocol_select = ui.select({1: 'DCC', 2: 'MM'}, value=1)                        
-                    self.green_button = ui.button('Green', on_click=lambda: self.set_turnout(True)).classes('drop-shadow bg-green')
-                    self.rood_button = ui.button('Red', on_click=lambda: self.set_turnout(False)).classes('drop-shadow bg-red')
-            with ui.tab_panel(self.locomotive_tab):
-                with ui.grid(columns=4):
-                    self.locomotive_address = ui.number(label='Locomotive address', value=1, format='%i')
-                    self.locomotive_protocol_select = ui.select({1: 'MFX', 2: 'DCC', 3:'MM1', 4:'MM2'}, value=1)                        
-                    with ui.grid(columns=3):
-                        self.decrement_button = ui.button(icon = 'remove', on_click=lambda:self.set_decrement_speed()) 
-                        self.speed_slider = ui.slider(min=0, max=1000, value=50, on_change=lambda:self.set_speed())
-                        self.speed_slider.on(type = 'update:model-valuex', leading_events = False, trailing_events = False, throttle = 5.0) 
-                        self.increment_button = ui.button(icon = 'add', on_click=lambda:self.set_increment_speed()) 
-                        self.direction_button = ui.button('FORWARD', on_click=lambda:self.set_direction()).classes('drop-shadow bg-red')
-                        self.stop_button = ui.button('STOP', on_click=lambda:self.stop())
-                        with ui.dialog() as dialog, ui.card():
-                            self.set_functions = []
-                            self.function_buttons = []
-                            ui.label('Functions')
-                            
-                            with ui.grid(columns=2):
-                                for number in range(1, 32):
-                                    set_function = partial(self.set_function, number)
-                                    self.set_functions.append(set_function)
-                                    text = "F" + str(number)
-                                    button = ui.button(text, on_click=set_function).classes('drop-shadow bg-red')
-                                    self.function_buttons.append(button)
-                                    # see icons https://fonts.google.com/icons
-                            ui.button('Close', on_click=dialog.close)
-                        ui.button('Functions', on_click=dialog.open)
+        with ui.tab_panels(tabs, value=self.cv_programming_tab).classes('w-full'):
+            if 0:
+                with ui.tab_panel(self.turnout_tab):
+                    with ui.grid(columns=4):
+                        self.turnout_number = ui.number(label='Turnout Number', value=1, format='%i')
+                        self.turnout_protocol_select = ui.select({1: 'DCC', 2: 'MM'}, value=1)                        
+                        self.green_button = ui.button('Green', on_click=lambda: self.set_turnout(True)).classes('drop-shadow bg-green')
+                        self.rood_button = ui.button('Red', on_click=lambda: self.set_turnout(False)).classes('drop-shadow bg-red')
+            if 0:
+                with ui.tab_panel(self.locomotive_tab):
+                    with ui.grid(columns=4):
+                        self.locomotive_address = ui.number(label='Locomotive address', value=1, format='%i')
+                        self.locomotive_protocol_select = ui.select({1: 'MFX', 2: 'DCC', 3:'MM1', 4:'MM2'}, value=1)                        
+                        with ui.grid(columns=3):
+                            self.decrement_button = ui.button(icon = 'remove', on_click=lambda:self.set_decrement_speed()) 
+                            self.speed_slider = ui.slider(min=0, max=1000, value=50, on_change=lambda:self.set_speed())
+                            self.speed_slider.on(type = 'update:model-valuex', leading_events = False, trailing_events = False, throttle = 5.0) 
+                            self.increment_button = ui.button(icon = 'add', on_click=lambda:self.set_increment_speed()) 
+                            self.direction_button = ui.button('FORWARD', on_click=lambda:self.set_direction()).classes('drop-shadow bg-red')
+                            self.stop_button = ui.button('STOP', on_click=lambda:self.stop())
+                            with ui.dialog() as dialog, ui.card():
+                                self.set_functions = []
+                                self.function_buttons = []
+                                ui.label('Functions')
+                                
+                                with ui.grid(columns=2):
+                                    for number in range(1, 32):
+                                        set_function = partial(self.set_function, number)
+                                        self.set_functions.append(set_function)
+                                        text = "F" + str(number)
+                                        button = ui.button(text, on_click=set_function).classes('drop-shadow bg-red')
+                                        self.function_buttons.append(button)
+                                        # see icons https://fonts.google.com/icons
+                                ui.button('Close', on_click=dialog.close)
+                            ui.button('Functions', on_click=dialog.open)
+            with ui.tab_panel(self.cv_programming_tab):
+                with ui.grid(columns=5):
+                    dcc_address_register_number = 1
+                    self.locomotive_address = ui.number(label='Locomotive address', value=1, min=dcc_address_register_number, max = 9999, format='%i')
+                    self.cv_address_register_button = ui.button('Set to Address Register', on_click=lambda:self.locomotive_address.set_value(dcc_address_register_number))
+                    self.locomotive_cv_register = ui.number(label='CV Register', value=0, min=0, max = 1023, format='%i')
+                    self.cv_value = ui.number(label='CV Value', value=0,  min=0, max = 255, format='%i')
+                    self.cv_write_button = ui.button('Write', on_click=lambda:self.cv_write())
+
             with ui.tab_panel(self.controller):
-                self.update_controller_button = ui.button('Update Controller', on_click=lambda: self.update_controller()).classes('drop-shadow bg-green')
-                self.factory_reset_controller_button = ui.button('Factory Reset Controller', on_click=lambda: self.factory_reset_controller()).classes('drop-shadow bg-green')
+                with ui.grid(columns=5):
+                    self.update_controller_button = ui.button('Update Controller', on_click=lambda: self.update_controller()).classes('drop-shadow bg-green')
+                    self.factory_reset_controller_button = ui.button('Factory Reset Controller', on_click=lambda: self.factory_reset_controller()).classes('drop-shadow bg-green')
             with ui.tab_panel(self.settings):
-                self.select_configuration_button = ui.button('Select Configuration', on_click=lambda: self.select_configuration(), icon='folder').classes('drop-shadow bg-green')
-                pass
+                with ui.grid(columns=5):
+                    self.select_configuration_button = ui.button('Select Configuration', on_click=lambda: self.select_configuration(), icon='folder').classes('drop-shadow bg-green')
 
 
         pass
@@ -127,7 +140,11 @@ class maintenance_control(Node):
             with open(self.app_path + "/settings.json", "w") as outfile:
                 outfile.write(json_config)
             ui.notify('Configuration saved')
-            self.super_class.test(self.super_class)  # ????
+            with ui.dialog() as popup, ui.card():
+                ui.label("Configuration saved, restart railtrack_gui webserver!")
+                ui.button("Close", on_click=popup.close)
+            popup.open()
+
         else:
             ui.notify(f'No file selected')
 
@@ -242,5 +259,14 @@ class maintenance_control(Node):
                 self.function_buttons[index].classes('drop-shadow bg-red', remove='bg-green')
                 self.locomotive_msg.function_state = self.function_status[index];
                 self.control_publisher.publish(self.locomotive_msg);
-
             ui.notify(notify_text)
+
+    def cv_write(self):
+        dcc_cv_message = DccCvWrite();
+        dcc_cv_message.address = int(self.locomotive_address.value)
+        dcc_cv_message.cv_register = int(self.locomotive_cv_register.value)
+        dcc_cv_message.cv_value = int(self.cv_value.value)
+        self.locomotive_dcc_cv_write_publisher.publish(dcc_cv_message)
+
+        notify_text = "Write CV locomotive: " + str(self.locomotive_address.value) + ", register: " + str(self.locomotive_cv_register.value) + " value: " + str(self.cv_value.value)
+        ui.notify(notify_text)

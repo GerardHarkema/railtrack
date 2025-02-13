@@ -25,7 +25,8 @@ from railway_interfaces.msg import PowerControl
 from railway_interfaces.msg import PowerState 
 from railway_interfaces.msg import SceneryControl  
 from railway_interfaces.msg import SceneryState   
-from railway_interfaces.msg import TrackConfig   
+from railway_interfaces.msg import TrackConfig 
+from railway_interfaces.msg import DccCvWrite  
 
 from turnout_control import turnout_control
 from locomotive_control import locomotive_control
@@ -92,6 +93,9 @@ class RailTrackNode(Node):
         topic = "/railtrack/locomotive/control"
         self.locomotive_control_publisher = self.create_publisher(LocomotiveControl, topic, 1)
 
+        topic = "/railtrack/locomotive/dcc_cv_write"
+        self.locomotive_dcc_cv_write_publisher = self.create_publisher(DccCvWrite, topic, 1)
+
         topic = "/railtrack/power_status"
         self.power_status_subscription = self.create_subscription(PowerState, topic,  self.power_status_callback, qos_profile=self.qos_profile)
 
@@ -105,7 +109,7 @@ class RailTrackNode(Node):
         self.scenery_status_subscription = self.create_subscription(SceneryState, topic,  self.scenery_status_callback, qos_profile=self.qos_profile)
 
         topic = "/railtrack/scenery/control"
-        self.scenery_control_publisher = self.create_publisher(SceneryControl, topic,  self.qos_profile)
+        self.scenery_control_publisher = self.create_publisher(SceneryControl, topic,  1)#self.qos_profile)
 
         self.power_msg = PowerControl()
         self.power_msg.enable = False
@@ -201,7 +205,7 @@ class RailTrackNode(Node):
                     pass
 
                 with ui.tab_panel(self.maintenance_tab):
-                    self.maintenance_control = maintenance_control(self.track_config  ,self.track_config_publisher, self.railtrack_ui_path, self)
+                    self.maintenance_control = maintenance_control(self.track_config  ,self.track_config_publisher, self.railtrack_ui_path, self.locomotive_dcc_cv_write_publisher)
             with ui.grid(columns=3):
                 with ui.card():
                     ui.label("Control")
@@ -209,7 +213,6 @@ class RailTrackNode(Node):
                     self.power_button = ui.button('STOP', on_click=lambda:self.power()).classes('drop-shadow bg-red')
                     ui.label("Connection state (Flash)")
                     self.active = ui.icon('fiber_manual_record', size='3em').classes('drop-shadow text-green')
-                    self.destroy_button = ui.button('Destroy', on_click=lambda:self.test()).classes('drop-shadow bg-red')
                 with ui.card():
                     ui.label("Status")
                     with ui.grid(columns=3):                
@@ -305,12 +308,7 @@ class RailTrackNode(Node):
             notify_text = notify_text + ": Disable"
         ui.notify(notify_text)
         pass
-    def test(self):
-        ui.notify("Test enterd")
-        for loc in self.locomotivesui: # of in context
-            ref_count = sys.getrefcount(loc)
-            self.get_logger().info(f"ref_count {ref_count}")
-            del loc
+
 
 
 
@@ -332,7 +330,7 @@ def ros_main(args=None) -> None:
 
 app.on_startup(lambda: threading.Thread(target=ros_main).start())
 ui_run.APP_IMPORT_STRING = f'{__name__}:app'  # ROS2 uses a non-standard module name, so we need to specify it here
-ui.run(uvicorn_reload_dirs=str(Path(__file__).parent.resolve()), favicon='🤖')
+ui.run(uvicorn_reload_dirs=str(Path(__file__).parent.resolve()), favicon='🚀')
 ui.run(title='Dorst central station')
 
 

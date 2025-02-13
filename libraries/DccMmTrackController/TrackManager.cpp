@@ -143,8 +143,9 @@ void IRAM_ATTR interrupt(rmt_channel_t channel, void *t) {
 }
 
 
+
 void protect_motor_driver_outputs(){
-#ifdef DCC_EX_MOTOR_SHIELD_8874 # ARDUINO_MOTOR_SHIELD_L298
+#if defined(DCC_EX_MOTOR_SHIELD_8874) || defined(ARDUINO_MOTOR_SHIELD_L298)
   pinMode(TRACK_POWER_ENABLE_PIN, OUTPUT);
   digitalWrite(TRACK_POWER_ENABLE_PIN, TRACK_POWER_OFF);
 
@@ -156,7 +157,7 @@ void protect_motor_driver_outputs(){
 
   pinMode(PROG_PULSE_PIN, OUTPUT);
   digitalWrite(PROG_PULSE_PIN, LOW);
-#endif
+#else
 
 #ifdef IBT_2_MOTOR_DRIVER
   pinMode(TRACK_POWER_ENABLE_PIN, OUTPUT);
@@ -167,6 +168,7 @@ void protect_motor_driver_outputs(){
 
   pinMode(TRACK_PULSE_PIN_L, OUTPUT);
   digitalWrite(TRACK_PULSE_PIN_L, LOW);
+#endif
 #endif
 
 }

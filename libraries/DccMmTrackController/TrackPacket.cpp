@@ -207,7 +207,7 @@ void TrackPacket::mm2GetBitstream(uint32_t *bitstream, bool *double_frequency){
 			break;
 	}	
 	switch(mm_data.kind){
-//		case MM1_LOC_SPEED_TELEGRAM: 
+		case MM1_LOC_SPEED_TELEGRAM: 
 		case MM2_LOC_SPEED_TELEGRAM: 
 		case MM2_LOC_F1_TELEGRAM: 
 		case MM2_LOC_F2_TELEGRAM: 
@@ -222,22 +222,30 @@ void TrackPacket::mm2GetBitstream(uint32_t *bitstream, bool *double_frequency){
 			}
 		break;
 	}
-#if 0
 	switch(mm_data.kind){
 		case MM1_LOC_SPEED_TELEGRAM:
-			div_value = mm_data.speed;
-			if(div_value == 1) div_value++;
+
+
+			operating_level_speed = mm_data.speed < 0 ? -mm_data.speed: mm_data.speed;
+			//operating_level_speed = mm_data.speed;
+			track_speed = operating_level_speed;
+			if(track_speed) track_speed++;
+
+			speed_mask = 1;
 			for(int i = 0; i < 4; i++){
-				tri_value = div_value%3;
-				div_value = div_value/3;
-				// reverse value off address
-				//bitstream_mask = mm_tribit_lookup[tri_value] << (((4-i) * 2) + 8);
-				bitstream_mask = mm_tribit_lookup[tri_value] << ((i * 2) + 10);
-				*bitstream = *bitstream | bitstream_mask;
+				if(track_speed & speed_mask){
+								          // 111111110000000000
+									        // 765432109876543210	
+					bitstream_mask = 0b000000010000000000;
+
+//					bitstream_mask = bitstream_mask << (((4-i) * 2) - 2);
+					bitstream_mask = bitstream_mask << (i* 2);
+					*bitstream = *bitstream | bitstream_mask;
+				}
+				speed_mask = speed_mask << 1;
 			}
 			break;
 	}
-#endif
 
 	switch(mm_data.kind){
 		case MM1_LOC_CHANGE_DIR_TELEGRAM:
