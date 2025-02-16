@@ -20,6 +20,7 @@
 // 0 = 64
 // a = show accessory packets toggle
 // l = show locomotive packets toggle
+// p = show packet details toggle
 //
 ////////////////////////////////////////////////////////
 
@@ -50,6 +51,7 @@ byte bufferCounter=0;
 byte isDifferentPacket=0;
 byte showLoc=1;
 byte showAcc=1;
+bool displayPacket = true;
 
 
 unsigned int decoderAddress;
@@ -74,7 +76,8 @@ byte getBit() {
   // gets the next bit from the bitBuffer
   // if the buffer is empty it will wait indefinitely for bits to arrive
   byte nbs = bitBuffHead;
-  while (nbs == bitBuffHead) byte nbs = nextBitSlot(bitBuffTail); //Buffer empty
+//  while (nbs == bitBuffHead) byte nbs = nextBitSlot(bitBuffTail); //Buffer empty
+  while (nbs == bitBuffHead) nbs = nextBitSlot(bitBuffTail); //Buffer empty
   bitBuffTail = nbs;
   return (bitBuffer[bitBuffTail]);
 }
@@ -107,7 +110,7 @@ void getPacket() {
   packetBytesCount = 0;
   preambleOneCount = 0;
   while (! packetEnd) {
-    Serial.println("y");
+    //Serial.println("y");
     if (preambleFound) getNextByte();
     else checkForPreamble();
   }
@@ -150,14 +153,35 @@ ISR(TIMER0_COMPB_vect) {                       //If timer 0 reaches comparator B
 }
 
 
+void printBinByte(uint8_t byte){
+  uint8_t mask = 0x80;
+  Serial.print("(");
+  Serial.print(byte);
+  Serial.print("|0x");
+  Serial.print(byte, HEX);
+  Serial.print("|b");
+  for(int i = 0; i < 8; i++){
+    byte & mask ? Serial.print("1") :Serial.print("0");
+    mask = mask >> 1;
+    if(i == 3)Serial.print(" ");
+  }
+  Serial.print(")");
+}
+
 
 //========================
 
 void printPacket() {
-  Serial.print(" ");
-  for (byte n=1; n<pktByteCount; n++) {
+  if(displayPacket){
+    Serial.print(" Packet = ");
+    //Serial.print(" pktByteCount = ");
+    //Serial.print(pktByteCount);
     Serial.print(" ");
-    Serial.print(dccPacket[n],BIN);
+    for (byte n=1; n<pktByteCount; n++) {
+        //    Serial.print(" ");
+      printBinByte(dccPacket[n]);
+      // Serial.print(dccPacket[n],BIN);
+    }
   }
   Serial.println(" ");
 }
@@ -169,7 +193,7 @@ void refreshBuffer() {
   for (byte n=0; n<packetBufferSize; n++) packetBuffer[n]=0;
   bufferCounter=0;
   Serial.println("-");
-#if 1
+#if 0
   Serial.print("Loc ");
   Serial.print(showLoc);
   Serial.print(" / Acc ");
@@ -177,7 +201,9 @@ void refreshBuffer() {
   Serial.print(" / Time ");
   Serial.print(refreshTime);
   Serial.print(" / Buff ");
-  Serial.println(packetBufferSize);
+  Serial.print(packetBufferSize);
+  Serial.print(" / Details ");
+  Serial.println(displayPacket);
   Serial.println(" ");
 #endif
 
@@ -197,61 +223,79 @@ void display_menu(){
   Serial.println("  0 = 64");
   Serial.println("  a = show accessory packets toggle");
   Serial.println("  l = show locomotive packets toggle");
+  Serial.println("  p = display packet details toggle");
+  Serial.print("Loc ");
+  Serial.print(showLoc);
+  Serial.print(" / Acc ");
+  Serial.print(showAcc);
+  Serial.print(" / Time ");
+  Serial.print(refreshTime);
+  Serial.print(" / Buff ");
+  Serial.print(packetBufferSize);
+  Serial.print(" / Details ");
+  Serial.println(displayPacket);
+  Serial.println(" ");  
+
 }
 
 void handleMenu(){
   if (Serial.available()) {
     Serial.println(" ");
-    switch (Serial.read()) {
-      case 49: 
+    char input = Serial.read();
+    switch (input) {
+      case '1': 
         Serial.println("Refresh Time = 1s");
         refreshTime=1;
       break;
-      case 50:
+      case '2':
         Serial.println("Refresh Time = 2s");
         refreshTime=2;
       break;
-      case 51:
+      case '3':
         Serial.println("Refresh Time = 4s");
         refreshTime=4;
       break;
-      case 52:
+      case '4':
         Serial.println("Refresh Time = 8s");
         refreshTime=8;
       break;
-      case 53:
+      case '5':
         Serial.println("Refresh Time = 16s");
         refreshTime=16;
       break;
-      case 54:
+      case '6':
         Serial.println("Buffer Size = 4");
         packetBufferSize=2;
       break;
-      case 55:
+      case '7':
         Serial.println("Buffer Size = 8");
         packetBufferSize=8;
       break;
-      case 56:
+      case '8':
         Serial.println("Buffer Size = 16");
         packetBufferSize=16;
       break;
-      case 57:
+      case '9':
         Serial.println("Buffer Size = 32");
         packetBufferSize=32;
       break;
-      case 48:
+      case '0':
         Serial.println("Buffer Size = 64");
         packetBufferSize=64;
       break;
-      case 97:
+      case 'a':
         if (showAcc) showAcc=0; else showAcc=1;
         Serial.print("show loc packets = ");
         Serial.println(showAcc);
       break;
-      case 108:
+      case 'l':
         if (showLoc) showLoc=0; else showLoc=1;
         Serial.print("show loc packets = ");
         Serial.println(showLoc);
+      case 'p':
+        displayPacket = displayPacket ? false : true;
+        Serial.print("show packets = ");
+        Serial.println(displayPacket);
       break;
     }
     display_menu();
@@ -280,8 +324,8 @@ void setup() {
 //====================
 void loop() {
 
-  Serial.println("x");
   handleMenu();
+
 
   getPacket(); //Uncomment this line when on DCC !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   byte speed;
@@ -361,6 +405,7 @@ dccPacket[6]=B11111111;
             Serial.print(decoderAddress);
             Serial.print(" Asp ");
             Serial.print(dccPacket[3],BIN);
+            printBinByte(dccPacket[3]);
           }
           printPacket();
         }
@@ -414,17 +459,20 @@ dccPacket[6]=B11111111;
 
             case 4: // Loc Function L-4-3-2-1
               Serial.print(" L F4-F1 ");
-              Serial.print(instrByte1&B00011111,BIN);
+              //Serial.print(instrByte1&B00011111,BIN);
+              printBinByte(instrByte1&B00011111);
             break;
 
             case 5: // Loc Function 8-7-6-5
               if (bitRead(instrByte1,4)) {
                 Serial.print(" F8-F5 ");
-                Serial.print(instrByte1&B00001111,BIN);
+                //Serial.print(instrByte1&B00001111,BIN);
+                printBinByte(instrByte1&B00011111);
               }
               else { // Loc Function 12-11-10-9
                 Serial.print(" F12-F9 ");
-                Serial.print(instrByte1&B00001111,BIN);
+                //Serial.print(instrByte1&B00001111,BIN);
+                printBinByte(instrByte1&B00011111);
               }
             break;
 
@@ -444,11 +492,13 @@ dccPacket[6]=B11111111;
                 break;
                 case B00011110: // F13-F20 Function Control
                   Serial.print(" F20-F13 ");
-                  Serial.print(dccPacket[pktByteCount-1],BIN);
+                  //Serial.print(dccPacket[pktByteCount-1],BIN);
+                  printBinByte(dccPacket[pktByteCount-1]);
                 break;
                 case B00011111: // F21-F28 Function Control
                   Serial.print(" F28-F21 ");
-                  Serial.print(dccPacket[pktByteCount-1],BIN);
+                  //Serial.print(dccPacket[pktByteCount-1],BIN);
+                  printBinByte(dccPacket[pktByteCount-1]);
                 break;
               }
             break;
@@ -502,6 +552,7 @@ dccPacket[6]=B11111111;
       }
     }
   }
+
 }
 
 //=====================

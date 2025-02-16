@@ -365,8 +365,8 @@ void IRAM_ATTR TrackManager::RMTinterrupt() {
       track_new_track_packet = true;
     }
     
-    else
-      rmt_fill_tx_items(RMT_CHANNEL, idle_message, idle_len, 0);
+    //else
+    //  rmt_fill_tx_items(RMT_CHANNEL, idle_message, idle_len, 0);
 }
 
 

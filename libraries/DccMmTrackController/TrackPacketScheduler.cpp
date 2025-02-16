@@ -78,6 +78,20 @@ void TrackPacketScheduler::scheduler_task(void *pvParameters)
 }
 #endif
 
+bool TrackPacketScheduler::idle(void){
+  TrackPacket p(TRACK_PROTOCOL_DCC);
+
+  //idle packet: address 0xFF, data 0x00, XOR 0xFF; S 9.2 line 90
+  p.dccSetAddress(0xFF, DCC_SHORT_ADDRESS);
+  p.setRepeatCount(10);
+  p.dccSetKind(DCC_IDLE_PACKET_KIND);
+  p.setPriority(HIGH_PRIORIY);
+
+  packet_buffer.insertPacket(p); //e_stop_queue will be empty, so no need to check if insertion was OK.
+  return true;
+
+}
+
 bool TrackPacketScheduler::setup(void) //for any post-constructor initialization
 {
   
@@ -110,6 +124,7 @@ bool TrackPacketScheduler::setup(void) //for any post-constructor initialization
   // C0 FF 00 FF
   // 00 FF FF   what are these?
   
+#if 0
   //idle packet: address 0xFF, data 0x00, XOR 0xFF; S 9.2 line 90
   p.dccSetAddress(0xFF, DCC_SHORT_ADDRESS);
   p.setRepeatCount(10);
@@ -117,6 +132,8 @@ bool TrackPacketScheduler::setup(void) //for any post-constructor initialization
   p.setPriority(HIGH_PRIORIY);
 
   packet_buffer.insertPacket(p); //e_stop_queue will be empty, so no need to check if insertion was OK.
+#endif
+  idle();
 #ifdef DEBUG
   packet_buffer.printQueue();
 #endif
@@ -312,7 +329,9 @@ bool TrackPacketScheduler::dccSetFunctions0to4(uint16_t address, ADDRESS_KIND dc
 
   p.dccAddData(data,1);
   p.dccSetKind(DCC_FUNCTION_PACKET_1_KIND);
-  p.setRepeatCount(FUNCTION_REPEAT);
+  //p.setRepeatCount(FUNCTION_REPEAT);
+  p.setRepeatCount(REPEAT_COUNT_CONTINOUS);
+
   return packet_buffer.insertPacket(p);
 }
 
@@ -329,7 +348,9 @@ bool TrackPacketScheduler::dccSetFunctions5to8(uint16_t address, ADDRESS_KIND dc
   
   p.dccAddData(data,1);
   p.dccSetKind(DCC_FUNCTION_PACKET_2_KIND);
-  p.setRepeatCount(FUNCTION_REPEAT);
+  //p.setRepeatCount(FUNCTION_REPEAT);
+  p.setRepeatCount(REPEAT_COUNT_CONTINOUS);
+
   return packet_buffer.insertPacket(p);
 }
 
@@ -346,7 +367,9 @@ bool TrackPacketScheduler::dccSetFunctions9to12(uint16_t address, ADDRESS_KIND d
   
   p.dccAddData(data,1);
   p.dccSetKind(DCC_FUNCTION_PACKET_3_KIND);
-  p.setRepeatCount(FUNCTION_REPEAT);
+  //p.setRepeatCount(FUNCTION_REPEAT);
+  p.setRepeatCount(REPEAT_COUNT_CONTINOUS);
+
   return packet_buffer.insertPacket(p);
 }
 

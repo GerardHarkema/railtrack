@@ -109,7 +109,7 @@ class RailTrackNode(Node):
         self.scenery_status_subscription = self.create_subscription(SceneryState, topic,  self.scenery_status_callback, qos_profile=self.qos_profile)
 
         topic = "/railtrack/scenery/control"
-        self.scenery_control_publisher = self.create_publisher(SceneryControl, topic,  1)#self.qos_profile)
+        self.scenery_control_publisher = self.create_publisher(SceneryControl, topic,  1)
 
         self.power_msg = PowerControl()
         self.power_msg.enable = False

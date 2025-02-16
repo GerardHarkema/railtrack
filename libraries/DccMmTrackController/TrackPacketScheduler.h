@@ -31,6 +31,7 @@ class TrackPacketScheduler
     //for configuration
     void setDefaultSpeedSteps(uint8_t new_speed_steps);
     bool setup(void); //for any post-constructor initialization
+    bool idle(void); //for any post-constructor initialization
 
 
     bool trackPower(bool enable);
