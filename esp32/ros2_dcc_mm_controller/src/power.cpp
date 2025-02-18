@@ -54,15 +54,13 @@ void power_control_callback(const void * msgin)
 {  
   const railway_interfaces__msg__PowerControl * control = (const railway_interfaces__msg__PowerControl *)msgin;
   if(!control->enable){
-    #if 1
     for(int i = 0 ; i < *number_of_active_locomotives; i++){
       if(locomotive_status_msgs[i].speed){
         locomotive_status_msgs[i].speed = 0;
 
         switch(p_locomtives[i].protocol){
           case railway_interfaces__msg__TrackProtocolDefines__PROTOCOL_DCC:
-            //trackScheduler.dcc_eStop(p_locomtives[i].address, DCC_SHORT_ADDRESS);
-            DEBUG_PRINT("Protocol DCC\n");         
+            DEBUG_PRINT("Protocol DCC\n");   
             switch(p_locomtives[i].dcc_loc_speedsteps){
               case railway_interfaces__msg__LocomotiveControl__DCC_SPEEDSTEP_128:
                 trackScheduler.dccSetSpeed128(p_locomtives[i].address, DCC_SHORT_ADDRESS, 0); //This should be in the call backs of the ROS subscribers
@@ -88,11 +86,7 @@ void power_control_callback(const void * msgin)
             break;
         }
       }
-      //locomotive_status[i].speed = 0;
-      //for(int j = 0; j < MAX_NUMBER_OF_FUNCTION; j++)
-      //  locomotive_status[i].function_state.data[j] = false;
     }
-    #endif
     delay(1000);
     trackScheduler.trackPower(control->enable);
   }
