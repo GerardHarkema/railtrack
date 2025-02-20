@@ -1,0 +1,14 @@
+{
+    "Node_name" : "marix",
+    "Lights":[
+
+        {
+            "type" : "rgb",
+            "number" : 40,
+            "pin_number" : 14,
+            "number_of_leds" : 64,
+            "color_order" : "RGB"
+        }
+
+    ]
+}

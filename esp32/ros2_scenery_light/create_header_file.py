@@ -21,7 +21,13 @@ def create_scenery_config_struct_line(scenery):
         line = line + "{.rgb = {"
         line = line + str(scenery["pin_number"]) + ', '
         line = line + str(scenery["number_of_leds"]) + ', '
-        line = line + "LED_ORDER_GRB" + "}}}, // To be implemented\n"
+        if scenery["color_order"] == "RGB":
+            line = line + "LED_ORDER_RGB" + "}}},\n" 
+        elif scenery["color_order"] == "GRB":
+            line = line + "LED_ORDER_GRB" + "}}},\n"
+        else:
+            line = line + "LED_ORDER_RGB" + "}}},\n"
+        # others need to be  implemented !!!!
 
 
     else:

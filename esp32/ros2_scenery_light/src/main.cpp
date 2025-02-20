@@ -294,13 +294,26 @@ void setup() {
     scenery_light_status[i].number = scenery_lights_config[i].scenery_light_number;
     scenery_light_status[i].light_type = scenery_lights_config[i].type;
     WS2812_configurations[i].active = false;
+    uint8_t led_order_config;
     switch(scenery_lights_config[i].type){
       case LT_MONO:
         // make output pin
         break;
       case LT_RGB:
+        switch(scenery_lights_config[i].rgb.led_order){
+          case LED_ORDER_RGB:
+            led_order_config = NEO_RGB + NEO_KHZ800;
+            break;
+          case LED_ORDER_GRB:
+            led_order_config = NEO_GRB + NEO_KHZ800;
+            break;
+          // Others need to be implemented
+          default:
+            led_order_config = NEO_RGB + NEO_KHZ800;
+            break;
+        }
         WS2812_configurations[i].ws2812fx = new WS2812FX(scenery_lights_config[i].rgb.number_of_leds,
-                                                          scenery_lights_config[i].rgb.pin, NEO_GRB + NEO_KHZ800);
+                                                          scenery_lights_config[i].rgb.pin, led_order_config);
         
         WS2812_configurations[i].ws2812fx->init();
         WS2812_configurations[i].ws2812fx->setBrightness(eeprom_store[i].brightness ? eeprom_store[i].brightness : 1); // Patch to set leds off on zero brightspace
@@ -357,7 +370,7 @@ void setup() {
   //WiFi.setTxPower(WIFI_POWER_5dBm);
   delay(100);
 #if defined(ARDUINO_ESP32S3_DEV)
-  WiFi.effect(WIFI_STA);
+  //WiFi.effect(WIFI_STA);
   WiFi.begin(WIFI_SSID, PASSWORD);
   //WiFi.setTxPower(WIFI_POWER_8_5dBm);
   Serial.print("Connecting to WiFi ..");
