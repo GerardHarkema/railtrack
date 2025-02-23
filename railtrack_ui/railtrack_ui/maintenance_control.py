@@ -23,6 +23,7 @@ from railway_interfaces.msg import DccCvWrite
 
 from local_file_picker import local_file_picker
 
+from cv_register_descr import cv_register_descr
 
 class maintenance_control(Node):
     def __init__(self, track_config, track_config_publisher, app_path, locomotive_dcc_cv_write_publisher):
@@ -82,7 +83,9 @@ class maintenance_control(Node):
                 with ui.grid(columns=5):
                     dcc_address_register_number = 1
                     self.locomotive_address = ui.number(label='Locomotive address', value=1, min=dcc_address_register_number, max = 9999, format='%i')
-                    self.cv_address_register_button = ui.button('Set to Address Register', on_click=lambda:self.locomotive_address.set_value(dcc_address_register_number))
+                    with ui.dropdown_button('CV Register', auto_close=True):
+                        for key in cv_register_descr.keys():
+                            ui.item(key, on_click=lambda k=key: self.select_cv_register(k, cv_register_descr[k]))
                     self.locomotive_cv_register = ui.number(label='CV Register', value=0, min=0, max = 1023, format='%i')
                     self.cv_value = ui.number(label='CV Value', value=0,  min=0, max = 255, format='%i')
                     self.cv_write_button = ui.button('Write', on_click=lambda:self.cv_write())
@@ -109,7 +112,8 @@ class maintenance_control(Node):
     def set_direction(self):
         pass
 
-
+    def select_cv_register(self, key, value):
+        self.locomotive_cv_register.value = value
 
     async def select_configuration(self):
         result = await local_file_picker('~', multiple=False)
