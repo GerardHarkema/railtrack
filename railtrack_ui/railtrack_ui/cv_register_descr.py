@@ -1,5 +1,5 @@
 cv_register_descr = {
-    "Short Address": 0, 
+    "Short Address": 1, 
     "Vstart": 2,
     "Acceleration Rate": 3,
     "Deceleration Rate": 4,

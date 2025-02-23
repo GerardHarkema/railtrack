@@ -227,7 +227,7 @@
     },
     {
       "name": "DB3029",
-      "type": "Stoom Locomotief",
+      "type": "Stoom Locomotief adr 3",
       "image": "DB3029.jpg",
       "protocol": "DCC",
       "address": 3,
@@ -242,7 +242,26 @@
           "icon" : "lightbulb"
         }
       ] 
+    },
+    {
+      "name": "DB3029",
+      "type": "Stoom Locomotief adr 10",
+      "image": "DB3029.jpg",
+      "protocol": "DCC",
+      "address": 10,
+      "speed_steps" : 128,
+      "max_speed" : 900,
+      "decrement_speed_step" : 50,
+      "increment_speed_step" : 50,
+      "functions":[
+        {
+          "number": 0,
+          "title" : "Shunting light",
+          "icon" : "lightbulb"
+        }
+      ] 
     }
+
   ],
   "Turnouts": [
     {

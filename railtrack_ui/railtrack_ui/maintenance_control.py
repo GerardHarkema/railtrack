@@ -86,7 +86,7 @@ class maintenance_control(Node):
                     with ui.dropdown_button('CV Register', auto_close=True):
                         for key in cv_register_descr.keys():
                             ui.item(key, on_click=lambda k=key: self.select_cv_register(k, cv_register_descr[k]))
-                    self.locomotive_cv_register = ui.number(label='CV Register', value=0, min=0, max = 1023, format='%i')
+                    self.locomotive_cv_register = ui.number(label='CV Register', value=1, min=0, max = 1023, format='%i')
                     self.cv_value = ui.number(label='CV Value', value=0,  min=0, max = 255, format='%i')
                     self.cv_write_button = ui.button('Write', on_click=lambda:self.cv_write())
 
@@ -265,12 +265,24 @@ class maintenance_control(Node):
                 self.control_publisher.publish(self.locomotive_msg);
             ui.notify(notify_text)
 
+    async def show_popup(self, message):
+        with ui.dialog() as popup, ui.card():
+            ui.label(message)
+            ui.button("Close", on_click=popup.close)
+        popup.open()
+        #await popup.wait_closed()  # Wait until the popup is closed
+
+
     def cv_write(self):
+        self.show_popup("Enable Power before programming!")
+
         dcc_cv_message = DccCvWrite();
         dcc_cv_message.address = int(self.locomotive_address.value)
         dcc_cv_message.cv_register = int(self.locomotive_cv_register.value)
         dcc_cv_message.cv_value = int(self.cv_value.value)
         self.locomotive_dcc_cv_write_publisher.publish(dcc_cv_message)
 
-        notify_text = "Write CV locomotive: " + str(self.locomotive_address.value) + ", register: " + str(self.locomotive_cv_register.value) + " value: " + str(self.cv_value.value)
+        notify_text = "Write CV locomotive: " + str(int(self.locomotive_address.value)) + ", register: " + str(int(self.locomotive_cv_register.value)) + " value: " + str(int(self.cv_value.value))
         ui.notify(notify_text)
+        #self.show_popup("Cycle power to take affect on locomotive!")
+
