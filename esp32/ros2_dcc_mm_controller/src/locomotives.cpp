@@ -214,3 +214,12 @@ void locomotive_control_callback(const void * msgin)
     }
   }
 }
+
+void dcc_cv_write_callback(const void * msgin){
+  const railway_interfaces__msg__DccCvWrite * control = (const railway_interfaces__msg__DccCvWrite *)msgin;
+
+  tft_printf(ST77XX_GREEN, "ROS msg\nLocomotive\nAddress(dcc): %i\nCV Write %i: %i\n", 
+    control->address, control->cv_register, control->cv_value);
+  trackScheduler.dccProgramCV(control->address, DCC_SHORT_ADDRESS, control->cv_register, control->cv_value);
+
+}

@@ -55,12 +55,15 @@ rcl_subscription_t power_control_subscriber;
 
 rcl_subscription_t track_config_subscriber;
 
+rcl_subscription_t dcc_cv_write_subscriber;
+
 rclc_executor_t executor;
 
 railway_interfaces__msg__TurnoutControl turnout_control;
 railway_interfaces__msg__LocomotiveControl locomotive_control;
 railway_interfaces__msg__PowerControl power_control;
 railway_interfaces__msg__TrackConfig track_config;
+railway_interfaces__msg__DccCvWrite dcc_cv_write;
 
 Adafruit_ST7735 *tft;
 
@@ -136,12 +139,20 @@ void init_ros(){
     &node,
     ROSIDL_GET_MSG_TYPE_SUPPORT(railway_interfaces, msg, PowerState),
     "railtrack/power_status"));
+
   // create power_control_subscriber
   RCCHECK(rclc_subscription_init_default(
     &power_control_subscriber,
     &node,
     ROSIDL_GET_MSG_TYPE_SUPPORT(railway_interfaces, msg, PowerControl),
     "railtrack/power_control"));
+
+  // create dcc_cv_write_subscriber
+  RCCHECK(rclc_subscription_init_default(
+    &dcc_cv_write_subscriber,
+    &node,
+    ROSIDL_GET_MSG_TYPE_SUPPORT(railway_interfaces, msg, DccCvWrite),
+    "/railtrack/locomotive/dcc_cv_write"));
 
   int size = sizeof(TRACK_OBJECT) * EEPROM_SIZE;
 
@@ -196,7 +207,7 @@ void init_ros(){
 
   // create executor
 
-  int number_of_executors = 7;
+  int number_of_executors = 8;
   
   RCCHECK(rclc_executor_init(&executor, &support.context, number_of_executors, &allocator));
 
@@ -209,6 +220,8 @@ void init_ros(){
 
     RCCHECK(rclc_executor_add_timer(&executor, &power_state_publisher_timer));
     RCCHECK(rclc_executor_add_subscription(&executor, &power_control_subscriber, &power_control, &power_control_callback, ON_NEW_DATA));
+    
+    RCCHECK(rclc_executor_add_subscription(&executor, &dcc_cv_write_subscriber, &dcc_cv_write, &dcc_cv_write_callback, ON_NEW_DATA));
   }
   RCCHECK(rclc_executor_add_subscription(&executor, &track_config_subscriber, &track_config, &track_config_callback, ON_NEW_DATA));
 
@@ -224,6 +237,8 @@ void stop_track_timers(){
 
   rclc_executor_remove_timer(&executor, &power_state_publisher_timer);
   rclc_executor_remove_subscription(&executor, &power_control_subscriber);
+
+  rclc_executor_remove_subscription(&executor, &dcc_cv_write_subscriber);
 
 }
 
