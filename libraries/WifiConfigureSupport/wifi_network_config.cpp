@@ -5,7 +5,9 @@
 #include <AsyncTCP.h>
 #include "LittleFS.h"
 #include "wifi_network_config.h"
+#ifndef IGNOR_TFT_PRINT
 #include "tft_printf.h"
+#endif
 
 #include <string>
 #include <iostream>
@@ -53,7 +55,9 @@ const long interval = 10000;  // interval to wait for Wi-Fi connection (millisec
 void initLittleFS() {
   if (!LittleFS.begin(false)) {
     DEBUG_PRINT("An error has occurred while mounting LittleFS\n");
+#ifndef IGNOR_TFT_PRINT
     tft_printf(ST77XX_BLUE, "No filesystem\ndetected\nInstall by\nPlatfomIO\n");
+#endif
     while(true){};
   }
   DEBUG_PRINT("LittleFS mounted successfully\n");
@@ -104,7 +108,9 @@ bool testWifi() {
   WiFi.mode(WIFI_STA);
   WiFi.begin(ssid.c_str(), pass.c_str());
   DEBUG_PRINT("Connecting to WiFi...\n");
+#ifndef IGNOR_TFT_PRINT
   tft_printf(ST77XX_MAGENTA, "Connecting\nto WiFi...\n");
+#endif
 
   unsigned long currentMillis = millis();
   previousMillis = currentMillis;
@@ -113,7 +119,9 @@ bool testWifi() {
     currentMillis = millis();
     if (currentMillis - previousMillis >= interval) {
       DEBUG_PRINT("Failed to connect\n");
+#ifndef IGNOR_TFT_PRINT
       tft_printf(ST77XX_MAGENTA, "Failed to\nconnect to\nWiFi\n");
+#endif
       return false;
     }
   }
@@ -134,7 +142,9 @@ bool configureNetwork(bool forceConfigure, NETWORK_CONFIG *networkConfig) {
   File file = LittleFS.open("/wifimanager.html");
   if(!file){
     DEBUG_PRINT("No webpages file found\n");
+#ifndef IGNOR_TFT_PRINT
     tft_printf(ST77XX_BLUE, "No webpages\nfound\nInstall by\nPlatfomIO\n");
+#endif
     while(true){};
   }
  
@@ -166,7 +176,9 @@ bool configureNetwork(bool forceConfigure, NETWORK_CONFIG *networkConfig) {
     WiFi.softAP(ap_name, NULL);
 
     IPAddress IP = WiFi.softAPIP();
+#ifndef IGNOR_TFT_PRINT
     tft_printf(ST77XX_MAGENTA, "Connect to AP:\n%s\nIP: %s\n", ap_name, IP.toString().c_str());
+#endif
     DEBUG_PRINT("Connect to AP: %s, IP: %s\n", ap_name, IP.toString().c_str());
     
     // Web Server Root URL
@@ -212,7 +224,9 @@ bool configureNetwork(bool forceConfigure, NETWORK_CONFIG *networkConfig) {
         }
       }
       request->send(200, "text/plain", "Done. Controller will restart");
+#ifndef IGNOR_TFT_PRINT
       tft_printf(ST77XX_MAGENTA, "WiFi\nconfiguration\nstored\nRestarting...\n");
+#endif
       delay(3000);
       ESP.restart();
     });

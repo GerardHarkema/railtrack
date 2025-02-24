@@ -2,6 +2,8 @@
 
 #include <EEPROM.h>
 
+#include <wifi_network_config.h>
+
 #include <micro_ros_platformio.h>
 
 #include <stdio.h>
@@ -14,6 +16,7 @@
 
 #include <railway_interfaces/msg/turnout_control.h>
 #include <railway_interfaces/msg/turnout_state.h>
+#include <railway_interfaces/msg/track_protocol_defines.h>
 
 
 #include <Adafruit_GFX.h> // Core graphics library
@@ -26,6 +29,7 @@
 #error This application is only avaible for Arduino Portenta, Arduino Nano RP2040 Connect, ESP32 Dev module and Wio Terminal
 #endif
 
+#define SELECT_WIFI_CONFIG_MODE_PIN  5
 
 rcl_publisher_t turnout_status_publisher;
 rcl_subscription_t turnout_control_subscriber;
@@ -68,11 +72,11 @@ typedef enum{
 }TURNOUT_TYPE;
 
 typedef enum{
-    ROS = railway_interfaces__msg__TurnoutControl__PROTOCOL_ROS, 
-    MM1 = railway_interfaces__msg__TurnoutControl__PROTOCOL_MM1, 
-    MM2 = railway_interfaces__msg__TurnoutControl__PROTOCOL_MM2, 
-    DCC = railway_interfaces__msg__TurnoutControl__PROTOCOL_DCC, 
-    MFX = railway_interfaces__msg__TurnoutControl__PROTOCOL_MFX
+    ROS = railway_interfaces__msg__TrackProtocolDefines__PROTOCOL_ROS, 
+    MM1 = railway_interfaces__msg__TrackProtocolDefines__PROTOCOL_MM1, 
+    MM2 = railway_interfaces__msg__TrackProtocolDefines__PROTOCOL_MM2, 
+    DCC = railway_interfaces__msg__TrackProtocolDefines__PROTOCOL_DCC, 
+    MFX = railway_interfaces__msg__TrackProtocolDefines__PROTOCOL_MFX
 }PROTOCOL;
 
 typedef struct{
@@ -99,10 +103,8 @@ typedef struct{
 
 Adafruit_ST7735 *tft;
 
-#include "network_config.h"
 #include "turnout_config.h"
 
-IPAddress agent_ip(ip_address[0], ip_address[1], ip_address[2], ip_address[3]);
 
 railway_interfaces__msg__TurnoutState turnout_status[NUMBER_OF_TURNOUTS] = {0};
 
@@ -238,6 +240,7 @@ char* convertToCamelCase(const char *input) {
     return output;
 }
 
+bool wifiUp;
 
 void setup() {
 
@@ -270,7 +273,23 @@ void setup() {
   const char *host_name = convertToCamelCase(NODE_NAME);
   //Serial.printf("hostname :%s\n", host_name);
   WiFi.setHostname(NODE_NAME);
-  set_microros_wifi_transports(WIFI_SSID, PASSWORD, agent_ip, (size_t)PORT);
+
+  pinMode(SELECT_WIFI_CONFIG_MODE_PIN, INPUT_PULLUP);
+
+  bool force_network_configure;
+  force_network_configure = !digitalRead(SELECT_WIFI_CONFIG_MODE_PIN);
+
+  NETWORK_CONFIG networkConfig;
+  wifiUp = configureNetwork(force_network_configure, &networkConfig);
+  if(!wifiUp){
+    tft_printf(ST77XX_MAGENTA, "Error configuring\nWiFi\n");
+
+  };
+
+  set_microros_wifi_transports(const_cast<char*>(networkConfig.ssid.c_str()), 
+                               const_cast<char*>(networkConfig.password.c_str()), 
+                               networkConfig.microros_agent_ip_address,
+                               networkConfig.microros_agent_port);
 
   pinMode(STATUS_LED, OUTPUT);
   digitalWrite(STATUS_LED, HIGH);

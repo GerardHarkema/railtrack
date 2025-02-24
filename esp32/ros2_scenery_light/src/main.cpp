@@ -2,6 +2,8 @@
 
 #include <EEPROM.h>
 
+#include <wifi_network_config.h>
+
 #include <micro_ros_platformio.h>
 
 #include <stdio.h>
@@ -13,6 +15,8 @@
 #include <std_msgs/msg/bool.h>
 #include <railway_interfaces/msg/scenery_control.h>
 #include <railway_interfaces/msg/scenery_state.h>
+
+#define SELECT_WIFI_CONFIG_MODE_PIN  5
 
 rcl_publisher_t scenery_status_publisher;
 rcl_subscription_t scenery_control_subscriber;
@@ -59,10 +63,10 @@ typedef struct{
 
 
 
-#include "network_config.h"
+//#include "network_config.h"
 #include "scenery_config.h"
 
-IPAddress agent_ip(ip_address[0], ip_address[1], ip_address[2], ip_address[3]);
+//IPAddress agent_ip(ip_address[0], ip_address[1], ip_address[2], ip_address[3]);
 
 
 typedef struct{
@@ -90,7 +94,7 @@ bool errorLedState = false;
 
 #include <WS2812FX.h>
 
-#define LED_COUNT 24
+
 #define LED_PIN 2
 
 #define STATUS_LED_PIN    8
@@ -268,6 +272,7 @@ char* convertToCamelCase(const char *input) {
     return output;
 }
 
+bool wifiUp;
 
 void setup() {
 
@@ -355,6 +360,14 @@ void setup() {
     "Unknown Platform"
 #endif
 
+  pinMode(SELECT_WIFI_CONFIG_MODE_PIN, INPUT_PULLUP);
+
+  bool force_network_configure;
+  force_network_configure = !digitalRead(SELECT_WIFI_CONFIG_MODE_PIN);
+
+  NETWORK_CONFIG networkConfig;
+  wifiUp = configureNetwork(force_network_configure, &networkConfig);
+  if(!wifiUp) error_loop();
 
   //neopixelWrite(RGB_BUILTIN,RGB_BRIGHTNESS,0, 0);
 
@@ -362,16 +375,23 @@ void setup() {
   Serial.printf("hostname :%s\n", host_name);
   WiFi.setHostname(NODE_NAME);
 
+  WiFi.setHostname("DccMMController");
+  set_microros_wifi_transports(const_cast<char*>(networkConfig.ssid.c_str()), 
+                               const_cast<char*>(networkConfig.password.c_str()), 
+                               networkConfig.microros_agent_ip_address,
+                               networkConfig.microros_agent_port);
+
     // Set WiFi to station mode and disconnect from an AP if it was previously connected.
     //WiFi.effect(WIFI_STA);
 
-  WiFi.mode(WIFI_STA);
-  WiFi.begin(WIFI_SSID, PASSWORD);
+  //WiFi.mode(WIFI_STA);
+  //WiFi.begin(WIFI_SSID, PASSWORD);
   //WiFi.setTxPower(WIFI_POWER_5dBm);
   delay(100);
 #if defined(ARDUINO_ESP32S3_DEV)
   //WiFi.effect(WIFI_STA);
-  WiFi.begin(WIFI_SSID, PASSWORD);
+  WiFi.begin(const_cast<char*>(networkConfig.ssid.c_str()), 
+             const_cast<char*>(networkConfig.password.c_str()));
   //WiFi.setTxPower(WIFI_POWER_8_5dBm);
   Serial.print("Connecting to WiFi ..");
   while (WiFi.status() != WL_CONNECTED) {
@@ -386,7 +406,7 @@ void setup() {
 #endif
 
 
-  set_microros_wifi_transports(WIFI_SSID, PASSWORD, agent_ip, (size_t)PORT);
+//  set_microros_wifi_transports(WIFI_SSID, PASSWORD, agent_ip, (size_t)PORT);
   //neopixelWrite(RGB_BUILTIN,0,0,RGB_BRIGHTNESS);
 #if defined(ARDUINO_ESP32C3_DEV)
 #elif defined(ARDUINO_ESP32S3_DEV)
