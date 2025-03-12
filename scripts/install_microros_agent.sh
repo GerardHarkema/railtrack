@@ -10,6 +10,8 @@ mkdir microros_ws
 cd microros_ws
 git clone -b $ROS_DISTRO https://github.com/micro-ROS/micro_ros_setup.git src/micro_ros_setup
 
+sudo rosdep init
+
 # Update dependencies using rosdep
 sudo apt update && rosdep update
 rosdep install --from-paths src --ignore-src -y

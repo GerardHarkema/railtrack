@@ -12,14 +12,14 @@ print(workspace_path)
 
 
 # Read in the template file
-with open('railtrack_control.service.template', 'r') as file:
+with open('microros_agent.service.template', 'r') as file:
   filedata = file.read()
 
 filedata = filedata.replace("<user>", user)
 filedata = filedata.replace("<workspace_path>", workspace_path)
 
 # Write the file service file
-with open('railtrack_control.service', 'w') as file:
+with open('microros_agent.service', 'w') as file:
   file.write(filedata)
 
 # Read in the template file

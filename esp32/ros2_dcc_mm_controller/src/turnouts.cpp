@@ -62,7 +62,11 @@ void turnout_control_callback(const void * msgin)
           break;
         case railway_interfaces__msg__TrackProtocolDefines__PROTOCOL_MM1:
         case railway_interfaces__msg__TrackProtocolDefines__PROTOCOL_MM2:           
-          trackScheduler.mmSetSolenoid(control->number, straight);
+          trackScheduler.mmSetTurnout(control->number, straight, true, 4);
+          //sleep(500);
+          vTaskDelay(500);
+          //delay(500);
+          trackScheduler.mmSetTurnout(control->number, straight, false, 4);
           break;
         default:
           break;

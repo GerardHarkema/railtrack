@@ -190,8 +190,8 @@ void TrackPacket::mm2GetBitstream(uint32_t *bitstream, bool *double_frequency){
 			*double_frequency = true;
 
 			port_mask = 0b1;
-											// 111111110000000000
-											// 765432109876543210	
+						    // 111111110000000000
+							// 765432109876543210	
 			bitstream_mask = 0b000000110000000000; // LSB D0
 			for(int i = 0; i < 3; i++){
 				if(mm_data.solenoid_sub_address & port_mask)
@@ -199,10 +199,19 @@ void TrackPacket::mm2GetBitstream(uint32_t *bitstream, bool *double_frequency){
 				bitstream_mask = bitstream_mask << 2;
 				port_mask = port_mask << 1;
 			}
-											// 111111110000000000
-											// 765432109876543210	
-			bitstream_mask = 0b110000000000000000; // auxiliary On
 
+			if(mm_data.auxiliary){
+								// 111111110000000000
+								// 765432109876543210	
+				bitstream_mask = 0b110000000000000000; // auxiliary On
+
+			}
+			else{
+								// 111111110000000000
+								// 765432109876543210	
+				bitstream_mask = 0b000000000000000000; // auxiliary Off
+
+			}
 			*bitstream = *bitstream | bitstream_mask;	
 			break;
 	}	

@@ -186,6 +186,11 @@ void MaerklinMotorola::Parse() {
 						DataQueue[QueuePos].MagnetState = true;
 						DataQueue[QueuePos].DecoderState = BitStream[10] ? MM2DecoderState_Green : MM2DecoderState_Red;				    
 					}
+					else{
+						DataQueue[QueuePos].MagnetState = false;
+						DataQueue[QueuePos].DecoderState = BitStream[10] ? MM2DecoderState_Green : MM2DecoderState_Red;				    
+
+					}
 			  }
 				else{
 					DataQueue[QueuePos].IsAdditionalFunction = true;

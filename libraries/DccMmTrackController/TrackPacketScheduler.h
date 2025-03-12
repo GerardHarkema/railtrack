@@ -69,7 +69,8 @@ class TrackPacketScheduler
     bool mm1SetFunctions(uint16_t address, uint8_t function);
     bool mm2SetSpeed(uint16_t address, int8_t new_speed); //new_speed: [0, 28]
     bool mm2SetFunctions(uint16_t address, uint8_t function);
-    bool mmSetSolenoid(uint16_t port, bool state);
+    //bool mmSetTurnout(uint16_t port, bool state);
+    bool mmSetTurnout(uint16_t port, bool direction, bool enable, uint8_t repaet_count);
 
     //to be called periodically within loop()
     void update(void); //checks queues, puts whatever's pending on the rails via global dcc_bitstream. easy-peasy

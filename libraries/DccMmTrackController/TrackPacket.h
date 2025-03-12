@@ -146,7 +146,7 @@ class TrackPacket
     inline uint8_t mmGetSpeed(void) { return mm_data.speed; }
     inline void mmSetSolenoidSubaddress(uint8_t solenoid_sub_address) { mm_data.solenoid_sub_address = solenoid_sub_address; }
     inline uint8_t mmgetSolenoidSubaddress(void) { return mm_data.solenoid_sub_address; }
-    inline void mmSetSolenoidState(bool solenoid_on) { mm_data.solenoid_state = solenoid_on; }
+    inline void mmSetTurnoutState(bool solenoid_on) { mm_data.solenoid_state = solenoid_on; }
     inline bool mmGetSolenoidState(void) { return mm_data.solenoid_state; }
     inline void mmSetAuxiliary(bool auxiliary) { mm_data.auxiliary = auxiliary; }
     inline bool mmGetAuxiliary(void) { return mm_data.auxiliary; }

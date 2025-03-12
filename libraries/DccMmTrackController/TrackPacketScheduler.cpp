@@ -513,7 +513,8 @@ bool TrackPacketScheduler::mm2SetSpeed(uint16_t address, int8_t new_speed){
   return packet_buffer.insertPacket(p);
 }
 
-bool TrackPacketScheduler::mmSetSolenoid(uint16_t port, bool state){
+
+bool TrackPacketScheduler::mmSetTurnout(uint16_t port, bool direction, bool enable, uint8_t repaet_count){
   //DEBUG_PRINT("set solenoid\n");
   TrackPacket p(TRACK_PROTOCOL_MM);
   p.mmSetKind(MM_SOLENOID_TELEGRAM);
@@ -521,10 +522,11 @@ bool TrackPacketScheduler::mmSetSolenoid(uint16_t port, bool state){
   p.mmSetAddress(port/4);
   //DEBUG_PRINT("State %i\n", state);
   //DEBUG_PRINT("set solenoid address = %i\n", (port/4) + 1);
-  u_int8_t sub_address = ((port%4) * 2) + (state?1:0); 
+  u_int8_t sub_address = ((port%4) * 2) + (direction?1:0); 
   p.mmSetSolenoidSubaddress(sub_address);
+  p.mmSetAuxiliary(enable);
   //DEBUG_PRINT("set solenoid sub address = %i\n", sub_address); 
-  p.setRepeatCount(4);
+  p.setRepeatCount(repaet_count);
   return packet_buffer.insertPacket(p);
 }
 

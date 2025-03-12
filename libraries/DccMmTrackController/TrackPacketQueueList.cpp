@@ -238,6 +238,7 @@ bool TrackPacketQueue::readPacket(TrackPacket &packet)
        packet.mmSetNextKind();
     }
     int8_t repeat_count =  packet.getRepeatCount();
+    Serial.println(repeat_count);
     if(repeat_count == REPEAT_COUNT_CONTINOUS) queue.push_back(packet);
     else{
       if(repeat_count > 0) 

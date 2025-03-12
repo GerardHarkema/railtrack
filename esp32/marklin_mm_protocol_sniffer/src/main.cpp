@@ -123,7 +123,8 @@ void loop() {
     
     //if(1){
     //if(Data->Address == 1 && Data->MagnetState){
-    if(Data->IsMagnet && Data->MagnetState && !Data->IsAdditionalFunction && display_solenoids){
+    //if(Data->IsMagnet && Data->MagnetState && !Data->IsAdditionalFunction && display_solenoids){
+    if(Data->IsMagnet && !Data->IsAdditionalFunction && display_solenoids){
       address = Data->Address ? Data->Address : 80; // Correct address 0 to 80
       port_number = ((int)address - 1) * 8 + (int)Data->SubAddress;
       wissel = (port_number / 2) + 1;
@@ -131,7 +132,16 @@ void loop() {
       Serial.print("MM Solenoid -->");
       Serial.print("; PortAddress = "); Serial.print(Data->PortAddress);
       Serial.print("; Turnout = "); Serial.print(wissel);
-      Serial.print("; MagnetState = " + String(groen ? "groen" : "rood"));
+      Serial.print("; Magnet = ");
+      if(groen)
+        Serial.print("Green");
+      else
+        Serial.print("Red");
+      Serial.print("; State = ");
+      if(Data->MagnetState)
+        Serial.print("On");
+      else
+        Serial.print("Off");
       Serial.println();
 #if (defined INCLUDE_BITSTREAM_DISPLAY)
       if(display_bitstream){
