@@ -1,0 +1,131 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="nl" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Setup turnout controller &mdash; ROS2 Railtrack 0.1 documentatie</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=a57088fb"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../_static/copybutton.js?v=f281be69"></script>
+      <script src="../_static/translations.js?v=e4d38c6a"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Zoeken" href="../search.html" />
+    <link rel="next" title="Setup Marklin Railbox Bridge" href="setup_marklin_railbox_bridge.html" />
+    <link rel="prev" title="Setup network" href="setup_network.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            ROS2 Railtrack
+              <img src="../_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Zoek in documentatie" aria-label="Zoek in documentatie" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigatiemenu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="main.html">Railtrack</a></li>
+<li class="toctree-l1"><a class="reference internal" href="demos.html">Demo</a></li>
+<li class="toctree-l1"><a class="reference internal" href="setup_environment.html">Setup environment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="setup_microROS_agent.html">Install microROS Agent</a></li>
+<li class="toctree-l1"><a class="reference internal" href="setup_nicegui_ui.html">Setup nicegui User Interface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="setup_network.html">Setup network</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Setup turnout controller</a></li>
+<li class="toctree-l1"><a class="reference internal" href="setup_marklin_railbox_bridge.html">Setup Marklin Railbox Bridge</a></li>
+<li class="toctree-l1"><a class="reference internal" href="setup_linux_startup_services.html">Setup linux startup services</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ros2_overview.html">ROS2 Railtrack System overview</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Navigatiemenu voor mobiel" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">ROS2 Railtrack</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Paginanavigatie">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Setup turnout controller</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/documentation/setup_turnout_controller.md.txt" rel="nofollow"> Bekijk paginabron</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="setup-turnout-controller">
+<h1>Setup turnout controller<a class="headerlink" href="#setup-turnout-controller" title="Link to this heading"></a></h1>
+<p>Under Construction</p>
+<p>With the turnout controller it is possible to control classical solenoid turnouts as well as servo, digital or analog controlled turnouts. The control takes place wireless over the wifi-netork. Configuring can be done by simple json configuration files. All needed is a ESP32-wroom32 device and a power switching element such as a relais(<em>don’t forget to use a freewheeling diode</em>), MOS-FET or power amplifier. An example is shown in: <a class="reference internal" href="turnout_example.html"><span class="std std-doc">Example of implementation</span></a>.</p>
+<p>An example of a configuration is given in the <em><strong>turnout_multi_config_test.json</strong></em> file in the config directory of this repository. It is also posible to use the turnout controller to switch different kind of accessories.</p>
+<p>To program the ESP32 chose the <em><strong>ros2_turnout_controller</strong></em> project in the <em><strong>ESP32</strong></em> workspace of this repositoy. When downloading or compile the project a popup apperas for selecting the configuration file.</p>
+<p><em>Note: Every configuration in your system should have a unique node name, defined in the configuration file.</em></p>
+<p><a class="reference internal" href="esp32_pinouts.html"><span class="std std-doc">ESP32 pinouts</span></a></p>
+<p><a class="reference internal" href="instructions_programming_esp32.html"><span class="std std-doc">Programming instructions</span></a>(Note: Select project <em><strong>ros2_turnout_controller</strong></em>)</p>
+<p><a class="reference internal" href="turnout_example.html"><span class="std std-doc">Example of implementation</span></a></p>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Voettekst">
+        <a href="setup_network.html" class="btn btn-neutral float-left" title="Setup network" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Vorige</a>
+        <a href="setup_marklin_railbox_bridge.html" class="btn btn-neutral float-right" title="Setup Marklin Railbox Bridge" accesskey="n" rel="next">Volgende <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright Gerard Harkema.</p>
+  </div>
+
+  Gebouwd met <a href="https://www.sphinx-doc.org/">Sphinx</a> met een
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">thema</a>
+    geleverd door <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
