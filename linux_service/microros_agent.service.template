@@ -4,7 +4,7 @@ After=NetworkManager.service time-sync.target
 [Service]
 Type=simple
 User=<user>
-ExecStart=/bin/sh -c ". /opt/ros/humble/setup.sh;. <workspace_path>/install/setup.sh; ros2 run micro_ros_agent micro_ros_agent udp4 --port 8888"
+ExecStart=/bin/sh -c ". /opt/ros/humble/setup.sh;. /home/<user>/microros_ws/install/setup.sh; ros2 run micro_ros_agent micro_ros_agent udp4 --port 8888"
 
 [Install]
 WantedBy=multi-user.target
