@@ -17,7 +17,7 @@ def generate_launch_description():
     return LaunchDescription([
         Node(
             package='railtrack_ui',
-            executable='railtrack_ui.py',
+            executable='railtrack_ui',
             output='screen',
             parameters=[{"railtrack_ui_path": railtrack_ui_path},
                         ],

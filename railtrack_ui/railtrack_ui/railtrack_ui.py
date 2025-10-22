@@ -28,8 +28,8 @@ from railway_interfaces.msg import SceneryState
 from railway_interfaces.msg import TrackConfig 
 from railway_interfaces.msg import DccCvWrite  
 
-from turnout_control import turnout_control
 from locomotive_control import locomotive_control
+from turnout_control import turnout_control
 from railtracklayout_control import railtracklayout_control
 from scenery_control import scenery_control
 from maintenance_control import maintenance_control
