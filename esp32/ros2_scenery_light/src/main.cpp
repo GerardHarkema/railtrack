@@ -385,7 +385,7 @@ void setup() {
     //WiFi.effect(WIFI_STA);
 
   //WiFi.mode(WIFI_STA);
-  //WiFi.begin(WIFI_SSID, PASSWORD);
+  //WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
   //WiFi.setTxPower(WIFI_POWER_5dBm);
   delay(100);
 #if defined(ARDUINO_ESP32S3_DEV)
@@ -406,7 +406,7 @@ void setup() {
 #endif
 
 
-//  set_microros_wifi_transports(WIFI_SSID, PASSWORD, agent_ip, (size_t)PORT);
+//  set_microros_wifi_transports(WIFI_SSID, WIFI_PASSWORD, agent_ip, (size_t)PORT);
   //neopixelWrite(RGB_BUILTIN,0,0,RGB_BRIGHTNESS);
 #if defined(ARDUINO_ESP32C3_DEV)
 #elif defined(ARDUINO_ESP32S3_DEV)

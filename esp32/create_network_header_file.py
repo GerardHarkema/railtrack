@@ -37,7 +37,7 @@ def main():
     header = header + line
     line = "#define WIFI_SSID   \"" + agent_config['wifi']['ssid'] + "\"\n"
     header = header + line
-    line = "#define PASSWORD   \"" + agent_config['wifi']['password'] + "\"\n"
+    line = "#define WIFI_PASSWORD   \"" + agent_config['wifi']['password'] + "\"\n"
     header = header + line
 
     ip_address = agent_config['agent']['ip']
