@@ -20,7 +20,7 @@ from std_msgs.msg import Bool;
 from railway_interfaces.msg import SceneryControl  
 from railway_interfaces.msg import SceneryState  
 
-from ws2812_effects import ws2812_effects
+from .ws2812_effects import ws2812_effects
 
 
 class scenery_control(Node):

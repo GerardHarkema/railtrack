@@ -3,12 +3,9 @@
 <package format="3">
   <name>railtrack_ui</name>
   <version>0.0.0</version>
-  <description>Userinterface of the railtrack</description>
-  <maintainer email="gerardanneharkema@gmail.com">gerard</maintainer>
+  <description>TODO: Package description</description>
+  <maintainer email="GerardAnneHarkema@gmail.com">gerard</maintainer>
   <license>CC BY-NC-SA 4.0</license>
-
-  <exec_depend>colcon-pip</exec_depend>
-  <exec_depend>railway_interfaces</exec_depend>
 
   <test_depend>ament_copyright</test_depend>
   <test_depend>ament_flake8</test_depend>

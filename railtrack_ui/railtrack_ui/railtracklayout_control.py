@@ -21,8 +21,8 @@ from railway_interfaces.msg import TurnoutState
 from railway_interfaces.msg import TrackProtocolDefines 
 
 
-from turnout_control import turnout_control
-from locomotive_control import locomotive_control
+from .turnout_control import turnout_control
+from .locomotive_control import locomotive_control
 
 # Region of interest
 class rio_class():

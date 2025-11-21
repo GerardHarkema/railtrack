@@ -21,9 +21,9 @@ from railway_interfaces.msg import LocomotiveState
 from railway_interfaces.msg import TrackConfig, TrackObjectConfig, TrackProtocolDefines
 from railway_interfaces.msg import DccCvWrite
 
-from local_file_picker import local_file_picker
+from .local_file_picker import local_file_picker
 
-from cv_register_descr import cv_register_descr
+from .cv_register_descr import cv_register_descr
 
 class maintenance_control(Node):
     def __init__(self, track_config, track_config_publisher, app_path, locomotive_dcc_cv_write_publisher):
