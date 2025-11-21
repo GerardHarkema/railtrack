@@ -118,120 +118,126 @@ class RailTrackNode(Node):
         self.locomotivesui = []
         self.turnouts = []
         self.sceneryui = []
-        with Client.auto_index_client:
-            with ui.tabs().classes('w-full') as tabs:
+        
+        # Setup UI on the index page
+        @ui.page('/')
+        def index():
+            self.build_ui()
+    
+    def build_ui(self):
+        with ui.tabs().classes('w-full') as tabs:
 
-                try:
-                    tmp = self.track_config["Locomotives"]
-                    self.locomotives_tab = ui.tab('Locomotives')
-                    first_tab = self.locomotives_tab
-                except KeyError:
+            try:
+                tmp = self.track_config["Locomotives"]
+                self.locomotives_tab = ui.tab('Locomotives')
+                first_tab = self.locomotives_tab
+            except KeyError:
+                pass
+
+            try:
+                tmp = self.track_config["Turnouts"]
+                self.turnouts_tab = ui.tab('Turnouts')
+                if not 'first_tab' in locals():
+                    first_tab = self.turnouts_tab
+            except KeyError:
+                pass
+
+            try:
+                tmp = self.track_config["Scenerys"]
+                self.scenery_tab = ui.tab('Scenerys')
+            except KeyError:
+                pass
+
+            try:
+                tmp = self.track_config["railtrack_layout_image"]
+                self.tracklayouts_tab = ui.tab('Track Layout')
+            except KeyError:
+                pass
+
+            try:
+                tmp = self.track_config["display_maintenance_tab"]
+                if tmp:
+                    self.maintenance_tab = ui.tab('Maintenance')
+            except KeyError:
+                pass
+
+        with ui.tab_panels(tabs, value=first_tab).classes('w-full'):
+            try:
+                tmp = self.track_config["Turnouts"]
+                with ui.tab_panel(self.turnouts_tab):
+                    with ui.grid(columns=3):
+
+                        try:
+                            for turnout in self.track_config["Turnouts"]:
+                                self.turnouts.append(turnout)
+                        except KeyError:
+                            pass
+
+                        #self.turnouts.sort()
+                        for turnout in self.turnouts:
+                            tc = turnout_control(turnout, self.turnout_control_publisher)
+                            self.turnoutsui.append(tc)
+            except KeyError:
+                pass
+
+            try:
+                tmp = self.track_config["Locomotives"]                
+                with ui.tab_panel(self.locomotives_tab):
+                    with ui.grid(columns=3):
+                        for loc in self.track_config['Locomotives']:
+                            locomotive = locomotive_control(loc, self.locomotive_control_publisher, self.locomotive_images_path)
+                            self.locomotivesui.append(locomotive)
+            except KeyError:
+                pass
+
+            try:
+                tmp = self.track_config["Scenerys"]                
+                with ui.tab_panel(self.scenery_tab):
+                    with ui.grid(columns=3):
+                        for sc in self.track_config['Scenerys']:
+                            scenery = scenery_control(sc, self.scenery_control_publisher)
+                            self.sceneryui.append(scenery)
+            except KeyError:
+                pass
+
+
+            try:
+                tmp = self.track_config["railtrack_layout_image"]
+                with ui.tab_panel(self.tracklayouts_tab):
+                    #railtracklayout_image_file = self.locomotive_images_path + "/"+ self.track_config["railtrack_layout_image"]
+                    self.track_control = railtracklayout_control(self.track_config["Turnouts"], self.railtracklayout_images_path, self.turnout_control_publisher)
                     pass
+            except KeyError:
+                pass
 
-                try:
-                    tmp = self.track_config["Turnouts"]
-                    self.turnouts_tab = ui.tab('Turnouts')
-                    if not 'first_tab' in locals():
-                        first_tab = self.turnouts_tab
-                except KeyError:
-                    pass
-
-                try:
-                    tmp = self.track_config["Scenerys"]
-                    self.scenery_tab = ui.tab('Scenerys')
-                except KeyError:
-                    pass
-
-                try:
-                    tmp = self.track_config["railtrack_layout_image"]
-                    self.tracklayouts_tab = ui.tab('Track Layout')
-                except KeyError:
-                    pass
-
-                try:
-                    tmp = self.track_config["display_maintenance_tab"]
-                    if tmp:
-                        self.maintenance_tab = ui.tab('Maintenance')
-                except KeyError:
-                    pass
-
-            with ui.tab_panels(tabs, value=first_tab).classes('w-full'):
-                try:
-                    tmp = self.track_config["Turnouts"]
-                    with ui.tab_panel(self.turnouts_tab):
-                        with ui.grid(columns=3):
-
-                            try:
-                                for turnout in self.track_config["Turnouts"]:
-                                    self.turnouts.append(turnout)
-                            except KeyError:
-                                pass
-
-                            #self.turnouts.sort()
-                            for turnout in self.turnouts:
-                                tc = turnout_control(turnout, self.turnout_control_publisher)
-                                self.turnoutsui.append(tc)
-                except KeyError:
-                    pass
-
-                try:
-                    tmp = self.track_config["Locomotives"]                
-                    with ui.tab_panel(self.locomotives_tab):
-                        with ui.grid(columns=3):
-                            for loc in self.track_config['Locomotives']:
-                                locomotive = locomotive_control(loc, self.locomotive_control_publisher, self.locomotive_images_path)
-                                self.locomotivesui.append(locomotive)
-                except KeyError:
-                    pass
-
-                try:
-                    tmp = self.track_config["Scenerys"]                
-                    with ui.tab_panel(self.scenery_tab):
-                        with ui.grid(columns=3):
-                            for sc in self.track_config['Scenerys']:
-                                scenery = scenery_control(sc, self.scenery_control_publisher)
-                                self.sceneryui.append(scenery)
-                except KeyError:
-                    pass
-
-
-                try:
-                    tmp = self.track_config["railtrack_layout_image"]
-                    with ui.tab_panel(self.tracklayouts_tab):
-                        #railtracklayout_image_file = self.locomotive_images_path + "/"+ self.track_config["railtrack_layout_image"]
-                        self.track_control = railtracklayout_control(self.track_config["Turnouts"], self.railtracklayout_images_path, self.turnout_control_publisher)
-                        pass
-                except KeyError:
-                    pass
-
-                with ui.tab_panel(self.maintenance_tab):
-                    self.maintenance_control = maintenance_control(self.track_config  ,self.track_config_publisher, self.railtrack_ui_path, self.locomotive_dcc_cv_write_publisher)
-            with ui.grid(columns=3):
-                with ui.card():
-                    ui.label("Control")
-                    ui.label("Track Power")
-                    self.power_button = ui.button('STOP', on_click=lambda:self.power()).classes('drop-shadow bg-red')
-                    ui.label("Connection state (Flash)")
-                    self.active = ui.icon('fiber_manual_record', size='3em').classes('drop-shadow text-green')
-                with ui.card():
-                    ui.label("Status")
-                    with ui.grid(columns=3):                
-                        with ui.card():
-                            ui.label("Current")
-                            self.current = ui.label("0.0 A")
-                            ui.label("Overload")
-                            self.current_overload = ui.icon('fiber_manual_record', size='3em').classes('drop-shadow text-green')
-                        with ui.card():
-                            ui.label("Voltage")
-                            self.voltage = ui.label("0.0 V")
-                            ui.label("Overload")
-                            self.voltage_overload = ui.icon('fiber_manual_record', size='3em').classes('drop-shadow text-green')
-                        with ui.card():
-                            ui.label("Temperature")
-                            self.temperature = ui.label("0.0 °C")
-                            ui.label("Overload")
-                            self.temperature_overload = ui.icon('fiber_manual_record', size='3em').classes('drop-shadow text-green')
-            self.active_status = False;
+            with ui.tab_panel(self.maintenance_tab):
+                self.maintenance_control = maintenance_control(self.track_config  ,self.track_config_publisher, self.railtrack_ui_path, self.locomotive_dcc_cv_write_publisher)
+        with ui.grid(columns=3):
+            with ui.card():
+                ui.label("Control")
+                ui.label("Track Power")
+                self.power_button = ui.button('STOP', on_click=lambda:self.power()).classes('drop-shadow bg-red')
+                ui.label("Connection state (Flash)")
+                self.active = ui.icon('fiber_manual_record', size='3em').classes('drop-shadow text-green')
+            with ui.card():
+                ui.label("Status")
+                with ui.grid(columns=3):                
+                    with ui.card():
+                        ui.label("Current")
+                        self.current = ui.label("0.0 A")
+                        ui.label("Overload")
+                        self.current_overload = ui.icon('fiber_manual_record', size='3em').classes('drop-shadow text-green')
+                    with ui.card():
+                        ui.label("Voltage")
+                        self.voltage = ui.label("0.0 V")
+                        ui.label("Overload")
+                        self.voltage_overload = ui.icon('fiber_manual_record', size='3em').classes('drop-shadow text-green')
+                    with ui.card():
+                        ui.label("Temperature")
+                        self.temperature = ui.label("0.0 °C")
+                        ui.label("Overload")
+                        self.temperature_overload = ui.icon('fiber_manual_record', size='3em').classes('drop-shadow text-green')
+        self.active_status = False
 
     def turnout_status_callback(self, status):
         try:
