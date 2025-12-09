@@ -76,6 +76,12 @@ class RailTrackNode(Node):
         self.railtracklayout_images_path = self.config_file_path + '/' + self.track_config["railtrack_layout_image"]
         self.get_logger().info(f"railtracklayout_images_path {self.railtracklayout_images_path}")
 
+        # Setup UI on the index page
+        @ui.page('/')
+        def index():
+            self.build_ui()
+
+
         self.qos_profile = QoSProfile(
                 reliability=QoSReliabilityPolicy.BEST_EFFORT,
                 history=QoSHistoryPolicy.KEEP_LAST,
@@ -259,6 +265,10 @@ class RailTrackNode(Node):
             scenery.set_status(status)
 
     def power_status_callback(self, status):
+        # Check if UI elements have been created before accessing them
+        if not hasattr(self, 'power_button'):
+            return
+            
         if status.state:
             self.power_msg.enable = True
             self.power_button.classes('drop-shadow bg-red', remove='bg-green')
