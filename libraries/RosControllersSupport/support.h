@@ -5,7 +5,7 @@
 #include "defines.h"
 
 void lookupLocomotiveProtocol(uint8_t protocol, char *protocol_txt);
-void error_loop();
+void fatal_error_handler();
 char* getDirectionTxt(int direction);
 bool lookupTurnoutIndex(int turnout_number, int *turnout_index);
 bool lookupLocomotiveIndex(int locomotive_address, uint8_t protocol, int *locomotive_index);

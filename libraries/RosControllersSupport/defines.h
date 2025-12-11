@@ -48,7 +48,7 @@ typedef struct{
         if ((temp_rc != RCL_RET_OK))                                                               \
         {                                                                                          \
             Serial.printf("%s: Failed ros_client status on line %d: %d, Stopping!\n", __FILE__,  __LINE__, (int)temp_rc); \
-            error_loop();                                                                        \
+            fatal_error_handler();                                                                        \
         }                                                                                          \
     }
 

@@ -99,8 +99,9 @@ void init_ros(){
   allocator = rcl_get_default_allocator();
   //create init_options
   if(rclc_support_init(&support, 0, NULL, &allocator)){
-    tft_printf(ST77XX_BLUE, "microROS agent\nnot found\nCheck network\nsettings\n");
-    while(true){};
+    tft_printf(ST77XX_BLUE, "microROS agent\nnot found\nRestarting...\n");
+    delay(5000);
+    ESP.restart();
   }
 
   // create node
@@ -203,7 +204,7 @@ void init_ros(){
     RCL_MS_TO_NS((int)timer_timeout),
     power_state_publisher_timer_callback));
 
-  if(!trackScheduler.setup())error_loop();
+  if(!trackScheduler.setup())fatal_error_handler();
 
   // create executor
 
@@ -338,8 +339,11 @@ void setup() {
 
   NETWORK_CONFIG networkConfig;
   wifiUp = configureNetwork(force_network_configure, &networkConfig);
-  if(!wifiUp) return;
-
+  if(!wifiUp){
+    tft_printf(ST77XX_MAGENTA, "Error configuring\nWiFi\nRestarting...\n");
+    delay(5000);
+    ESP.restart();
+  };
   init_eeprom();
 
   if(!track_config_enable_flag){

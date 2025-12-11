@@ -49,14 +49,12 @@ void lookupLocomotiveProtocol(uint8_t protocol, char *protocol_txt){
   }
 }
 
-void error_loop(){
+void fatal_error_handler(){
   Serial.println("Error: System halted");
   tft_printf(ST77XX_BLUE, "Error\nSystem halted");
 
-  while(1){
-    digitalWrite(LED_BUILTIN, !digitalRead(LED_BUILTIN));
-    delay(100);
-  }
+  delay(5000);
+  ESP.restart();
 }
 
 char* getDirectionTxt(int direction){

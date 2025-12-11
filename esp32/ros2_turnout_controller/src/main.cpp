@@ -109,7 +109,7 @@ Adafruit_ST7735 *tft;
 railway_interfaces__msg__TurnoutState turnout_status[NUMBER_OF_TURNOUTS] = {0};
 
 rcl_timer_t timer;
-#define RCCHECK(fn) { rcl_ret_t temp_rc = fn; if((temp_rc != RCL_RET_OK)){error_loop();}}
+#define RCCHECK(fn) { rcl_ret_t temp_rc = fn; if((temp_rc != RCL_RET_OK)){fatal_error_handler();}}
 #define RCSOFTCHECK(fn) { rcl_ret_t temp_rc = fn; if((temp_rc != RCL_RET_OK)){}}
 
 
@@ -129,13 +129,11 @@ bool lookupTurnoutIndex(int turnout_number, int *turnout_index){
   return false;
 }
 
-void error_loop(){
+void fatal_error_handler(){
   tft_printf(ST77XX_BLUE, "DCC controller\nError\nSystem halted");
   Serial.printf("DCC controller\nError\nSystem halted");
-  while(1){
-    digitalWrite(STATUS_LED, !digitalRead(STATUS_LED));
-    delay(100);
-  }
+  delay(5000);
+  ESP.restart();
 }
 
 
@@ -218,7 +216,7 @@ char* convertToCamelCase(const char *input) {
     
     if(output == NULL) {
         Serial.printf("Error allocating memory\n");
-        error_loop();
+        fatal_error_handler();
     }
 
     // Kopieer de originele string naar de uitvoerstring

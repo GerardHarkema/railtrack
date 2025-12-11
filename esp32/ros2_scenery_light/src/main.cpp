@@ -81,7 +81,7 @@ EEPROM_STORE eeprom_store[NUMBER_OF_SCENERY_LIGHTS];
 railway_interfaces__msg__SceneryState scenery_light_status[NUMBER_OF_SCENERY_LIGHTS] = {0};
 
 rcl_timer_t timer;
-#define RCCHECK(fn) { rcl_ret_t temp_rc = fn; if((temp_rc != RCL_RET_OK)){error_loop();}}
+#define RCCHECK(fn) { rcl_ret_t temp_rc = fn; if((temp_rc != RCL_RET_OK)){fatal_error_handler();}}
 #define RCSOFTCHECK(fn) { rcl_ret_t temp_rc = fn; if((temp_rc != RCL_RET_OK)){}}
 
 int scan_index = 0;
@@ -130,42 +130,43 @@ bool lookupSceneryLightIndex(int scenery_light_number, int *scenery_light_index)
 }
 
 
-void error_loop(){
+void fatal_error_handler(){
   Serial.printf("Light RGB controller\nError\nSystem halted");
-  while(1){
-      
+
+  
 #if defined(ARDUINO_ESP32C3_DEV)
 
 #elif defined(ARDUINO_ESP32S3_DEV)
-        ws2812fxStatus.service();
+  ws2812fxStatus.service();
 #else
-    "Unknown Platform"
+"Unknown Platform"
 #endif
-        if(errorLedState){
-            //neopixelWrite(RGB_BUILTIN,0,0, 0);
+  if(errorLedState){
+      //neopixelWrite(RGB_BUILTIN,0,0, 0);
 #if defined(ARDUINO_ESP32C3_DEV)
-              digitalWrite(STATUS_LED_PIN, HIGH);
+        digitalWrite(STATUS_LED_PIN, HIGH);
 
 #elif defined(ARDUINO_ESP32S3_DEV)
-            ws2812fxStatus.setColor(0,0,0);
+      ws2812fxStatus.setColor(0,0,0);
 #else
-    "Unknown Platform"
+"Unknown Platform"
 #endif
-            errorLedState = false;
-        }
-        else{
-            //neopixelWrite(RGB_BUILTIN,RGB_BRIGHTNESS,0, 0);
-#if defined(ARDUINO_ESP32C3_DEV)
-              digitalWrite(STATUS_LED_PIN, LOW);
-#elif defined(ARDUINO_ESP32S3_DEV)
-            ws2812fxStatus.setColor(RGB_BRIGHTNESS,0,0);
-#else
-    "Unknown Platform"
-#endif
-            errorLedState = true;
-        }
-    delay(100);
+      errorLedState = false;
   }
+  else{
+      //neopixelWrite(RGB_BUILTIN,RGB_BRIGHTNESS,0, 0);
+#if defined(ARDUINO_ESP32C3_DEV)
+        digitalWrite(STATUS_LED_PIN, LOW);
+#elif defined(ARDUINO_ESP32S3_DEV)
+      ws2812fxStatus.setColor(RGB_BRIGHTNESS,0,0);
+#else
+"Unknown Platform"
+#endif
+      errorLedState = true;
+  }
+  delay(5000);
+  ESP.restart();
+
 }
 
 
@@ -250,7 +251,7 @@ char* convertToCamelCase(const char *input) {
     
     if(output == NULL) {
         Serial.printf("Error allocating memory\n");
-        error_loop();
+        fatal_error_handler();
     }
 
     // Kopieer de originele string naar de uitvoerstring
@@ -367,7 +368,7 @@ void setup() {
 
   NETWORK_CONFIG networkConfig;
   wifiUp = configureNetwork(force_network_configure, &networkConfig);
-  if(!wifiUp) error_loop();
+  if(!wifiUp) fatal_error_handler();
 
   //neopixelWrite(RGB_BUILTIN,RGB_BRIGHTNESS,0, 0);
 
