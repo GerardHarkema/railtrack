@@ -110,7 +110,7 @@ railway_interfaces__msg__TurnoutState turnout_status[NUMBER_OF_TURNOUTS] = {0};
 
 rcl_timer_t timer;
 #define RCCHECK(fn) { rcl_ret_t temp_rc = fn; if((temp_rc != RCL_RET_OK)){fatal_error_handler();}}
-#define RCSOFTCHECK(fn) { rcl_ret_t temp_rc = fn; if((temp_rc != RCL_RET_OK)){}}
+#define RCSOFTCHECK(fn) { rcl_ret_t temp_rc = fn; if((temp_rc != RCL_RET_OK)){fatal_error_handler();}}
 
 
 int scan_index = 0;
@@ -126,12 +126,13 @@ bool lookupTurnoutIndex(int turnout_number, int *turnout_index){
     scan_index++; 
   }  
   if(scan_index == NUMBER_OF_TURNOUTS) scan_index = 0;
+  Serial.printf("Turnout number %d not found\n", turnout_number);
   return false;
 }
 
 void fatal_error_handler(){
-  tft_printf(ST77XX_BLUE, "DCC controller\nError\nSystem halted");
-  Serial.printf("DCC controller\nError\nSystem halted");
+  tft_printf(ST77XX_BLUE, "Railtrack controller\nError\nSystem halted");
+  Serial.printf("Railtrack controller\nError\nSystem halted");
   delay(5000);
   ESP.restart();
 }
@@ -141,8 +142,7 @@ void turnout_control_callback(const void * msgin)
 { 
   int turnout_index;
   const railway_interfaces__msg__TurnoutControl * control = (const railway_interfaces__msg__TurnoutControl *)msgin;
-  //Serial.println("callback");
-  //Serial.println(control->number);
+  Serial.printf("callback turnout control number: %d\n", control->number);
   while(lookupTurnoutIndex(control->number, &turnout_index)){
       //Serial.println("set turnout");
       uint pin;
@@ -153,19 +153,22 @@ void turnout_control_callback(const void * msgin)
           pin = control->state ? turnout_config[turnout_index].magnet.green_pin : turnout_config[turnout_index].magnet.red_pin;
           digitalWrite(pin, HIGH);  
           delay(200);
-          digitalWrite(pin, LOW);  
+          digitalWrite(pin, LOW);
+          Serial.printf("Turnout %d set to Magnet pin %d\n", control->number, pin);  
           break;
         case SERVO:
           pwm_value = control->state ? 
                       turnout_config[turnout_index].servo.green_value :
                       turnout_config[turnout_index].servo.red_value;
           analogWrite(turnout_config[turnout_index].servo.pin, pwm_value);
+          Serial.printf("Turnout %d set to Servo %d\n", control->number, pwm_value);
           break;
         case ANALOG_OUT:
           analog_value = control->state ? 
                       turnout_config[turnout_index].analog_out.green_value :
                       turnout_config[turnout_index].analog_out.red_value;        
           analogWrite(turnout_config[turnout_index].analog_out.pin, analog_value);
+          Serial.printf("Turnout %d set to Analog %d\n", control->number, analog_value);
           break;
         case DIGITAL_OUT:
           if(turnout_config[turnout_index].digital_out.negative_logic)
@@ -173,6 +176,10 @@ void turnout_control_callback(const void * msgin)
           else
              state = control->state ? true: false; 
           digitalWrite(turnout_config[turnout_index].digital_out.pin, state); 
+          Serial.printf("Turnout %d set to Digital %d\n", control->number, state);
+          break;
+        default:
+          Serial.printf("Turnout %d unknown type\n", control->number);
           break;
       }
 
@@ -186,13 +193,15 @@ void turnout_control_callback(const void * msgin)
       if(turnout_status[turnout_index].state){
         tft->setTextColor(ST77XX_GREEN);
         tft->printf("T%i: Green", control->number);
+        Serial.printf("T%i: Green\n", control->number);
       }
       else{
         tft->setTextColor(ST77XX_BLUE);
         tft->printf("T%i: Red", control->number);
+        Serial.printf("T%i: Red\n", control->number);
       }
   }
-  //else Serial.println("Invalid Turnout");
+
 
 }
 
@@ -238,16 +247,7 @@ char* convertToCamelCase(const char *input) {
     return output;
 }
 
-bool wifiUp;
-
-void setup() {
-
-  Serial.begin(115200);
-  while (!Serial);
-  delay(2000);
-  Serial.print("Turnout-decoder started, node: ");
-  Serial.println(NODE_NAME);
-
+void int_tft_display(){
   tft = new Adafruit_ST7735(CS_PIN, DC_PIN, MOSI_PIN, SCLK_PIN, RST_PIN);
   
   tft_prinft_begin(tft);
@@ -267,33 +267,9 @@ void setup() {
   tft->println(NODE_NAME);
   tft->println("Controller Started");
 
-  EEPROM.begin(NUMBER_OF_TURNOUTS);
-  const char *host_name = convertToCamelCase(NODE_NAME);
-  //Serial.printf("hostname :%s\n", host_name);
-  WiFi.setHostname(NODE_NAME);
+}
 
-  pinMode(SELECT_WIFI_CONFIG_MODE_PIN, INPUT_PULLUP);
-
-  bool force_network_configure;
-  force_network_configure = !digitalRead(SELECT_WIFI_CONFIG_MODE_PIN);
-
-  NETWORK_CONFIG networkConfig;
-  wifiUp = configureNetwork(force_network_configure, &networkConfig);
-  if(!wifiUp){
-    tft_printf(ST77XX_MAGENTA, "Error configuring\nWiFi\n");
-
-  };
-
-  set_microros_wifi_transports(const_cast<char*>(networkConfig.ssid.c_str()), 
-                               const_cast<char*>(networkConfig.password.c_str()), 
-                               networkConfig.microros_agent_ip_address,
-                               networkConfig.microros_agent_port);
-
-  pinMode(STATUS_LED, OUTPUT);
-  digitalWrite(STATUS_LED, HIGH);
-  tft_printf(ST77XX_MAGENTA, "Turnout Control\nWiFi\nConnected\n");
-  Serial.printf("Turnout Control WiFi Connected\n");
-
+void display_turnout_states(){
   tft->fillRect(0, 33, tft->width()-1, tft->height() - 33, ST77XX_BLACK);
   for(int i=0; i < NUMBER_OF_TURNOUTS; i++){
     turnout_status[i].number = turnout_config[i].turnout_number;
@@ -344,14 +320,59 @@ void setup() {
         digitalWrite(turnout_config[i].digital_out.pin, state); 
         break;
     }
-
-
   }
+
+}
+
+bool wifiUp;
+
+void setup() {
+
+  Serial.begin(115200);
+  while (!Serial);
+  delay(2000);
+  Serial.print("Turnout-decoder started, node: ");
+  Serial.println(NODE_NAME);
+
+  int_tft_display();
+
+  EEPROM.begin(NUMBER_OF_TURNOUTS);
+  const char *host_name = convertToCamelCase(NODE_NAME);
+  //Serial.printf("hostname :%s\n", host_name);
+  WiFi.setHostname(NODE_NAME);
+
+//  pinMode(SELECT_WIFI_CONFIG_MODE_PIN, INPUT_PULLUP);
+
+//  bool force_network_configure;
+//  force_network_configure = !digitalRead(SELECT_WIFI_CONFIG_MODE_PIN);
+
+  NETWORK_CONFIG networkConfig;
+//  wifiUp = configureNetwork(force_network_configure, &networkConfig);
+  wifiUp = configureNetwork(false, &networkConfig);
+  if(!wifiUp){
+    tft_printf(ST77XX_MAGENTA, "Error configuring\nWiFi\n");
+
+  };
+
+  set_microros_wifi_transports(const_cast<char*>(networkConfig.ssid.c_str()), 
+                               const_cast<char*>(networkConfig.password.c_str()), 
+                               networkConfig.microros_agent_ip_address,
+                               networkConfig.microros_agent_port);
+
+  pinMode(STATUS_LED, OUTPUT);
+  digitalWrite(STATUS_LED, HIGH);
+  tft_printf(ST77XX_MAGENTA, "Turnout Control\nWiFi\nConnected\n");
+  Serial.printf("Turnout Control WiFi Connected\n");
 
   allocator = rcl_get_default_allocator();
 
   //create init_options
-  RCCHECK(rclc_support_init(&support, 0, NULL, &allocator));
+  if(rclc_support_init(&support, 0, NULL, &allocator)){
+    tft_printf(ST77XX_BLUE, "microROS agent\nnot found\nRestarting...\n");
+    Serial.printf("microROS agent\nnot found\nRestarting...\n");
+    delay(5000);
+    ESP.restart();
+  }
 
   // create node
   RCCHECK(rclc_node_init_default(&node, NODE_NAME, "", &support));
@@ -364,7 +385,6 @@ void setup() {
     &node,
     ROSIDL_GET_MSG_TYPE_SUPPORT(railway_interfaces, msg, TurnoutState),
     topic_name));
-
 
   // create turnout_control_subscriber
   sprintf(topic_name, "railtrack/turnout/control");
@@ -389,6 +409,9 @@ void setup() {
   RCCHECK(rclc_executor_add_subscription(&executor, &turnout_control_subscriber, &turnout_control, &turnout_control_callback, ON_NEW_DATA));
 
   Serial.println("Turnout-decoder ready");
+  tft_printf(ST77XX_MAGENTA, "Controller\nReady\n");
+  delay(5000);
+  display_turnout_states();
 }
 
 void loop() {
