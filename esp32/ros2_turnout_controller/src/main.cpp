@@ -262,7 +262,7 @@ void int_tft_display(){
   tft->setTextSize(1);
   tft->fillScreen(ST77XX_BLACK);
   tft->setTextColor(ST77XX_CYAN);
-  tft->setCursor(14, 22);
+  tft->setCursor(7, 22);
   tft->println("Turnout Control");
   tft->println(NODE_NAME);
   tft->println("Controller Started");

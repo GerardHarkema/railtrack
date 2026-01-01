@@ -251,60 +251,70 @@ class RailTrackNode(Node):
             self.track_control.set_status_indicator(status)
         except:
             pass
-        for turnout in self.turnoutsui:
-            turnout.set_status_indicator(status)
+        try:
+            for turnout in self.turnoutsui:
+                turnout.set_status_indicator(status)
+        except RuntimeError:
+            pass  # Client may have disconnected
 
     def locomotive_status_callback(self, status):
         #print(status)
-        for loc in self.locomotivesui:
-            loc.set_status(status)
+        try:
+            for loc in self.locomotivesui:
+                loc.set_status(status)
+        except RuntimeError:
+            pass  # Client may have disconnected
 
     def scenery_status_callback(self, status):
         #print(status)
-        for scenery in self.sceneryui:
-            scenery.set_status(status)
+        try:
+            for scenery in self.sceneryui:
+                scenery.set_status(status)
+        except RuntimeError:
+            pass  # Client may have disconnected
 
     def power_status_callback(self, status):
         # Check if UI elements have been created before accessing them
         if not hasattr(self, 'power_button'):
             return
+        
+        try:
+            if status.state:
+                self.power_msg.enable = True
+                self.power_button.classes('drop-shadow bg-red', remove='bg-green')
+                self.power_button.text = 'STOP'
+            else:
+                self.power_msg.enable = False
+                self.power_button.classes('drop-shadow bg-green', remove='bg-red') 
+                self.power_button.text = 'ENABLE'
+            if(self.active_status):
+                self.active.classes('text-green', remove='text-red')
+                self.active_status = False
+            else:
+                self.active.classes('text-red', remove='text-green')
+                self.active_status = True
+            text = str(round(status.current, 1)) + " A"
+            self.current.text = text
+            text = str(round(status.voltage, 1)) + " V"
+            self.voltage.text = text
+            text = str(round(status.temperature, 1)) + " °C"
+            self.temperature.text = text
+            if(status.current_overload):
+                self.current_overload.classes('text-red', remove='text-green')
+            else:
+                self.current_overload.classes('text-green', remove='text-red')
             
-        if status.state:
-            self.power_msg.enable = True
-            self.power_button.classes('drop-shadow bg-red', remove='bg-green')
-            self.power_button.text = 'STOP'
-        else:
-            self.power_msg.enable = False
-            self.power_button.classes('drop-shadow bg-green', remove='bg-red') 
-            self.power_button.text = 'ENABLE'
-        if(self.active_status):
-            self.active.classes('text-green', remove='text-red')
-            self.active_status = False
-        else:
-            self.active.classes('text-red', remove='text-green')
-            self.active_status = True
-        text = str(round(status.current, 1)) + " A"
-        self.current.text = text
-        text = str(round(status.voltage, 1)) + " V"
-        self.voltage.text = text
-        text = str(round(status.temperature, 1)) + " °C"
-        self.temperature.text = text
-        if(status.current_overload):
-            self.current_overload.classes('text-red', remove='text-green')
-        else:
-            self.current_overload.classes('text-green', remove='text-red')
-        
-        if(status.voltage_overload):
-            self.voltage_overload.classes('text-red', remove='text-green')
-        else:
-            self.voltage_overload.classes('text-green', remove='text-red')
-        
-        if(status.temperature_overload):
-            self.temperature_overload.classes('text-red', remove='text-green')
-        else:
-            self.temperature_overload.classes('text-green', remove='text-red')
-        
-        pass
+            if(status.voltage_overload):
+                self.voltage_overload.classes('text-red', remove='text-green')
+            else:
+                self.voltage_overload.classes('text-green', remove='text-red')
+            
+            if(status.temperature_overload):
+                self.temperature_overload.classes('text-red', remove='text-green')
+            else:
+                self.temperature_overload.classes('text-green', remove='text-red')
+        except RuntimeError:
+            pass  # Client may have disconnected
 
     def power(self):
         #ui.notify(self.power_button.text)
@@ -346,7 +356,6 @@ def ros_main(args=None) -> None:
 
 app.on_startup(lambda: threading.Thread(target=ros_main).start())
 ui_run.APP_IMPORT_STRING = f'{__name__}:app'  # ROS2 uses a non-standard module name, so we need to specify it here
-ui.run(uvicorn_reload_dirs=str(Path(__file__).parent.resolve()), favicon='🚀')
-ui.run(title='Dorst central station')
+ui.run(uvicorn_reload_dirs=str(Path(__file__).parent.resolve()), favicon='🚀', title='Dorst central station')
 
 
