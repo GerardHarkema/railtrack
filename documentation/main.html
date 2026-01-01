@@ -1,0 +1,143 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="nl" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Railtrack &mdash; ROS2 Railtrack 0.1 documentatie</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=a57088fb"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../_static/copybutton.js?v=f281be69"></script>
+      <script src="../_static/translations.js?v=e4d38c6a"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Zoeken" href="../search.html" />
+    <link rel="next" title="Demo" href="demos.html" />
+    <link rel="prev" title="Welcome to ROS2 Railtrack" href="../index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            ROS2 Railtrack
+              <img src="../_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Zoek in documentatie" aria-label="Zoek in documentatie" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigatiemenu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Railtrack</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#modular-low-cost-model-railtrack-control-system">Modular &amp; low-cost model RailTrack Control System</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="demos.html">Demo</a></li>
+<li class="toctree-l1"><a class="reference internal" href="setup_environment.html">Setup environment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="setup_microROS_agent.html">Install microROS Agent</a></li>
+<li class="toctree-l1"><a class="reference internal" href="setup_nicegui_ui.html">Setup nicegui User Interface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="setup_network.html">Setup network</a></li>
+<li class="toctree-l1"><a class="reference internal" href="setup_turnout_controller.html">Setup turnout controller</a></li>
+<li class="toctree-l1"><a class="reference internal" href="setup_marklin_railbox_bridge.html">Setup Marklin Railbox Bridge</a></li>
+<li class="toctree-l1"><a class="reference internal" href="setup_linux_startup_services.html">Setup linux startup services</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ros2_overview.html">ROS2 Railtrack System overview</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Navigatiemenu voor mobiel" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">ROS2 Railtrack</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Paginanavigatie">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Railtrack</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/documentation/main.md.txt" rel="nofollow"> Bekijk paginabron</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="railtrack">
+<h1>Railtrack<a class="headerlink" href="#railtrack" title="Link to this heading"></a></h1>
+<section id="modular-low-cost-model-railtrack-control-system">
+<h2>Modular &amp; low-cost model RailTrack Control System<a class="headerlink" href="#modular-low-cost-model-railtrack-control-system" title="Link to this heading"></a></h2>
+<p><em><strong>Note: This repository is currently under construcion. All code works, except documentation is not completed. It wil follow soon. Once the documentation is ready it will be possible to send issus about the system through this github repository.</strong></em></p>
+<p>Welcome to this modular model railway control system. This system makes it possible to control turnout and locomotives from a graphical user panel. The system is modular and can control both classic turnouts and digitally controlled turnouts.</p>
+<p>This system has the following features:</p>
+<ul class="simple">
+<li><p>Standardization through use of ROS2(<a class="reference external" href="https://docs.ros.org/en/humble/index.html">Robot Operating System - Humble</a>) as middelware system</p></li>
+<li><p>Low-costs by using ESP32 components</p></li>
+<li><p>Scalable to the wishes of the individual user</p></li>
+<li><p>Easy to configure using simple json configuration files</p></li>
+<li><p>Integratable with Marklin Central/Digital Station throug the Marklin CAN bus</p></li>
+<li><p>Easy to adapt to “Railboxs”(Boosters) from other manufactures as Marklin</p></li>
+</ul>
+<p><em>My apologies for my English language. This documentation provides a brief description of the system setup. Let the internet help you when a configuration goes wrong. Usually the answer can be found there.</em></p>
+<p><img alt="Image" src="../_images/SystemArchitecture.jpg" /></p>
+<p><em>Note: The “<a class="reference external" href="https://www.maerklin.de/en/products/details/article/60116">Digital Connector Box 60116</a>”(or simular) from Marklin is called in this documentation “Railbox”</em></p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Voettekst">
+        <a href="../index.html" class="btn btn-neutral float-left" title="Welcome to ROS2 Railtrack" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Vorige</a>
+        <a href="demos.html" class="btn btn-neutral float-right" title="Demo" accesskey="n" rel="next">Volgende <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright Gerard Harkema.</p>
+  </div>
+
+  Gebouwd met <a href="https://www.sphinx-doc.org/">Sphinx</a> met een
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">thema</a>
+    geleverd door <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
